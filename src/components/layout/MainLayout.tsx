@@ -1,0 +1,46 @@
+import { useState } from "react";
+import { Header } from "./Header";
+import { Sidebar } from "./Sidebar";
+import { Dashboard } from "../dashboard/Dashboard";
+import { ClientsTable } from "../clients/ClientsTable";
+import { DebtsTable } from "../debts/DebtsTable";
+import { Reports } from "../reports/Reports";
+import { Notifications } from "../notifications/Notifications";
+import { Analytics } from "../analytics/Analytics";
+
+const MainLayout = () => {
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return <Dashboard />;
+      case "clients":
+        return <ClientsTable />;
+      case "debts":
+        return <DebtsTable />;
+      case "reports":
+        return <Reports />;
+      case "notifications":
+        return <Notifications />;
+      case "analytics":
+        return <Analytics />;
+      default:
+        return <Dashboard />;
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-background">
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-auto p-6">
+          {renderContent()}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default MainLayout;
