@@ -22,6 +22,8 @@ import {
   Calendar
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatCurrencySimple } from "@/utils/currency";
+import { ClientForm, type ClientFormData } from "@/components/forms/ClientForm";
 
 interface Client {
   id: string;
@@ -102,6 +104,7 @@ const mockClients: Client[] = [
 export const ClientsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredClients, setFilteredClients] = useState(mockClients);
+  const [showClientForm, setShowClientForm] = useState(false);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -111,6 +114,23 @@ export const ClientsTable = () => {
       client.email.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredClients(filtered);
+  };
+
+  const handleAddClient = async (clientData: ClientFormData) => {
+    console.log("Novo cliente:", clientData);
+    const newClient = {
+      id: `C${(mockClients.length + 1).toString().padStart(3, '0')}`,
+      name: clientData.nome,
+      nuit: clientData.nuit,
+      phone: clientData.telefone,
+      email: clientData.email,
+      registrationDate: new Date().toISOString().split('T')[0],
+      totalDebt: 0,
+      paidDebt: 0,
+      overdueDebt: 0,
+      status: (clientData.ativo ? "ativo" : "inativo") as "ativo" | "inativo",
+    };
+    setFilteredClients(prev => [newClient, ...prev]);
   };
 
   const getStatusBadge = (status: Client["status"]) => {
@@ -128,7 +148,7 @@ export const ClientsTable = () => {
             Gestão completa da base de clientes
           </p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
+        <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowClientForm(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Cliente
         </Button>
@@ -192,10 +212,10 @@ export const ClientsTable = () => {
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">
-                      MZN {client.totalDebt.toLocaleString()}
+                      {formatCurrencySimple(client.totalDebt)}
                     </div>
                     <div className="text-xs text-success">
-                      Pago: MZN {client.paidDebt.toLocaleString()}
+                      Pago: {formatCurrencySimple(client.paidDebt)}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -204,7 +224,7 @@ export const ClientsTable = () => {
                       client.overdueDebt > 0 ? "text-destructive" : "text-muted-foreground"
                     )}>
                       {client.overdueDebt > 0 
-                        ? `MZN ${client.overdueDebt.toLocaleString()}`
+                        ? formatCurrencySimple(client.overdueDebt)
                         : "Sem atraso"
                       }
                     </div>
@@ -229,6 +249,12 @@ export const ClientsTable = () => {
           </Table>
         </CardContent>
       </Card>
+      
+      <ClientForm 
+        open={showClientForm}
+        onOpenChange={setShowClientForm}
+        onSubmit={handleAddClient}
+      />
     </div>
   );
 };

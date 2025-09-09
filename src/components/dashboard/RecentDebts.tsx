@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatCurrencySimple } from "@/utils/currency";
 
 interface Debt {
   id: string;
@@ -124,7 +125,7 @@ export const RecentDebts = () => {
                 <div className="flex items-center space-x-3">
                   <div className="text-right">
                     <p className="text-sm font-medium text-foreground">
-                      MZN {debt.amount.toLocaleString()}
+                      {formatCurrencySimple(debt.amount)}
                     </p>
                     {getStatusBadge(debt.status)}
                   </div>

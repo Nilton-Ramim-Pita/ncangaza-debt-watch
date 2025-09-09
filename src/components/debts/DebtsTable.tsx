@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +22,9 @@ import {
   Filter
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatCurrencySimple } from "@/utils/currency";
+import { useState } from "react";
+import { DebtForm, type DebtFormData } from "@/components/forms/DebtForm";
 
 interface Debt {
   id: string;
@@ -109,6 +111,7 @@ export const DebtsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [filteredDebts, setFilteredDebts] = useState(mockDebts);
+  const [showDebtForm, setShowDebtForm] = useState(false);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -127,12 +130,30 @@ export const DebtsTable = () => {
       debt.description.toLowerCase().includes(search.toLowerCase()) ||
       debt.id.toLowerCase().includes(search.toLowerCase())
     );
-
     if (status !== "all") {
       filtered = filtered.filter(debt => debt.status === status);
     }
-
     setFilteredDebts(filtered);
+  };
+
+  const handleAddDebt = async (debtData: DebtFormData) => {
+    // TODO: Integrate with Supabase when tables are created
+    console.log("Nova dívida:", debtData);
+    
+    // For now, add to mock data
+    const newDebt = {
+      id: `D${(mockDebts.length + 1).toString().padStart(3, '0')}`,
+      clientName: "Cliente Exemplo", // Would get from client_id
+      clientNuit: "123456789", // Would get from client_id
+      amount: debtData.valor,
+      description: debtData.descricao,
+      creationDate: new Date().toISOString().split('T')[0],
+      dueDate: debtData.data_vencimento,
+      status: debtData.status,
+      category: "Geral"
+    };
+    
+    setFilteredDebts(prev => [newDebt, ...prev]);
   };
 
   const getStatusBadge = (status: Debt["status"]) => {
@@ -180,7 +201,7 @@ export const DebtsTable = () => {
             Controle completo das dívidas em aberto
           </p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
+        <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowDebtForm(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Nova Dívida
         </Button>
@@ -264,7 +285,7 @@ export const DebtsTable = () => {
                     </TableCell>
                     <TableCell>
                       <div className="font-bold text-foreground">
-                        MZN {debt.amount.toLocaleString()}
+                        {formatCurrencySimple(debt.amount)}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -312,6 +333,12 @@ export const DebtsTable = () => {
           </Table>
         </CardContent>
       </Card>
+      
+      <DebtForm 
+        open={showDebtForm}
+        onOpenChange={setShowDebtForm}
+        onSubmit={handleAddDebt}
+      />
     </div>
   );
 };

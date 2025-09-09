@@ -1,0 +1,196 @@
+import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+
+interface ClientFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit?: (data: ClientFormData) => void;
+}
+
+export interface ClientFormData {
+  nome: string;
+  nuit: string;
+  email: string;
+  telefone: string;
+  endereco: string;
+  ativo: boolean;
+}
+
+export const ClientForm = ({ open, onOpenChange, onSubmit }: ClientFormProps) => {
+  const [formData, setFormData] = useState<ClientFormData>({
+    nome: "",
+    nuit: "",
+    email: "",
+    telefone: "",
+    endereco: "",
+    ativo: true,
+  });
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validações básicas
+    if (!formData.nome.trim()) {
+      toast({
+        title: "Erro",
+        description: "O nome é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.nuit.trim()) {
+      toast({
+        title: "Erro", 
+        description: "O NUIT é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      if (onSubmit) {
+        await onSubmit(formData);
+      }
+      
+      // Reset form
+      setFormData({
+        nome: "",
+        nuit: "",
+        email: "",
+        telefone: "",
+        endereco: "",
+        ativo: true,
+      });
+      
+      onOpenChange(false);
+      
+      toast({
+        title: "Sucesso",
+        description: "Cliente adicionado com sucesso!",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar cliente:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar cliente",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof ClientFormData, value: string | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Novo Cliente</DialogTitle>
+          <DialogDescription>
+            Adicione um novo cliente à base de dados da Ncangaza Multiservices
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="nome">Nome Completo *</Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) => handleInputChange("nome", e.target.value)}
+                placeholder="Ex: João Manuel Silva"
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="nuit">NUIT *</Label>
+                <Input
+                  id="nuit"
+                  value={formData.nuit}
+                  onChange={(e) => handleInputChange("nuit", e.target.value)}
+                  placeholder="123456789"
+                  required
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="telefone">Telefone</Label>
+                <Input
+                  id="telefone"
+                  value={formData.telefone}
+                  onChange={(e) => handleInputChange("telefone", e.target.value)}
+                  placeholder="+258 84 123 4567"
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                placeholder="cliente@email.com"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="endereco">Endereço</Label>
+              <Textarea
+                id="endereco"
+                value={formData.endereco}
+                onChange={(e) => handleInputChange("endereco", e.target.value)}
+                placeholder="Av. Julius Nyerere, Bairro Central, Tete"
+                rows={3}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="ativo"
+                checked={formData.ativo}
+                onCheckedChange={(checked) => handleInputChange("ativo", checked)}
+              />
+              <Label htmlFor="ativo">Cliente ativo</Label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Guardando..." : "Guardar Cliente"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
