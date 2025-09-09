@@ -46,7 +46,7 @@ export const StatsCards = () => {
   const stats = [
     {
       title: "Total de Dívidas",
-      value: "MZN 2,847,550",
+      value: "MZN 2.847.550,00",
       change: "+12.5%",
       changeType: "positive" as const,
       icon: <DollarSign className="h-4 w-4" />,
@@ -54,7 +54,7 @@ export const StatsCards = () => {
     },
     {
       title: "Dívidas Vencidas",
-      value: "MZN 486,200",
+      value: "MZN 486.200,00",
       change: "+8.2%",
       changeType: "negative" as const,
       icon: <AlertTriangle className="h-4 w-4" />,
@@ -62,7 +62,7 @@ export const StatsCards = () => {
     },
     {
       title: "Próximas a Vencer",
-      value: "MZN 123,450",
+      value: "MZN 123.450,00",
       change: "7 dívidas",
       changeType: "neutral" as const,
       icon: <Clock className="h-4 w-4" />,
@@ -70,7 +70,7 @@ export const StatsCards = () => {
     },
     {
       title: "Dívidas Pagas",
-      value: "MZN 1,654,300",
+      value: "MZN 1.654.300,00",
       change: "+15.3%",
       changeType: "positive" as const,
       icon: <CheckCircle className="h-4 w-4" />,

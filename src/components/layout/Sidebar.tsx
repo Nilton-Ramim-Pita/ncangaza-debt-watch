@@ -60,11 +60,11 @@ export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       <div className="p-6 border-b">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-            <span className="text-primary-foreground font-bold">N</span>
+            <span className="text-primary-foreground font-bold text-lg">N</span>
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">Sistema de</h2>
-            <p className="text-sm text-muted-foreground">Gestão de Dívidas</p>
+            <h2 className="font-semibold text-foreground">Ncangaza</h2>
+            <p className="text-sm text-muted-foreground">Multiservices</p>
           </div>
         </div>
       </div>
