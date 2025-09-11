@@ -14,13 +14,145 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clientes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data_registro: string
+          email: string | null
+          endereco: string | null
+          id: string
+          nome: string
+          nuit: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data_registro?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome: string
+          nuit?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data_registro?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome?: string
+          nuit?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dividas: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_criacao: string
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string
+          id: string
+          status: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_criacao?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao: string
+          id?: string
+          status?: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_criacao?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dividas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notificacoes: {
+        Row: {
+          created_at: string
+          data_agendamento: string
+          data_envio: string | null
+          divida_id: string
+          erro: string | null
+          id: string
+          mensagem: string | null
+          status: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          data_agendamento: string
+          data_envio?: string | null
+          divida_id: string
+          erro?: string | null
+          id?: string
+          mensagem?: string | null
+          status?: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          data_agendamento?: string
+          data_envio?: string | null
+          divida_id?: string
+          erro?: string | null
+          id?: string
+          mensagem?: string | null
+          status?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_divida_id_fkey"
+            columns: ["divida_id"]
+            isOneToOne: false
+            referencedRelation: "dividas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_debt_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
