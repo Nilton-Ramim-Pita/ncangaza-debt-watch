@@ -1,8 +1,11 @@
 import { StatsCards } from "./StatsCards";
 import { DebtChart } from "./DebtChart";
 import { RecentDebts } from "./RecentDebts";
+import { useStats } from "@/hooks/useStats";
 
 export const Dashboard = () => {
+  const { refetch } = useStats();
+
   return (
     <div className="space-y-6">
       <div>

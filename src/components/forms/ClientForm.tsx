@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ interface ClientFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit?: (data: ClientFormData) => void;
+  initialData?: ClientFormData;
 }
 
 export interface ClientFormData {
@@ -22,15 +23,17 @@ export interface ClientFormData {
   ativo: boolean;
 }
 
-export const ClientForm = ({ open, onOpenChange, onSubmit }: ClientFormProps) => {
-  const [formData, setFormData] = useState<ClientFormData>({
-    nome: "",
-    nuit: "",
-    email: "",
-    telefone: "",
-    endereco: "",
-    ativo: true,
-  });
+export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: ClientFormProps) => {
+  const [formData, setFormData] = useState<ClientFormData>(
+    initialData || {
+      nome: "",
+      nuit: "",
+      email: "",
+      telefone: "",
+      endereco: "",
+      ativo: true,
+    }
+  );
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -63,27 +66,29 @@ export const ClientForm = ({ open, onOpenChange, onSubmit }: ClientFormProps) =>
         await onSubmit(formData);
       }
       
-      // Reset form
-      setFormData({
-        nome: "",
-        nuit: "",
-        email: "",
-        telefone: "",
-        endereco: "",
-        ativo: true,
-      });
+      // Reset form only if not editing
+      if (!initialData) {
+        setFormData({
+          nome: "",
+          nuit: "",
+          email: "",
+          telefone: "",
+          endereco: "",
+          ativo: true,
+        });
+      }
       
       onOpenChange(false);
       
       toast({
         title: "Sucesso",
-        description: "Cliente adicionado com sucesso!",
+        description: initialData ? "Cliente atualizado com sucesso!" : "Cliente adicionado com sucesso!",
       });
     } catch (error) {
       console.error("Erro ao salvar cliente:", error);
       toast({
         title: "Erro",
-        description: "Erro ao adicionar cliente",
+        description: initialData ? "Erro ao atualizar cliente" : "Erro ao adicionar cliente",
         variant: "destructive",
       });
     } finally {
@@ -102,9 +107,9 @@ export const ClientForm = ({ open, onOpenChange, onSubmit }: ClientFormProps) =>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Novo Cliente</DialogTitle>
+          <DialogTitle>{initialData ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           <DialogDescription>
-            Adicione um novo cliente à base de dados da Ncangaza Multiservices
+            {initialData ? 'Edite os dados do cliente.' : 'Adicione um novo cliente à base de dados da Ncangaza Multiservices'}
           </DialogDescription>
         </DialogHeader>
         
@@ -185,9 +190,9 @@ export const ClientForm = ({ open, onOpenChange, onSubmit }: ClientFormProps) =>
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Guardando..." : "Guardar Cliente"}
-            </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Guardando..." : (initialData ? "Atualizar Cliente" : "Guardar Cliente")}
+          </Button>
           </DialogFooter>
         </form>
       </DialogContent>

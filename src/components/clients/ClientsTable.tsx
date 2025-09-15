@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,125 +16,52 @@ import {
   Plus, 
   Eye, 
   Edit, 
-  CreditCard, 
+  Trash2, 
   Phone, 
   Mail,
-  Calendar
+  Calendar,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatCurrencySimple } from "@/utils/currency";
 import { ClientForm, type ClientFormData } from "@/components/forms/ClientForm";
-
-interface Client {
-  id: string;
-  name: string;
-  nuit: string;
-  phone: string;
-  email: string;
-  registrationDate: string;
-  totalDebt: number;
-  paidDebt: number;
-  overdueDebt: number;
-  status: "ativo" | "inativo";
-}
-
-const mockClients: Client[] = [
-  {
-    id: "C001",
-    name: "João Mutema Silva",
-    nuit: "123456789",
-    phone: "+258 84 123 4567",
-    email: "joao.silva@email.com",
-    registrationDate: "2023-06-15",
-    totalDebt: 345000,
-    paidDebt: 270000,
-    overdueDebt: 75000,
-    status: "ativo"
-  },
-  {
-    id: "C002",
-    name: "Maria Joaquina Banda",
-    nuit: "987654321",
-    phone: "+258 87 987 6543",
-    email: "maria.banda@email.com",
-    registrationDate: "2023-08-22",
-    totalDebt: 128000,
-    paidDebt: 86000,
-    overdueDebt: 0,
-    status: "ativo"
-  },
-  {
-    id: "C003",
-    name: "Carlos Mandlate Nhongo",
-    nuit: "456789123",
-    phone: "+258 82 456 7890",
-    email: "carlos.nhongo@email.com",
-    registrationDate: "2023-09-10",
-    totalDebt: 287000,
-    paidDebt: 159000,
-    overdueDebt: 128000,
-    status: "ativo"
-  },
-  {
-    id: "C004",
-    name: "Ana Cristina Macome",
-    nuit: "789123456",
-    phone: "+258 85 321 6540",
-    email: "ana.macome@email.com",  
-    registrationDate: "2023-07-03",
-    totalDebt: 89500,
-    paidDebt: 89500,
-    overdueDebt: 0,
-    status: "ativo"
-  },
-  {
-    id: "C005",
-    name: "Pedro Antônio Machel",
-    nuit: "321654987",
-    phone: "+258 86 654 3210",
-    email: "pedro.machel@email.com",
-    registrationDate: "2023-05-18",
-    totalDebt: 412000,
-    paidDebt: 256000,
-    overdueDebt: 156000,
-    status: "inativo"
-  }
-];
+import { useClients, Client } from "@/hooks/useClients";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export const ClientsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredClients, setFilteredClients] = useState(mockClients);
   const [showClientForm, setShowClientForm] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const { clients, loading, createClient, updateClient, deleteClient } = useClients();
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    const filtered = mockClients.filter(client =>
-      client.name.toLowerCase().includes(value.toLowerCase()) ||
-      client.nuit.includes(value) ||
-      client.email.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredClients(filtered);
-  };
+  // Filtrar clientes baseado no termo de pesquisa
+  const filteredClients = clients.filter(client =>
+    client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.nuit && client.nuit.includes(searchTerm)) ||
+    (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   const handleAddClient = async (clientData: ClientFormData) => {
-    console.log("Novo cliente:", clientData);
-    const newClient = {
-      id: `C${(mockClients.length + 1).toString().padStart(3, '0')}`,
-      name: clientData.nome,
-      nuit: clientData.nuit,
-      phone: clientData.telefone,
-      email: clientData.email,
-      registrationDate: new Date().toISOString().split('T')[0],
-      totalDebt: 0,
-      paidDebt: 0,
-      overdueDebt: 0,
-      status: (clientData.ativo ? "ativo" : "inativo") as "ativo" | "inativo",
-    };
-    setFilteredClients(prev => [newClient, ...prev]);
+    const result = await createClient(clientData);
+    if (result.success) {
+      setShowClientForm(false);
+    }
   };
 
-  const getStatusBadge = (status: Client["status"]) => {
-    return status === "ativo" 
+  const handleEditClient = async (clientData: ClientFormData) => {
+    if (!editingClient) return;
+    const result = await updateClient(editingClient.id, clientData);
+    if (result.success) {
+      setShowClientForm(false);
+      setEditingClient(null);
+    }
+  };
+
+  const handleDeleteClient = async (id: string) => {
+    await deleteClient(id);
+  };
+
+  const getStatusBadge = (ativo: boolean) => {
+    return ativo 
       ? <Badge className="bg-success text-success-foreground">Ativo</Badge>
       : <Badge variant="secondary">Inativo</Badge>;
   };
@@ -164,7 +91,7 @@ export const ClientsTable = () => {
                 <Input
                   placeholder="Buscar por nome, NUIT ou email..."
                   value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 w-80"
                 />
               </div>
@@ -179,72 +106,94 @@ export const ClientsTable = () => {
                 <TableHead>NUIT</TableHead>
                 <TableHead>Contacto</TableHead>
                 <TableHead>Registro</TableHead>
-                <TableHead>Dívida Total</TableHead>
-                <TableHead>Dívida Vencida</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredClients.map((client) => (
-                <TableRow key={client.id} className="hover:bg-muted/50">
-                  <TableCell>
-                    <div>
-                      <div className="font-medium text-foreground">{client.name}</div>
-                      <div className="text-sm text-muted-foreground flex items-center mt-1">
-                        <Mail className="h-3 w-3 mr-1" />
-                        {client.email}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono">{client.nuit}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center text-sm">
-                      <Phone className="h-3 w-3 mr-1 text-muted-foreground" />
-                      {client.phone}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center text-sm">
-                      <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
-                      {new Date(client.registrationDate).toLocaleDateString("pt-MZ")}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">
-                      {formatCurrencySimple(client.totalDebt)}
-                    </div>
-                    <div className="text-xs text-success">
-                      Pago: {formatCurrencySimple(client.paidDebt)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className={cn(
-                      "font-medium",
-                      client.overdueDebt > 0 ? "text-destructive" : "text-muted-foreground"
-                    )}>
-                      {client.overdueDebt > 0 
-                        ? formatCurrencySimple(client.overdueDebt)
-                        : "Sem atraso"
-                      }
-                    </div>
-                  </TableCell>
-                  <TableCell>{getStatusBadge(client.status)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <CreditCard className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                    <p className="text-muted-foreground mt-2">Carregando clientes...</p>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filteredClients.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <p className="text-muted-foreground">Nenhum cliente encontrado</p>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredClients.map((client) => (
+                  <TableRow key={client.id} className="hover:bg-muted/50">
+                    <TableCell>
+                      <div>
+                        <div className="font-medium text-foreground">{client.nome}</div>
+                        <div className="text-sm text-muted-foreground flex items-center mt-1">
+                          <Mail className="h-3 w-3 mr-1" />
+                          {client.email || 'N/A'}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono">{client.nuit || 'N/A'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center text-sm">
+                        <Phone className="h-3 w-3 mr-1 text-muted-foreground" />
+                        {client.telefone || 'N/A'}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center text-sm">
+                        <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
+                        {new Date(client.created_at).toLocaleDateString("pt-MZ")}
+                      </div>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(client.ativo)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setEditingClient(client);
+                            setShowClientForm(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Eliminar Cliente</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja eliminar o cliente "{client.nome}"? Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteClient(client.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -252,8 +201,19 @@ export const ClientsTable = () => {
       
       <ClientForm 
         open={showClientForm}
-        onOpenChange={setShowClientForm}
-        onSubmit={handleAddClient}
+        onOpenChange={(open) => {
+          setShowClientForm(open);
+          if (!open) setEditingClient(null);
+        }}
+        onSubmit={editingClient ? handleEditClient : handleAddClient}
+        initialData={editingClient ? {
+          nome: editingClient.nome,
+          nuit: editingClient.nuit || '',
+          email: editingClient.email || '',
+          telefone: editingClient.telefone || '',
+          endereco: editingClient.endereco || '',
+          ativo: editingClient.ativo,
+        } : undefined}
       />
     </div>
   );
