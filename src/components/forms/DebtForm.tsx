@@ -13,9 +13,11 @@ interface DebtFormProps {
   onOpenChange: (open: boolean) => void;
   onSubmit?: (data: DebtFormData) => void;
   clients?: Array<{ id: string; nome: string; nuit: string }>;
+  editData?: DebtFormData;
 }
 
 export interface DebtFormData {
+  id?: string;
   cliente_id: string;
   valor: number;
   descricao: string;
@@ -35,7 +37,7 @@ const categorias = [
   "Outros"
 ];
 
-export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [] }: DebtFormProps) => {
+export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [], editData }: DebtFormProps) => {
   const [formData, setFormData] = useState<DebtFormData>({
     cliente_id: "",
     valor: 0,
@@ -44,6 +46,23 @@ export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [] }: DebtFor
     status: "pendente",
   });
   const [valorDisplay, setValorDisplay] = useState("");
+
+  // Load edit data when provided
+  useEffect(() => {
+    if (editData) {
+      setFormData(editData);
+      setValorDisplay(editData.valor.toString());
+    } else {
+      setFormData({
+        cliente_id: "",
+        valor: 0,
+        descricao: "",
+        data_vencimento: "",
+        status: "pendente",
+      });
+      setValorDisplay("");
+    }
+  }, [editData]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -154,9 +173,9 @@ export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [] }: DebtFor
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Nova Dívida</DialogTitle>
+          <DialogTitle>{editData ? "Editar Dívida" : "Nova Dívida"}</DialogTitle>
           <DialogDescription>
-            Registre uma nova dívida na base de dados da Ncangaza Multiservices
+            {editData ? "Edite os dados da dívida" : "Registre uma nova dívida na base de dados da Ncangaza Multiservices"}
           </DialogDescription>
         </DialogHeader>
         
@@ -245,7 +264,7 @@ export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [] }: DebtFor
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Guardando..." : "Guardar Dívida"}
+              {loading ? "Guardando..." : (editData ? "Actualizar Dívida" : "Guardar Dívida")}
             </Button>
           </DialogFooter>
         </form>

@@ -25,6 +25,10 @@ import { cn } from "@/lib/utils";
 import { formatCurrencySimple } from "@/utils/currency";
 import { useState } from "react";
 import { DebtForm, type DebtFormData } from "@/components/forms/DebtForm";
+import { useDebts } from "@/hooks/useDebts";
+import { useClients } from "@/hooks/useClients";
+import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/utils/currency";
 
 interface Debt {
   id: string;
@@ -110,57 +114,74 @@ const mockDebts: Debt[] = [
 export const DebtsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [filteredDebts, setFilteredDebts] = useState(mockDebts);
   const [showDebtForm, setShowDebtForm] = useState(false);
+  const [editingDebt, setEditingDebt] = useState<DebtFormData | undefined>();
+  
+  const { debts, loading, createDebt, updateDebt, deleteDebt } = useDebts();
+  const { clients } = useClients();
+  const { toast } = useToast();
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    applyFilters(value, statusFilter);
-  };
-
-  const handleStatusFilter = (status: string) => {
-    setStatusFilter(status);
-    applyFilters(searchTerm, status);
-  };
-
-  const applyFilters = (search: string, status: string) => {
-    let filtered = mockDebts.filter(debt =>
-      debt.clientName.toLowerCase().includes(search.toLowerCase()) ||
-      debt.clientNuit.includes(search) ||
-      debt.description.toLowerCase().includes(search.toLowerCase()) ||
-      debt.id.toLowerCase().includes(search.toLowerCase())
-    );
-    if (status !== "all") {
-      filtered = filtered.filter(debt => debt.status === status);
-    }
-    setFilteredDebts(filtered);
-  };
+  // Filter debts based on search and status
+  const filteredDebts = debts.filter(debt => {
+    const client = clients.find(c => c.id === debt.cliente_id);
+    const matchesSearch = !searchTerm || 
+      client?.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client?.nuit?.includes(searchTerm) ||
+      debt.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      debt.id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || debt.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const handleAddDebt = async (debtData: DebtFormData) => {
-    // TODO: Integrate with Supabase when tables are created
-    console.log("Nova dívida:", debtData);
-    
-    // For now, add to mock data
-    const newDebt = {
-      id: `D${(mockDebts.length + 1).toString().padStart(3, '0')}`,
-      clientName: "Cliente Exemplo", // Would get from client_id
-      clientNuit: "123456789", // Would get from client_id
-      amount: debtData.valor,
-      description: debtData.descricao,
-      creationDate: new Date().toISOString().split('T')[0],
-      dueDate: debtData.data_vencimento,
-      status: debtData.status,
-      category: "Geral"
-    };
-    
-    setFilteredDebts(prev => [newDebt, ...prev]);
+    try {
+      if (editingDebt?.id) {
+        await updateDebt(editingDebt.id, debtData);
+        toast({
+          title: "Sucesso",
+          description: "Dívida actualizada com sucesso!",
+        });
+      } else {
+        await createDebt(debtData);
+        toast({
+          title: "Sucesso", 
+          description: "Dívida adicionada com sucesso!",
+        });
+      }
+      setEditingDebt(undefined);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao processar dívida",
+        variant: "destructive",
+      });
+    }
   };
 
-  const getStatusBadge = (status: Debt["status"]) => {
+  const handleEdit = (debt: any) => {
+    setEditingDebt({
+      id: debt.id,
+      cliente_id: debt.cliente_id,
+      valor: Number(debt.valor),
+      descricao: debt.descricao,
+      data_vencimento: debt.data_vencimento,
+      status: debt.status,
+    });
+    setShowDebtForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowDebtForm(false);
+    setEditingDebt(undefined);
+  };
+
+  const getStatusBadge = (status: "pendente" | "paga" | "vencida") => {
     switch (status) {
       case "paga":
         return (
-          <Badge className="bg-success text-success-foreground">
+          <Badge className="bg-green-100 text-green-800">
             <CheckCircle className="mr-1 h-3 w-3" />
             Paga
           </Badge>
@@ -174,7 +195,7 @@ export const DebtsTable = () => {
         );
       case "vencida":
         return (
-          <Badge className="bg-destructive text-destructive-foreground">
+          <Badge className="bg-red-100 text-red-800">
             <AlertTriangle className="mr-1 h-3 w-3" />
             Vencida
           </Badge>
@@ -212,7 +233,7 @@ export const DebtsTable = () => {
           <CardTitle className="flex items-center justify-between">
             Lista de Dívidas
             <div className="flex items-center space-x-2">
-              <Select value={statusFilter} onValueChange={handleStatusFilter}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40">
                   <Filter className="mr-2 h-4 w-4" />
                   <SelectValue placeholder="Status" />
@@ -229,7 +250,7 @@ export const DebtsTable = () => {
                 <Input
                   placeholder="Buscar dívidas..."
                   value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 w-80"
                 />
               </div>
@@ -237,107 +258,114 @@ export const DebtsTable = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Vencimento</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredDebts.map((debt) => {
-                const daysUntilDue = getDaysUntilDue(debt.dueDate);
-                const isUrgent = daysUntilDue <= 3 && debt.status === "pendente";
-                
-                return (
-                  <TableRow 
-                    key={debt.id} 
-                    className={cn(
-                      "hover:bg-muted/50",
-                      debt.status === "vencida" && "bg-destructive/5 border-l-4 border-l-destructive",
-                      isUrgent && "bg-warning/5 border-l-4 border-l-warning"
-                    )}
-                  >
-                    <TableCell className="font-mono font-medium">
-                      {debt.id}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium text-foreground">{debt.clientName}</div>
-                        <div className="text-sm text-muted-foreground font-mono">
-                          NUIT: {debt.clientNuit}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="max-w-xs">
-                        <div className="font-medium text-sm">{debt.description}</div>
-                        <div className="text-xs text-muted-foreground">
-                          Criado: {new Date(debt.creationDate).toLocaleDateString("pt-MZ")}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-bold text-foreground">
-                        {formatCurrencySimple(debt.amount)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">
-                          {new Date(debt.dueDate).toLocaleDateString("pt-MZ")}
-                        </div>
-                        {debt.status === "pendente" && (
-                          <div className={cn(
-                            "text-xs",
-                            daysUntilDue < 0 && "text-destructive",
-                            daysUntilDue <= 3 && daysUntilDue >= 0 && "text-warning",
-                            daysUntilDue > 3 && "text-muted-foreground"
-                          )}>
-                            {daysUntilDue < 0 
-                              ? `${Math.abs(daysUntilDue)} dias em atraso`
-                              : daysUntilDue === 0 
-                                ? "Vence hoje"
-                                : `${daysUntilDue} dias restantes`
-                            }
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Carregando dívidas...</p>
+            </div>
+          ) : filteredDebts.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Nenhuma dívida encontrada</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead>Vencimento</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredDebts.map((debt) => {
+                  const client = clients.find(c => c.id === debt.cliente_id);
+                  const daysUntilDue = getDaysUntilDue(debt.data_vencimento);
+                  const isUrgent = daysUntilDue <= 3 && debt.status === "pendente";
+                  
+                  return (
+                    <TableRow 
+                      key={debt.id} 
+                      className={cn(
+                        "hover:bg-muted/50",
+                        debt.status === "vencida" && "bg-red-50 border-l-4 border-l-red-500",
+                        isUrgent && "bg-yellow-50 border-l-4 border-l-yellow-500"
+                      )}
+                    >
+                      <TableCell className="font-mono font-medium">
+                        {debt.id.slice(0, 8)}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium text-foreground">{client?.nome || 'Cliente não encontrado'}</div>
+                          <div className="text-sm text-muted-foreground font-mono">
+                            NUIT: {client?.nuit || 'N/A'}
                           </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(debt.status)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {debt.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-xs">
+                          <div className="font-medium text-sm">{debt.descricao}</div>
+                          <div className="text-xs text-muted-foreground">
+                            Criado: {new Date(debt.data_criacao).toLocaleDateString("pt-MZ")}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-bold text-foreground">
+                          {formatCurrency(Number(debt.valor))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">
+                            {new Date(debt.data_vencimento).toLocaleDateString("pt-MZ")}
+                          </div>
+                          {debt.status === "pendente" && (
+                            <div className={cn(
+                              "text-xs",
+                              daysUntilDue < 0 && "text-red-600",
+                              daysUntilDue <= 3 && daysUntilDue >= 0 && "text-yellow-600",
+                              daysUntilDue > 3 && "text-muted-foreground"
+                            )}>
+                              {daysUntilDue < 0 
+                                ? `${Math.abs(daysUntilDue)} dias em atraso`
+                                : daysUntilDue === 0 
+                                  ? "Vence hoje"
+                                  : `${daysUntilDue} dias restantes`
+                              }
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(debt.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleEdit(debt)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
       
       <DebtForm 
         open={showDebtForm}
-        onOpenChange={setShowDebtForm}
+        onOpenChange={handleCloseForm}
         onSubmit={handleAddDebt}
+        clients={clients}
+        editData={editingDebt}
       />
     </div>
   );

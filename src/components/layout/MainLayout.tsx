@@ -4,9 +4,9 @@ import { Sidebar } from "./Sidebar";
 import { Dashboard } from "../dashboard/Dashboard";
 import { ClientsTable } from "../clients/ClientsTable";
 import { DebtsTable } from "../debts/DebtsTable";
-import { Reports } from "../reports/Reports";
-import { Notifications } from "../notifications/Notifications";
-import { Analytics } from "../analytics/Analytics";
+import { ReportsReal } from "../reports/ReportsReal";
+import { NotificationsReal } from "../notifications/NotificationsReal";
+import { AnalyticsReal } from "../analytics/AnalyticsReal";
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -20,11 +20,11 @@ const MainLayout = () => {
       case "debts":
         return <DebtsTable />;
       case "reports":
-        return <Reports />;
+        return <ReportsReal />;
       case "notifications":
-        return <Notifications />;
+        return <NotificationsReal />;
       case "analytics":
-        return <Analytics />;
+        return <AnalyticsReal />;
       default:
         return <Dashboard />;
     }
