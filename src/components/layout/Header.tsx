@@ -1,4 +1,4 @@
-import { Bell, User, LogOut, X, Check } from "lucide-react";
+import { Bell, User, LogOut, X, Check, Settings, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
 interface HeaderProps {
@@ -24,15 +25,19 @@ interface HeaderProps {
 
 export const Header = ({ onTabChange }: HeaderProps) => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { profile, signOut, isAdmin } = useAuth();
   const [notificationOpen, setNotificationOpen] = useState(false);
 
   const handleProfileClick = () => {
     onTabChange('profile');
   };
 
-  const handleLogout = () => {
-    // In a real app, this would handle logout logic
-    alert('Funcionalidade de logout será implementada em breve');
+  const handleSettingsClick = () => {
+    onTabChange('settings');
+  };
+
+  const handleUsersClick = () => {
+    onTabChange('users');
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -156,18 +161,33 @@ export const Header = ({ onTabChange }: HeaderProps) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2">
                 <User className="h-5 w-5" />
-                <span className="hidden md:inline">Admin</span>
+                <span className="hidden md:inline">{profile?.full_name || 'Usuário'}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                <div>
+                  <p className="font-medium">{profile?.full_name}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
+                </div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleProfileClick}>
                 <User className="mr-2 h-4 w-4" />
                 Perfil
               </DropdownMenuItem>
+              {isAdmin && (
+                <DropdownMenuItem onClick={handleUsersClick}>
+                  <UserCog className="mr-2 h-4 w-4" />
+                  Gestão de Usuários
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={handleSettingsClick}>
+                <Settings className="mr-2 h-4 w-4" />
+                Configurações
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
+              <DropdownMenuItem className="text-destructive" onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Sair
               </DropdownMenuItem>

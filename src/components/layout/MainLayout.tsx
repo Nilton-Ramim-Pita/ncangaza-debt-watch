@@ -9,6 +9,7 @@ import { NotificationsReal } from "../notifications/NotificationsReal";
 import { AnalyticsReal } from "../analytics/AnalyticsReal";
 import { Profile } from "../profile/Profile";
 import { Settings } from "../settings/Settings";
+import UserManagement from "../admin/UserManagement";
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -31,6 +32,8 @@ const MainLayout = () => {
         return <Profile />;
       case "settings":
         return <Settings />;
+      case "users":
+        return <UserManagement />;
       default:
         return <Dashboard />;
     }
