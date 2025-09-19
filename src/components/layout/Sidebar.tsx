@@ -100,7 +100,12 @@ export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       </nav>
 
       <div className="p-4 border-t">
-        <Button variant="ghost" className="w-full justify-start" size="sm">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start" 
+          size="sm"
+          onClick={() => onTabChange('settings')}
+        >
           <Settings className="mr-2 h-4 w-4" />
           Configurações
         </Button>

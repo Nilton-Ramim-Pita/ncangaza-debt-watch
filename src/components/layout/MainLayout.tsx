@@ -7,6 +7,8 @@ import { DebtsTable } from "../debts/DebtsTable";
 import { ReportsReal } from "../reports/ReportsReal";
 import { NotificationsReal } from "../notifications/NotificationsReal";
 import { AnalyticsReal } from "../analytics/AnalyticsReal";
+import { Profile } from "../profile/Profile";
+import { Settings } from "../settings/Settings";
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -25,6 +27,10 @@ const MainLayout = () => {
         return <NotificationsReal />;
       case "analytics":
         return <AnalyticsReal />;
+      case "profile":
+        return <Profile />;
+      case "settings":
+        return <Settings />;
       default:
         return <Dashboard />;
     }
@@ -34,7 +40,7 @@ const MainLayout = () => {
     <div className="flex h-screen bg-background">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <Header onTabChange={setActiveTab} />
         <main className="flex-1 overflow-auto p-6">
           {renderContent()}
         </main>

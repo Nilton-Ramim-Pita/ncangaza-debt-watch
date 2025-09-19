@@ -1,4 +1,4 @@
-import { Bell, User, LogOut } from "lucide-react";
+import { Bell, User, LogOut, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,9 +8,53 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useState } from "react";
 
-export const Header = () => {
+interface HeaderProps {
+  onTabChange: (tab: string) => void;
+}
+
+export const Header = ({ onTabChange }: HeaderProps) => {
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const [notificationOpen, setNotificationOpen] = useState(false);
+
+  const handleProfileClick = () => {
+    onTabChange('profile');
+  };
+
+  const handleLogout = () => {
+    // In a real app, this would handle logout logic
+    alert('Funcionalidade de logout será implementada em breve');
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Agora mesmo';
+    if (diffInMinutes < 60) return `${diffInMinutes}m atrás`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h atrás`;
+    return `${Math.floor(diffInMinutes / 1440)}d atrás`;
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'success': return '✅';
+      case 'warning': return '⚠️';
+      case 'error': return '❌';
+      default: return 'ℹ️';
+    }
+  };
+
   return (
     <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
       <div className="flex h-16 items-center justify-between px-6">
@@ -28,12 +72,84 @@ export const Header = () => {
 
         <div className="flex items-center space-x-4">
           {/* Notifications */}
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="h-5 w-5" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-destructive">
-              3
-            </Badge>
-          </Button>
+          <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-destructive">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0" align="end">
+              <div className="flex items-center justify-between p-4 border-b">
+                <h3 className="font-semibold">Notificações</h3>
+                <div className="flex items-center space-x-2">
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={markAllAsRead}
+                      className="text-xs"
+                    >
+                      <Check className="w-3 h-3 mr-1" />
+                      Marcar todas
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <ScrollArea className="h-80">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Nenhuma notificação
+                  </div>
+                ) : (
+                  <div className="p-2">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors hover:bg-muted/50 ${
+                          !notification.read ? 'bg-muted/30' : ''
+                        }`}
+                        onClick={() => markAsRead(notification.id)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm">{getNotificationIcon(notification.type)}</span>
+                              <h4 className="text-sm font-medium">{notification.title}</h4>
+                              {!notification.read && (
+                                <Badge variant="secondary" className="h-2 w-2 p-0 bg-primary" />
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {notification.message}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {formatTimeAgo(notification.created_at)}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotification(notification.id);
+                            }}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
 
           {/* User Menu */}
           <DropdownMenu>
@@ -46,12 +162,12 @@ export const Header = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleProfileClick}>
                 <User className="mr-2 h-4 w-4" />
                 Perfil
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Sair
               </DropdownMenuItem>
