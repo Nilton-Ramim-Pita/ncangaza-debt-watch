@@ -49,6 +49,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) {
+        // If profile doesn't exist, create one
+        if (error.code === 'PGRST116') {
+          await createProfile(userId);
+          return;
+        }
         console.error('Error fetching profile:', error);
         return;
       }
@@ -56,6 +61,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
+    }
+  };
+
+  const createProfile = async (userId: string) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const fullName = userData.user?.user_metadata?.full_name || userData.user?.email || 'Usuário';
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: userId,
+          full_name: fullName,
+          role: 'user',
+          active: true
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating profile:', error);
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error creating profile:', error);
     }
   };
 
