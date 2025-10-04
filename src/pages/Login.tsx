@@ -68,6 +68,23 @@ const Login = () => {
     }
   };
 
+  const createDemoUsers = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-demo-users');
+      
+      if (error) {
+        toast.error('Erro ao criar usuários demo: ' + error.message);
+      } else {
+        toast.success('Usuários demo criados com sucesso!');
+      }
+    } catch (error) {
+      toast.error('Erro inesperado ao criar usuários demo');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const loginAsDemo = (role: 'admin' | 'user') => {
     if (role === 'admin') {
       setEmail('admin@ncangaza.co.mz');
@@ -138,6 +155,23 @@ const Login = () => {
                 
                 <div className="space-y-2 pt-4 border-t">
                   <p className="text-xs text-muted-foreground text-center">Credenciais de demonstração:</p>
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    size="sm" 
+                    className="w-full mb-2"
+                    onClick={createDemoUsers}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Criando...
+                      </>
+                    ) : (
+                      'Criar Usuários Demo'
+                    )}
+                  </Button>
                   <div className="flex gap-2">
                     <Button 
                       type="button" 
