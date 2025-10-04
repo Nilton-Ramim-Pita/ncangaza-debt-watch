@@ -18,17 +18,20 @@ interface Profile {
   id: string;
   user_id: string;
   full_name: string;
-  role: string;
   active: boolean;
   created_at: string;
   updated_at: string;
 }
 
+interface UserWithRole extends Profile {
+  role?: string;
+}
+
 const UserManagement = () => {
-  const [users, setUsers] = useState<Profile[]>([]);
+  const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<Profile | null>(null);
+  const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
   const { isAdmin } = useAuth();
 
   // Form states
@@ -39,7 +42,7 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
@@ -49,7 +52,18 @@ const UserManagement = () => {
         return;
       }
 
-      setUsers(data || []);
+      // Fetch roles for all users
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      // Merge profiles with roles
+      const usersWithRoles = profiles?.map(profile => ({
+        ...profile,
+        role: roles?.find(r => r.user_id === profile.user_id)?.role || 'user'
+      })) || [];
+
+      setUsers(usersWithRoles);
     } catch (error) {
       toast.error('Erro ao carregar usuários');
     } finally {
@@ -75,25 +89,25 @@ const UserManagement = () => {
     e.preventDefault();
     
     try {
-      // In a real implementation, you would need to use Supabase Admin API
-      // For demo purposes, we'll show the UI but note this limitation
-      toast.info('Criação de usuários requer API Admin do Supabase');
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: { email, password, fullName, role }
+      });
       
-      // This would be the actual implementation:
-      // const { data, error } = await supabase.auth.admin.createUser({
-      //   email,
-      //   password,
-      //   user_metadata: { full_name: fullName }
-      // });
+      if (error) {
+        toast.error('Erro ao criar usuário: ' + error.message);
+        return;
+      }
       
+      toast.success('Usuário criado com sucesso!');
       setIsCreateDialogOpen(false);
       resetForm();
+      await fetchUsers();
     } catch (error) {
       toast.error('Erro ao criar usuário');
     }
   };
 
-  const handleUpdateUser = async (userId: string, updates: Partial<Profile>) => {
+  const handleUpdateUser = async (userId: string, updates: Partial<UserWithRole>) => {
     try {
       const { error } = await supabase
         .from('profiles')
@@ -112,7 +126,7 @@ const UserManagement = () => {
     }
   };
 
-  const handleToggleActive = async (user: Profile) => {
+  const handleToggleActive = async (user: UserWithRole) => {
     await handleUpdateUser(user.id, { active: !user.active });
   };
 
@@ -205,7 +219,6 @@ const UserManagement = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Administrador</SelectItem>
-                    <SelectItem value="manager">Gerente</SelectItem>
                     <SelectItem value="user">Usuário</SelectItem>
                   </SelectContent>
                 </Select>
@@ -248,7 +261,7 @@ const UserManagement = () => {
                     <TableCell className="font-medium">{user.full_name}</TableCell>
                     <TableCell>
                       <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                        {user.role === 'admin' ? 'Admin' : user.role === 'manager' ? 'Gerente' : 'Usuário'}
+                        {user.role === 'admin' ? 'Administrador' : 'Usuário'}
                       </Badge>
                     </TableCell>
                     <TableCell>

@@ -25,7 +25,7 @@ interface HeaderProps {
 
 export const Header = ({ onTabChange }: HeaderProps) => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
-  const { profile, signOut, isAdmin } = useAuth();
+  const { profile, signOut, isAdmin, userRole } = useAuth();
   const [notificationOpen, setNotificationOpen] = useState(false);
 
   const handleProfileClick = () => {
@@ -168,7 +168,7 @@ export const Header = ({ onTabChange }: HeaderProps) => {
               <DropdownMenuLabel>
                 <div>
                   <p className="font-medium">{profile?.full_name}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{userRole || 'user'}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

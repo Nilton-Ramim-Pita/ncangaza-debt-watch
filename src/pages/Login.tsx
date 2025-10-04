@@ -68,30 +68,20 @@ const Login = () => {
     }
   };
 
-  const createDemoUsers = async () => {
+  const createAdmin = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-demo-users');
+      const { data, error } = await supabase.functions.invoke('create-admin');
       
       if (error) {
-        toast.error('Erro ao criar usuários demo: ' + error.message);
+        toast.error('Erro ao criar admin: ' + error.message);
       } else {
-        toast.success('Usuários demo criados com sucesso!');
+        toast.success('Admin criado! Use: admin@ncangaza.co.mz / Admin@123');
       }
     } catch (error) {
-      toast.error('Erro inesperado ao criar usuários demo');
+      toast.error('Erro inesperado ao criar admin');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const loginAsDemo = (role: 'admin' | 'user') => {
-    if (role === 'admin') {
-      setEmail('admin@ncangaza.co.mz');
-      setPassword('admin123');
-    } else {
-      setEmail('user@ncangaza.co.mz');
-      setPassword('user123');
     }
   };
 
@@ -154,13 +144,13 @@ const Login = () => {
                 </Button>
                 
                 <div className="space-y-2 pt-4 border-t">
-                  <p className="text-xs text-muted-foreground text-center">Credenciais de demonstração:</p>
+                  <p className="text-xs text-muted-foreground text-center">Primeira vez?</p>
                   <Button 
                     type="button" 
                     variant="secondary" 
                     size="sm" 
-                    className="w-full mb-2"
-                    onClick={createDemoUsers}
+                    className="w-full"
+                    onClick={createAdmin}
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -169,29 +159,9 @@ const Login = () => {
                         Criando...
                       </>
                     ) : (
-                      'Criar Usuários Demo'
+                      'Criar Administrador Inicial'
                     )}
                   </Button>
-                  <div className="flex gap-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => loginAsDemo('admin')}
-                    >
-                      Admin
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => loginAsDemo('user')}
-                    >
-                      Usuário
-                    </Button>
-                  </div>
                 </div>
               </form>
             </TabsContent>

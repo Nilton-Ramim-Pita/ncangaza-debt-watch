@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { User, Settings, Shield } from 'lucide-react';
 
 export const Profile = () => {
-  const { profile, user } = useAuth();
+  const { profile, user, userRole } = useAuth();
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -83,8 +83,8 @@ export const Profile = () => {
             </Avatar>
             <CardTitle>{profile?.full_name}</CardTitle>
             <CardDescription>{user?.email}</CardDescription>
-            <Badge variant={getRoleBadgeVariant(profile?.role || 'user')} className="w-fit mx-auto">
-              {getRoleDisplay(profile?.role || 'user')}
+            <Badge variant={getRoleBadgeVariant(userRole || 'user')} className="w-fit mx-auto">
+              {getRoleDisplay(userRole || 'user')}
             </Badge>
           </CardHeader>
           <CardContent>
@@ -140,7 +140,7 @@ export const Profile = () => {
                   <Label htmlFor="role">Função</Label>
                   <Input
                     id="role"
-                    value={getRoleDisplay(profile?.role || 'user')}
+                    value={getRoleDisplay(userRole || 'user')}
                     disabled
                     className="bg-muted"
                   />
