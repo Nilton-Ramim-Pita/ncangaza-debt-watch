@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Lock } from 'lucide-react';
 
@@ -26,6 +27,19 @@ const Login = () => {
   if (user) {
     return <Navigate to="/" replace />;
   }
+
+  const handleCreateAdmin = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-admin');
+      if (error) throw error;
+      toast.success('Administrador criado com sucesso! Use as credenciais para fazer login.');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao criar administrador');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,9 +116,21 @@ const Login = () => {
               )}
             </Button>
 
-            <p className="text-xs text-center text-muted-foreground pt-4">
-              Acesso restrito. Apenas usuários autorizados.
-            </p>
+            <div className="pt-4 space-y-2">
+              <p className="text-xs text-center text-muted-foreground">
+                Acesso restrito. Apenas usuários autorizados.
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleCreateAdmin}
+                disabled={isLoading}
+                className="w-full text-xs"
+              >
+                Criar Administrador Inicial
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

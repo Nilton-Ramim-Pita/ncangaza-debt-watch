@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
     // Check if admin already exists
     const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
-    const adminExists = existingUser?.users?.some(u => u.email === 'admin@ncangaza.co.mz');
+    const adminExists = existingUser?.users?.some(u => u.email === 'adminnms@sistema.com');
 
     if (adminExists) {
       console.log('Admin user already exists');
@@ -37,11 +37,11 @@ Deno.serve(async (req) => {
 
     // Create admin user
     const { data: adminUser, error: adminError } = await supabaseAdmin.auth.admin.createUser({
-      email: 'admin@ncangaza.co.mz',
-      password: 'Admin@123',
+      email: 'adminnms@sistema.com',
+      password: 'nmsadmin123',
       email_confirm: true,
       user_metadata: {
-        full_name: 'Administrador'
+        full_name: 'admin'
       }
     });
 
@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       .from('profiles')
       .insert({
         user_id: adminUser.user.id,
-        full_name: 'Administrador',
+        full_name: 'admin',
         active: true
       });
 
@@ -86,8 +86,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         message: 'Admin user created successfully',
-        email: 'admin@ncangaza.co.mz',
-        password: 'Admin@123'
+        email: 'adminnms@sistema.com',
+        password: 'nmsadmin123'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
