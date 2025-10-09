@@ -5,29 +5,28 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState, useMemo, useEffect } from "react";
 import { useDebts } from "@/hooks/useDebts";
 import { useClients } from "@/hooks/useClients";
-import { useToast } from "@/hooks/use-toast";
+import { NotificationTemplates } from './NotificationTemplates';
+import { toast } from 'sonner';
 import { formatCurrency } from "@/utils/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Bell, 
   Mail, 
-  MessageSquare, 
-  Phone,
   Calendar,
   CheckCircle,
   Clock,
   AlertTriangle,
   Send,
-  Settings
+  Settings,
+  Loader2
 } from "lucide-react";
 
 interface NotificationSettings {
   emailEnabled: boolean;
-  smsEnabled: boolean;
-  whatsappEnabled: boolean;
   reminderDays: number;
   autoSend: boolean;
 }
@@ -42,13 +41,19 @@ interface Notification {
   data_envio: string;
   erro: string;
   created_at: string;
+  dividas?: {
+    valor: number;
+    descricao: string;
+    clientes?: {
+      nome: string;
+      email: string;
+    };
+  };
 }
 
 export const NotificationsReal = () => {
   const [settings, setSettings] = useState<NotificationSettings>({
     emailEnabled: true,
-    smsEnabled: false,
-    whatsappEnabled: false,
     reminderDays: 3,
     autoSend: false
   });
@@ -60,9 +65,7 @@ export const NotificationsReal = () => {
   
   const { debts } = useDebts();
   const { clients } = useClients();
-  const { toast } = useToast();
 
-  // Load notifications from database
   useEffect(() => {
     loadNotifications();
   }, []);
@@ -72,7 +75,17 @@ export const NotificationsReal = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('notificacoes')
-        .select('*')
+        .select(`
+          *,
+          dividas (
+            valor,
+            descricao,
+            clientes (
+              nome,
+              email
+            )
+          )
+        `)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -80,17 +93,12 @@ export const NotificationsReal = () => {
       setNotifications(data || []);
     } catch (error) {
       console.error('Erro ao carregar notificações:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar notificações",
-        variant: "destructive",
-      });
+      toast.error('Erro ao carregar notificações');
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate notifications summary
   const notificationsSummary = useMemo(() => {
     const today = new Date().toDateString();
     const todayNotifications = notifications.filter(n => 
@@ -101,129 +109,127 @@ export const NotificationsReal = () => {
       ? (notifications.filter(n => n.status === 'enviada').length / notifications.length * 100).toFixed(1)
       : '0';
 
-    const nextSend = debts
-      .filter(debt => debt.status === 'pendente')
-      .sort((a, b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime())
-      .slice(0, 5);
-
     return {
       todayCount: todayNotifications.length,
       successRate,
-      nextSend
     };
-  }, [notifications, debts]);
+  }, [notifications]);
 
-  // Get overdue debts that need notification
   const overdueDebts = useMemo(() => {
     const today = new Date();
     const reminderDate = new Date();
     reminderDate.setDate(today.getDate() + settings.reminderDays);
 
     return debts.filter(debt => {
-      if (debt.status !== 'pendente') return false;
+      if (debt.status !== 'vencida' && debt.status !== 'pendente') return false;
       const dueDate = new Date(debt.data_vencimento);
       return dueDate <= reminderDate;
     });
   }, [debts, settings.reminderDays]);
 
-  const sendNotification = async (debtId: string, type: 'email' | 'sms' | 'whatsapp', message?: string) => {
-    try {
-      setSending(true);
-      
-      const defaultMessage = message || generateDefaultMessage(debtId);
-      
-      const { error } = await supabase
-        .from('notificacoes')
-        .insert({
-          divida_id: debtId,
-          tipo: type,
-          status: 'pendente',
-          mensagem: defaultMessage,
-          data_agendamento: new Date().toISOString(),
-        });
-
-      if (error) throw error;
-
-      // Simulate sending (in real implementation, this would call an API)
-      setTimeout(async () => {
-        const { error: updateError } = await supabase
-          .from('notificacoes')
-          .update({ 
-            status: 'enviada',
-            data_envio: new Date().toISOString()
-          })
-          .eq('divida_id', debtId)
-          .eq('tipo', type)
-          .eq('status', 'pendente');
-
-        if (!updateError) {
-          toast({
-            title: "Notificação enviada",
-            description: `Notificação ${type} enviada com sucesso!`,
-          });
-          loadNotifications();
-        }
-      }, 2000);
-
-    } catch (error) {
-      console.error('Erro ao enviar notificação:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao enviar notificação",
-        variant: "destructive",
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const generateDefaultMessage = (debtId: string) => {
-    const debt = debts.find(d => d.id === debtId);
-    const client = debt ? clients.find(c => c.id === debt.cliente_id) : null;
-    
-    if (!debt || !client) return "Lembrete de pagamento";
-
+  const generateDefaultMessage = (debt: any, client: any) => {
     const dueDate = new Date(debt.data_vencimento).toLocaleDateString('pt-MZ');
     const today = new Date();
     const due = new Date(debt.data_vencimento);
     const isOverdue = due < today;
     
     if (isOverdue) {
-      return `Caro(a) ${client.nome}, a sua dívida de ${formatCurrency(Number(debt.valor))} venceu em ${dueDate}. Por favor, entre em contacto connosco para regularizar a situação. Ncangaza Multiservices`;
+      return `Caro(a) ${client.nome}, a sua dívida de ${formatCurrency(Number(debt.valor))} venceu em ${dueDate}. Por favor, entre em contacto connosco para regularizar a situação.`;
     } else {
-      return `Caro(a) ${client.nome}, lembramos que a sua dívida de ${formatCurrency(Number(debt.valor))} vence em ${dueDate}. Agradecemos a atenção. Ncangaza Multiservices`;
+      return `Caro(a) ${client.nome}, lembramos que a sua dívida de ${formatCurrency(Number(debt.valor))} vence em ${dueDate}. Agradecemos a atenção.`;
+    }
+  };
+
+  const sendNotification = async (debt: any, type: 'email' | 'in_app') => {
+    try {
+      const client = clients.find(c => c.id === debt.cliente_id);
+      if (!client) return;
+
+      const message = customMessage || generateDefaultMessage(debt, client);
+
+      if (type === 'email' && client.email) {
+        const { error } = await supabase.functions.invoke('send-email', {
+          body: {
+            to: client.email,
+            subject: 'Aviso de Dívida Vencida',
+            message: message,
+          },
+        });
+
+        if (error) throw error;
+
+        await supabase.from('notificacoes').insert({
+          divida_id: debt.id,
+          tipo: 'email',
+          status: 'enviada',
+          mensagem: message,
+          data_envio: new Date().toISOString(),
+          data_agendamento: new Date().toISOString(),
+        });
+
+        toast.success('Email enviado com sucesso!');
+      } else if (type === 'in_app') {
+        await supabase.from('notificacoes').insert({
+          divida_id: debt.id,
+          tipo: 'in_app',
+          status: 'enviada',
+          mensagem: message,
+          data_envio: new Date().toISOString(),
+          data_agendamento: new Date().toISOString(),
+        });
+
+        toast.success('Notificação in-app criada!');
+      }
+
+      loadNotifications();
+    } catch (error: any) {
+      console.error('Erro ao enviar notificação:', error);
+      toast.error('Erro ao enviar notificação');
+      
+      await supabase.from('notificacoes').insert({
+        divida_id: debt.id,
+        tipo: type,
+        status: 'erro',
+        mensagem: customMessage || '',
+        erro: error.message,
+        data_agendamento: new Date().toISOString(),
+      });
     }
   };
 
   const sendBulkNotifications = async () => {
     if (overdueDebts.length === 0) {
-      toast({
-        title: "Informação",
-        description: "Não há dívidas pendentes para notificar",
-      });
+      toast.info('Não há dívidas vencidas para notificar');
       return;
     }
 
     setSending(true);
-    
-    for (const debt of overdueDebts) {
-      if (settings.emailEnabled) {
-        await sendNotification(debt.id, 'email', customMessage);
-      }
-      if (settings.smsEnabled) {
-        await sendNotification(debt.id, 'sms', customMessage);
-      }
-      if (settings.whatsappEnabled) {
-        await sendNotification(debt.id, 'whatsapp', customMessage);
-      }
-    }
+    let successCount = 0;
 
-    toast({
-      title: "Notificações enviadas",
-      description: `${overdueDebts.length} notificações foram programadas para envio`,
-    });
-    
-    setSending(false);
+    try {
+      for (const debt of overdueDebts) {
+        const client = clients.find(c => c.id === debt.cliente_id);
+        if (!client) continue;
+
+        if (settings.emailEnabled && client.email) {
+          await sendNotification(debt, 'email');
+          successCount++;
+        }
+
+        await sendNotification(debt, 'in_app');
+        successCount++;
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      toast.success(`${successCount} notificações enviadas com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao enviar notificações em massa:', error);
+      toast.error('Erro ao enviar notificações em massa');
+    } finally {
+      setSending(false);
+      loadNotifications();
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -242,174 +248,162 @@ export const NotificationsReal = () => {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'email':
-        return <Mail className="w-4 h-4" />;
-      case 'sms':
-        return <Phone className="w-4 h-4" />;
-      case 'whatsapp':
-        return <MessageSquare className="w-4 h-4" />;
+        return <Mail className="h-4 w-4 text-blue-500" />;
+      case 'in_app':
+        return <Bell className="h-4 w-4 text-green-500" />;
       default:
-        return <Bell className="w-4 h-4" />;
+        return <Bell className="h-4 w-4" />;
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">Notificações</h2>
-        <p className="text-muted-foreground">
-          Sistema de notificações automáticas da Ncangaza Multiservices
-        </p>
-      </div>
+    <Tabs defaultValue="notifications" className="space-y-6">
+      <TabsList>
+        <TabsTrigger value="notifications">Notificações</TabsTrigger>
+        <TabsTrigger value="templates">Templates</TabsTrigger>
+      </TabsList>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <TabsContent value="notifications" className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">Notificações Automáticas</h2>
+            <p className="text-muted-foreground">
+              Configure e envie notificações para clientes com dívidas vencidas
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Notificações Hoje</CardTitle>
+              <Bell className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{notificationsSummary.todayCount}</div>
+              <p className="text-xs text-muted-foreground">enviadas hoje</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Taxa de Sucesso</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{notificationsSummary.successRate}%</div>
+              <p className="text-xs text-muted-foreground">de entrega</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Próximos Envios</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{overdueDebts.length}</div>
+              <p className="text-xs text-muted-foreground">dívidas pendentes</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Notificações Hoje</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="w-5 h-5 mr-2" />
+              Configurações de Notificação
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{notificationsSummary.todayCount}</div>
-            <p className="text-xs text-muted-foreground">enviadas hoje</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taxa de Sucesso</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{notificationsSummary.successRate}%</div>
-            <p className="text-xs text-muted-foreground">de entrega</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Próximos Envios</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{overdueDebts.length}</div>
-            <p className="text-xs text-muted-foreground">dívidas pendentes</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Notification Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Settings className="w-5 h-5 mr-2" />
-            Configurações de Notificação
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Email</Label>
-                  <p className="text-sm text-muted-foreground">Enviar notificações por email</p>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Email</Label>
+                    <p className="text-sm text-muted-foreground">Enviar notificações por email</p>
+                  </div>
+                  <Switch 
+                    checked={settings.emailEnabled}
+                    onCheckedChange={(checked) => setSettings({ ...settings, emailEnabled: checked })}
+                  />
                 </div>
-                <Switch 
-                  checked={settings.emailEnabled}
-                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, emailEnabled: checked }))}
-                />
+                
+                <div className="space-y-2">
+                  <Label htmlFor="in-app-enabled" className="flex items-center gap-2 cursor-pointer">
+                    <Bell className="h-4 w-4" />
+                    Notificações In-App
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Notificações visíveis dentro do sistema (sempre ativo)
+                  </p>
+                </div>
               </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">SMS</Label>
-                  <p className="text-sm text-muted-foreground">Enviar notificações por SMS</p>
+
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="reminderDays">Dias de Antecedência</Label>
+                  <Input
+                    id="reminderDays"
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={settings.reminderDays}
+                    onChange={(e) => setSettings({ ...settings, reminderDays: parseInt(e.target.value) || 3 })}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Notificar {settings.reminderDays} dias antes do vencimento
+                  </p>
                 </div>
-                <Switch 
-                  checked={settings.smsEnabled}
-                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, smsEnabled: checked }))}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">WhatsApp</Label>
-                  <p className="text-sm text-muted-foreground">Enviar notificações por WhatsApp</p>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="customMessage">Mensagem Personalizada</Label>
+                  <Textarea
+                    id="customMessage"
+                    value={customMessage}
+                    onChange={(e) => setCustomMessage(e.target.value)}
+                    placeholder="Deixe vazio para usar mensagem padrão..."
+                    rows={3}
+                  />
                 </div>
-                <Switch 
-                  checked={settings.whatsappEnabled}
-                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, whatsappEnabled: checked }))}
-                />
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="reminderDays">Dias de Antecedência</Label>
-                <Input
-                  id="reminderDays"
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={settings.reminderDays}
-                  onChange={(e) => setSettings(prev => ({ ...prev, reminderDays: parseInt(e.target.value) || 3 }))}
-                />
+            <div className="flex justify-between items-center mt-6 pt-6 border-t">
+              <div>
+                <p className="text-sm font-medium">Envio em Lote</p>
                 <p className="text-sm text-muted-foreground">
-                  Notificar {settings.reminderDays} dias antes do vencimento
+                  {overdueDebts.length} dívidas precisam de notificação
                 </p>
               </div>
+              <Button 
+                onClick={sendBulkNotifications}
+                disabled={sending || overdueDebts.length === 0}
+              >
+                {sending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                <Send className="w-4 h-4 mr-2" />
+                {sending ? "Enviando..." : "Enviar Todas"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="grid gap-2">
-                <Label htmlFor="customMessage">Mensagem Personalizada</Label>
-                <Textarea
-                  id="customMessage"
-                  value={customMessage}
-                  onChange={(e) => setCustomMessage(e.target.value)}
-                  placeholder="Deixe vazio para usar mensagem padrão..."
-                  rows={3}
-                />
+        <Card>
+          <CardHeader>
+            <CardTitle>Histórico de Notificações</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-8 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center mt-6 pt-6 border-t">
-            <div>
-              <p className="text-sm font-medium">Envio em Lote</p>
-              <p className="text-sm text-muted-foreground">
-                {overdueDebts.length} dívidas precisam de notificação
-              </p>
-            </div>
-            <Button 
-              onClick={sendBulkNotifications}
-              disabled={sending || overdueDebts.length === 0}
-            >
-              <Send className="w-4 h-4 mr-2" />
-              {sending ? "Enviando..." : "Enviar Todas"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Notifications History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Histórico de Notificações</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Carregando notificações...</p>
-            </div>
-          ) : notifications.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Nenhuma notificação encontrada</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {notifications.map((notification) => {
-                const debt = debts.find(d => d.id === notification.divida_id);
-                const client = debt ? clients.find(c => c.id === debt.cliente_id) : null;
-                
-                return (
+            ) : notifications.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhuma notificação encontrada</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {notifications.map((notification) => (
                   <div key={notification.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="text-muted-foreground">
@@ -417,13 +411,15 @@ export const NotificationsReal = () => {
                       </div>
                       <div>
                         <p className="font-medium">
-                          {client?.nome || 'Cliente não encontrado'}
+                          {notification.dividas?.clientes?.nome || 'Cliente desconhecido'}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {debt ? formatCurrency(Number(debt.valor)) : 'Dívida não encontrada'}
+                          {notification.mensagem?.substring(0, 60)}...
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(notification.created_at).toLocaleString('pt-MZ')}
+                          {notification.data_envio 
+                            ? new Date(notification.data_envio).toLocaleString('pt-MZ')
+                            : 'Pendente'}
                         </p>
                       </div>
                     </div>
@@ -434,12 +430,16 @@ export const NotificationsReal = () => {
                       </p>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="templates">
+        <NotificationTemplates />
+      </TabsContent>
+    </Tabs>
   );
 };

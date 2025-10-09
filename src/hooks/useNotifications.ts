@@ -42,37 +42,38 @@ export const useNotifications = () => {
 
   const loadNotifications = async () => {
     try {
-      // Simulate loading real notifications
-      // In a real app, this would query the notifications table
-      const mockNotifications: Notification[] = [
-        {
-          id: '1',
-          title: 'Nova dívida vencida',
-          message: 'Cliente João Silva tem uma dívida vencida de 5.000,00 MZN',
-          type: 'warning',
-          read: false,
-          created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString() // 30 minutes ago
-        },
-        {
-          id: '2', 
-          title: 'Pagamento recebido',
-          message: 'Cliente Maria Santos efectuou pagamento de 2.500,00 MZN',
-          type: 'success',
-          read: false,
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() // 2 hours ago
-        },
-        {
-          id: '3',
-          title: 'Relatório mensal pronto',
-          message: 'O relatório financeiro de Janeiro foi gerado com sucesso',
-          type: 'info',
-          read: true,
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() // 1 day ago
-        }
-      ];
+      const { data, error } = await supabase
+        .from('notificacoes')
+        .select(`
+          id,
+          mensagem,
+          status,
+          tipo,
+          created_at,
+          dividas (
+            valor,
+            clientes (
+              nome
+            )
+          )
+        `)
+        .eq('tipo', 'in_app')
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-      setNotifications(mockNotifications);
-      setUnreadCount(mockNotifications.filter(n => !n.read).length);
+      if (error) throw error;
+
+      const formattedNotifications: Notification[] = (data || []).map(n => ({
+        id: n.id,
+        title: n.status === 'enviada' ? 'Dívida Vencida' : 'Notificação',
+        message: n.mensagem || 'Sem mensagem',
+        type: n.status === 'erro' ? 'error' : n.status === 'enviada' ? 'warning' : 'info',
+        read: false,
+        created_at: n.created_at
+      }));
+
+      setNotifications(formattedNotifications);
+      setUnreadCount(formattedNotifications.filter(n => !n.read).length);
     } catch (error) {
       console.error('Erro ao carregar notificações:', error);
     } finally {
