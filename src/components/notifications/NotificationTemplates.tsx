@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Loader2, Plus, Pencil, Trash2, Mail, Bell } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Mail, Bell, Send } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 
@@ -27,6 +27,8 @@ export const NotificationTemplates = () => {
   const [saving, setSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<NotificationTemplate | null>(null);
+  const [testEmail, setTestEmail] = useState('');
+  const [testing, setTesting] = useState(false);
 
   const [formData, setFormData] = useState({
     type: 'email' as 'email' | 'in_app',
@@ -131,6 +133,37 @@ export const NotificationTemplates = () => {
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     resetForm();
+  };
+
+  const handleTestSend = async (template: NotificationTemplate) => {
+    if (!testEmail) {
+      toast.error('Por favor, insira um email para teste');
+      return;
+    }
+
+    setTesting(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: testEmail,
+          subject: template.title,
+          message: template.body
+            .replace(/{{cliente_nome}}/g, 'João Silva (Teste)')
+            .replace(/{{valor}}/g, '5,000.00')
+            .replace(/{{data_vencimento}}/g, new Date().toLocaleDateString('pt-MZ'))
+            .replace(/{{descricao}}/g, 'Teste de template'),
+        },
+      });
+
+      if (error) throw error;
+      toast.success('Email de teste enviado com sucesso!');
+      setTestEmail('');
+    } catch (error: any) {
+      console.error('Erro ao enviar email de teste:', error);
+      toast.error('Erro ao enviar email de teste');
+    } finally {
+      setTesting(false);
+    }
   };
 
   if (loading) {
@@ -285,6 +318,34 @@ export const NotificationTemplates = () => {
               <pre className="text-sm bg-muted p-3 rounded whitespace-pre-wrap">
                 {template.body}
               </pre>
+              
+              {template.type === 'email' && (
+                <div className="mt-4 pt-4 border-t">
+                  <Label htmlFor={`test-email-${template.id}`}>Testar envio</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      id={`test-email-${template.id}`}
+                      type="email"
+                      placeholder="email@exemplo.com"
+                      value={testEmail}
+                      onChange={(e) => setTestEmail(e.target.value)}
+                      disabled={testing}
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => handleTestSend(template)}
+                      disabled={testing || !testEmail}
+                    >
+                      {testing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      <span className="ml-2">Enviar Teste</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
