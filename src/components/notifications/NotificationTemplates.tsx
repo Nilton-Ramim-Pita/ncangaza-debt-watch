@@ -15,7 +15,8 @@ import { Badge } from '@/components/ui/badge';
 interface NotificationTemplate {
   id: string;
   type: 'email' | 'in_app';
-  title: string;
+  name: string;
+  subject: string;
   body: string;
   is_default: boolean;
   created_at: string;
@@ -32,7 +33,8 @@ export const NotificationTemplates = () => {
 
   const [formData, setFormData] = useState({
     type: 'email' as 'email' | 'in_app',
-    title: '',
+    name: '',
+    subject: '',
     body: '',
     is_default: false,
   });
@@ -113,7 +115,8 @@ export const NotificationTemplates = () => {
     setEditingTemplate(template);
     setFormData({
       type: template.type,
-      title: template.title,
+      name: template.name,
+      subject: template.subject,
       body: template.body,
       is_default: template.is_default,
     });
@@ -124,7 +127,8 @@ export const NotificationTemplates = () => {
     setEditingTemplate(null);
     setFormData({
       type: 'email',
-      title: '',
+      name: '',
+      subject: '',
       body: '',
       is_default: false,
     });
@@ -146,7 +150,7 @@ export const NotificationTemplates = () => {
       const { error } = await supabase.functions.invoke('send-email', {
         body: {
           to: testEmail,
-          subject: template.title,
+          subject: template.subject,
           message: template.body
             .replace(/{{cliente_nome}}/g, 'João Silva (Teste)')
             .replace(/{{valor}}/g, '5,000.00')
@@ -219,15 +223,28 @@ export const NotificationTemplates = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="title">Título</Label>
+                <Label htmlFor="name">Nome do Template</Label>
                 <Input
-                  id="title"
-                  value={formData.title}
+                  id="name"
+                  value={formData.name}
                   onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
+                    setFormData({ ...formData, name: e.target.value })
                   }
-                  placeholder="Título da notificação"
+                  placeholder="Ex: Aviso de Dívida Cadastrada"
                   required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subject">Assunto (para emails)</Label>
+                <Input
+                  id="subject"
+                  value={formData.subject}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subject: e.target.value })
+                  }
+                  placeholder="Ex: Nova dívida registrada com sucesso"
+                  required={formData.type === 'email'}
                 />
               </div>
 
@@ -287,13 +304,17 @@ export const NotificationTemplates = () => {
                     ) : (
                       <Bell className="h-4 w-4 text-green-500" />
                     )}
-                    <CardTitle className="text-lg">{template.title}</CardTitle>
+                    <CardTitle className="text-lg">{template.name}</CardTitle>
                     {template.is_default && (
                       <Badge variant="secondary">Padrão</Badge>
                     )}
                   </div>
                   <CardDescription>
-                    {template.type === 'email' ? 'Email' : 'Notificação In-App'}
+                    {template.type === 'email' ? (
+                      <>Email: {template.subject}</>
+                    ) : (
+                      'Notificação In-App'
+                    )}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">

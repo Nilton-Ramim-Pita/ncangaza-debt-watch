@@ -150,7 +150,8 @@ export type Database = {
           created_at: string
           id: string
           is_default: boolean | null
-          title: string
+          name: string
+          subject: string
           type: string
           updated_at: string
         }
@@ -159,7 +160,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_default?: boolean | null
-          title: string
+          name: string
+          subject: string
           type: string
           updated_at?: string
         }
@@ -168,7 +170,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_default?: boolean | null
-          title?: string
+          name?: string
+          subject?: string
           type?: string
           updated_at?: string
         }

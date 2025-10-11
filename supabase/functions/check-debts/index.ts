@@ -85,7 +85,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Send email if client has email
       if (clientEmail && emailTemplate) {
         try {
-          const emailSubject = replaceVars(emailTemplate.title);
+          const emailSubject = replaceVars(emailTemplate.subject);
           const emailBody = replaceVars(emailTemplate.body);
 
           const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
