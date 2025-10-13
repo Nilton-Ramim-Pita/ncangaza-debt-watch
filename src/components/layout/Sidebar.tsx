@@ -5,10 +5,12 @@ import {
   FileText, 
   Settings, 
   TrendingUp,
-  Calendar
+  Calendar,
+  UserCog
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   activeTab: string;
@@ -54,7 +56,19 @@ const sidebarItems = [
   }
 ];
 
+const adminItems = [
+  {
+    id: "users",
+    label: "Gerir Usuários",
+    icon: UserCog,
+    description: "Administração de usuários",
+    adminOnly: true
+  }
+];
+
 export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
+  const { isAdmin } = useAuth();
+  
   return (
     <div className="w-64 bg-card border-r h-screen sticky top-0 flex flex-col">
       <div className="p-6 border-b">
@@ -69,7 +83,7 @@ export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {sidebarItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -97,6 +111,43 @@ export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
             </Button>
           );
         })}
+
+        {isAdmin && (
+          <>
+            <div className="pt-4 pb-2 px-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Administração
+              </p>
+            </div>
+            {adminItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              
+              return (
+                <Button
+                  key={item.id}
+                  variant={isActive ? "default" : "ghost"}
+                  className={cn(
+                    "w-full justify-start h-12 text-left",
+                    isActive && "bg-primary text-primary-foreground shadow-md"
+                  )}
+                  onClick={() => onTabChange(item.id)}
+                >
+                  <Icon className="mr-3 h-5 w-5" />
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium">{item.label}</span>
+                    <span className={cn(
+                      "text-xs",
+                      isActive ? "text-primary-foreground/80" : "text-muted-foreground"
+                    )}>
+                      {item.description}
+                    </span>
+                  </div>
+                </Button>
+              );
+            })}
+          </>
+        )}
       </nav>
 
       <div className="p-4 border-t">
