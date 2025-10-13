@@ -111,14 +111,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('🔍 Auth state changed:', event, 'Session:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           console.log('🔍 Fetching profile for user:', session.user.id);
-          await fetchProfile(session.user.id);
+          setProfile(null);
+          // Use setTimeout to defer Supabase calls and prevent deadlock
+          setTimeout(() => {
+            fetchProfile(session.user.id);
+          }, 0);
         } else {
           setProfile(null);
         }
