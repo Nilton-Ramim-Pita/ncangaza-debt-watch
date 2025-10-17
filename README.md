@@ -18,8 +18,8 @@ O Sistema de Gestão de Dívidas é uma plataforma moderna e profissional desenv
 ### Paleta de Cores
 Inspirada nas cores da bandeira de Moçambique, adaptada para uso empresarial:
 
-- **Verde Principal** (`--primary`): Representa crescimento e prosperidade
-- **Dourado** (`--accent`): Destaque para elementos importantes
+- **Vermelho Principal** (`--primary`): Representa crescimento e prosperidade
+- **preto** (`--accent`): Destaque para elementos importantes
 - **Status Colors**: 
   - Verde para dívidas pagas
   - Amarelo para pendentes
@@ -246,7 +246,7 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 Para suporte técnico ou dúvidas:
 
 - **Email**: suporte@ncangaza.co.mz
-- **Telefone**: +258 23 XXX XXX
+- **Telefone**: +258 87 645 0559
 - **Endereço**: Tete, Moçambique
 
 ---
