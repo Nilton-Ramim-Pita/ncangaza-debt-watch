@@ -328,7 +328,7 @@ export const NotificationsReal = () => {
       return;
     }
 
-    const message = `🔔 *Teste de Notificação WhatsApp*\n\nOlá! Este é um teste do Sistema de Gestão de Dívidas da Ncangaza Multiservices.\n\n✅ Se você recebeu esta mensagem, significa que a integração Click to Chat está funcionando!\n\n📅 Data/Hora: ${new Date().toLocaleString('pt-MZ')}\n\n_Esta é uma mensagem de teste automática._`;
+    const message = `*Teste de Notificacao WhatsApp*\n\nOla! Este e um teste do Sistema de Gestao de Dividas da Ncangaza Multiservices.\n\nSe voce recebeu esta mensagem, significa que a integracao Click to Chat esta funcionando!\n\nData/Hora: ${new Date().toLocaleString('pt-MZ')}\n\nEsta e uma mensagem de teste automatica.`;
     
     sendWhatsApp(testPhone, message);
   };
