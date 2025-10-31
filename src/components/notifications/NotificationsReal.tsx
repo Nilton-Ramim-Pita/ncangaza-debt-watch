@@ -277,30 +277,44 @@ export const NotificationsReal = () => {
       return;
     }
 
-    // Remove caracteres não numéricos do telefone
+    // Normaliza telefone (apenas dígitos) e garante código do país (Mozambique: 258)
     const cleanPhone = phone.replace(/\D/g, '');
-    
-    // Verifica se tem formato internacional (com código do país)
     const phoneNumber = cleanPhone.startsWith('258') ? cleanPhone : `258${cleanPhone}`;
-    
+
     const encodedMessage = encodeURIComponent(message);
-    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-    
-    // Registrar no banco de dados
+
+    // Evita domínio bloqueado: usa app scheme no mobile e web.whatsapp.com no desktop
+    const isMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const primaryUrl = isMobile
+      ? `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`
+      : `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+
+    // Fallback universal oficial
+    const fallbackUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+
+    // Registrar no banco (somente cria registro; abertura acontece em seguida)
     if (debtId) {
-      supabase.from('notificacoes').insert({
-        divida_id: debtId,
-        tipo: 'whatsapp',
-        status: 'enviada',
-        mensagem: message,
-        data_envio: new Date().toISOString(),
-        data_agendamento: new Date().toISOString(),
-      }).then(() => {
-        loadNotifications();
-      });
+      supabase
+        .from('notificacoes')
+        .insert({
+          divida_id: debtId,
+          tipo: 'whatsapp',
+          status: 'enviada',
+          mensagem: message,
+          data_envio: new Date().toISOString(),
+          data_agendamento: new Date().toISOString(),
+        })
+        .then(() => {
+          loadNotifications();
+        });
     }
-    
-    window.open(url, '_blank');
+
+    // Tenta abrir a URL principal; se o navegador bloquear, ofereça o fallback
+    const win = window.open(primaryUrl, '_blank');
+    if (!win) {
+      window.open(fallbackUrl, '_blank');
+    }
+
     toast.success('Abrindo WhatsApp...');
   };
 
