@@ -7,6 +7,7 @@ import { useDebts } from "@/hooks/useDebts";
 import { useClients } from "@/hooks/useClients";
 import { formatCurrency } from "@/utils/currency";
 import { useToast } from "@/hooks/use-toast";
+import { generatePDF, downloadPDF, previewPDF } from "@/utils/pdfGenerator";
 import { 
   FileText, 
   Download, 
@@ -67,26 +68,29 @@ export const ReportsReal = () => {
 
     setGenerating(true);
     
-    // Simulate report generation
-    setTimeout(() => {
-      setGenerating(false);
-      toast({
-        title: "Relatório gerado",
-        description: `Relatório ${reportData.reportType} em formato ${reportData.format.toUpperCase()} foi gerado com sucesso!`,
-      });
+    try {
+      if (reportData.format === 'pdf') {
+        await generatePDFReport();
+      } else if (reportData.format === 'csv') {
+        generateCSVReport();
+      } else {
+        generateTextReport();
+      }
       
-      // Create mock download
-      const reportContent = generateReportContent();
-      const blob = new Blob([reportContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `relatorio-${reportData.reportType}-${Date.now()}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 2000);
+      toast({
+        title: "✅ Relatório gerado",
+        description: `Relatório ${getReportTypeName(reportData.reportType)} em formato ${reportData.format.toUpperCase()} foi gerado com sucesso!`,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar relatório:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao gerar relatório. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const generateReportContent = () => {
@@ -131,25 +135,220 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
     `;
   };
 
-  const previewReport = () => {
+  const getReportTypeName = (type: string) => {
+    const names: Record<string, string> = {
+      debts: 'Dívidas',
+      clients: 'Clientes',
+      payments: 'Pagamentos',
+      overdue: 'Dívidas Vencidas',
+      summary: 'Resumo Executivo',
+      notifications: 'Notificações'
+    };
+    return names[type] || type;
+  };
+
+  const getPeriodName = (period: string) => {
+    const names: Record<string, string> = {
+      week: 'Última Semana',
+      month: 'Último Mês',
+      quarter: 'Último Trimestre',
+      year: 'Último Ano',
+      all: 'Todo o Período'
+    };
+    return names[period] || period;
+  };
+
+  const generatePDFReport = async () => {
+    const { totalValue, count, debts: filteredDebts } = reportSummary;
+    
+    let headers: string[] = [];
+    let data: any[][] = [];
+    let summaryData = [
+      { label: 'Total de Registos', value: count.toString() },
+      { label: 'Valor Total', value: formatCurrency(totalValue) },
+      { label: 'Período', value: getPeriodName(reportData.period) },
+      { label: 'Status', value: reportData.status === 'all' ? 'Todos' : reportData.status }
+    ];
+
+    if (reportData.reportType === 'debts' || reportData.reportType === 'overdue') {
+      headers = ['ID', 'Cliente', 'Descrição', 'Valor', 'Vencimento', 'Status'];
+      data = filteredDebts.map(debt => {
+        const client = clients.find(c => c.id === debt.cliente_id);
+        return [
+          debt.id.slice(0, 8),
+          client?.nome || 'N/A',
+          debt.descricao,
+          formatCurrency(Number(debt.valor)),
+          new Date(debt.data_vencimento).toLocaleDateString('pt-PT'),
+          debt.status
+        ];
+      });
+    } else if (reportData.reportType === 'clients') {
+      headers = ['Nome', 'NUIT', 'Email', 'Telefone', 'Status'];
+      data = clients.map(client => [
+        client.nome,
+        client.nuit || 'N/A',
+        client.email || 'N/A',
+        client.telefone || 'N/A',
+        client.ativo ? 'Ativo' : 'Inativo'
+      ]);
+      summaryData = [
+        { label: 'Total de Clientes', value: clients.length.toString() },
+        { label: 'Clientes Ativos', value: clients.filter(c => c.ativo).length.toString() },
+        { label: 'Período', value: getPeriodName(reportData.period) }
+      ];
+    } else if (reportData.reportType === 'summary') {
+      headers = ['Métrica', 'Valor'];
+      data = [
+        ['Total de Clientes', stats.totalClients.toString()],
+        ['Total de Dívidas', stats.totalDebts.toString()],
+        ['Valor Total em Carteira', formatCurrency(stats.totalValue)],
+        ['Dívidas Pagas', `${stats.paidCount} (${formatCurrency(stats.paidValue)})`],
+        ['Dívidas Pendentes', `${stats.pendingCount} (${formatCurrency(stats.pendingValue)})`],
+        ['Dívidas Vencidas', `${stats.overdueCount} (${formatCurrency(stats.overdueValue)})`],
+      ];
+      summaryData = [
+        { label: 'Período de Análise', value: getPeriodName(reportData.period) },
+        { label: 'Total em Carteira', value: formatCurrency(stats.totalValue) }
+      ];
+    }
+
+    const doc = generatePDF(
+      {
+        title: `Relatório de ${getReportTypeName(reportData.reportType)}`,
+        subtitle: `Período: ${getPeriodName(reportData.period)}`,
+        orientation: headers.length > 4 ? 'landscape' : 'portrait',
+        showLogo: true,
+        filename: `relatorio_${reportData.reportType}`
+      },
+      headers,
+      data,
+      summaryData
+    );
+
+    downloadPDF(doc, `relatorio_${reportData.reportType}`);
+  };
+
+  const generateCSVReport = () => {
+    const { debts: filteredDebts } = reportSummary;
+    
+    let csvContent = '';
+    
+    if (reportData.reportType === 'debts' || reportData.reportType === 'overdue') {
+      csvContent = 'ID,Cliente,Descrição,Valor,Vencimento,Status\n';
+      filteredDebts.forEach(debt => {
+        const client = clients.find(c => c.id === debt.cliente_id);
+        csvContent += `${debt.id},${client?.nome || 'N/A'},"${debt.descricao}",${debt.valor},${debt.data_vencimento},${debt.status}\n`;
+      });
+    } else if (reportData.reportType === 'clients') {
+      csvContent = 'Nome,NUIT,Email,Telefone,Status\n';
+      clients.forEach(client => {
+        csvContent += `${client.nome},${client.nuit || 'N/A'},${client.email || 'N/A'},${client.telefone || 'N/A'},${client.ativo ? 'Ativo' : 'Inativo'}\n`;
+      });
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `relatorio_${reportData.reportType}_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const generateTextReport = () => {
     const content = generateReportContent();
-    const newWindow = window.open('', '_blank');
-    if (newWindow) {
-      newWindow.document.write(`
-        <html>
-          <head>
-            <title>Pré-visualização do Relatório</title>
-            <style>
-              body { font-family: monospace; padding: 20px; line-height: 1.6; }
-              pre { white-space: pre-wrap; }
-            </style>
-          </head>
-          <body>
-            <pre>${content}</pre>
-          </body>
-        </html>
-      `);
-      newWindow.document.close();
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `relatorio_${reportData.reportType}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const previewReport = () => {
+    if (reportData.format === 'pdf') {
+      const { totalValue, count, debts: filteredDebts } = reportSummary;
+      
+      let headers: string[] = [];
+      let data: any[][] = [];
+      let summaryData = [
+        { label: 'Total de Registos', value: count.toString() },
+        { label: 'Valor Total', value: formatCurrency(totalValue) }
+      ];
+
+      if (reportData.reportType === 'debts' || reportData.reportType === 'overdue') {
+        headers = ['ID', 'Cliente', 'Descrição', 'Valor', 'Vencimento', 'Status'];
+        data = filteredDebts.slice(0, 10).map(debt => {
+          const client = clients.find(c => c.id === debt.cliente_id);
+          return [
+            debt.id.slice(0, 8),
+            client?.nome || 'N/A',
+            debt.descricao,
+            formatCurrency(Number(debt.valor)),
+            new Date(debt.data_vencimento).toLocaleDateString('pt-PT'),
+            debt.status
+          ];
+        });
+      } else if (reportData.reportType === 'clients') {
+        headers = ['Nome', 'NUIT', 'Email', 'Telefone'];
+        data = clients.slice(0, 10).map(client => [
+          client.nome,
+          client.nuit || 'N/A',
+          client.email || 'N/A',
+          client.telefone || 'N/A'
+        ]);
+      }
+
+      const doc = generatePDF(
+        {
+          title: `Pré-visualização: ${getReportTypeName(reportData.reportType)}`,
+          subtitle: 'Mostrando primeiros 10 registos',
+          orientation: 'portrait',
+          showLogo: true
+        },
+        headers,
+        data,
+        summaryData
+      );
+
+      previewPDF(doc);
+    } else {
+      const content = generateReportContent();
+      const newWindow = window.open('', '_blank');
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head>
+              <title>Pré-visualização do Relatório</title>
+              <style>
+                body { 
+                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                  padding: 40px; 
+                  line-height: 1.6;
+                  background: #f5f5f5;
+                }
+                pre { 
+                  background: white;
+                  padding: 20px;
+                  border-radius: 8px;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                  white-space: pre-wrap;
+                }
+              </style>
+            </head>
+            <body>
+              <pre>${content}</pre>
+            </body>
+          </html>
+        `);
+        newWindow.document.close();
+      }
     }
   };
 
@@ -304,6 +503,7 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
                     <SelectItem value="payments">Relatório de Pagamentos</SelectItem>
                     <SelectItem value="overdue">Dívidas Vencidas</SelectItem>
                     <SelectItem value="summary">Resumo Executivo</SelectItem>
+                    <SelectItem value="notifications">Histórico de Notificações</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

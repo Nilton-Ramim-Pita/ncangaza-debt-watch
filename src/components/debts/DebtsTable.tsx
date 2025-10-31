@@ -22,13 +22,14 @@ import {
   Filter
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatCurrencySimple } from "@/utils/currency";
+import { formatCurrencySimple, formatCurrency } from "@/utils/currency";
+import { generatePDF, downloadPDF } from "@/utils/pdfGenerator";
+import { FileDown } from "lucide-react";
 import { useState } from "react";
 import { DebtForm, type DebtFormData } from "@/components/forms/DebtForm";
 import { useDebts } from "@/hooks/useDebts";
 import { useClients } from "@/hooks/useClients";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/utils/currency";
 
 interface Debt {
   id: string;
@@ -213,6 +214,49 @@ export const DebtsTable = () => {
     return diffDays;
   };
 
+  const handleExportPDF = () => {
+    const headers = ['ID', 'Cliente', 'NUIT', 'Descrição', 'Valor', 'Vencimento', 'Status'];
+    const data = filteredDebts.map(debt => {
+      const client = clients.find(c => c.id === debt.cliente_id);
+      return [
+        debt.id.slice(0, 8),
+        client?.nome || 'N/A',
+        client?.nuit || 'N/A',
+        debt.descricao,
+        formatCurrency(Number(debt.valor)),
+        new Date(debt.data_vencimento).toLocaleDateString('pt-PT'),
+        debt.status
+      ];
+    });
+
+    const totalValue = filteredDebts.reduce((sum, debt) => sum + Number(debt.valor), 0);
+    const summaryData = [
+      { label: 'Total de Dívidas', value: filteredDebts.length.toString() },
+      { label: 'Valor Total', value: formatCurrency(totalValue) },
+      { label: 'Status Filtrado', value: statusFilter === 'all' ? 'Todos' : statusFilter }
+    ];
+
+    const doc = generatePDF(
+      {
+        title: 'Relatório de Dívidas',
+        subtitle: `Filtro: ${statusFilter === 'all' ? 'Todas as dívidas' : statusFilter}`,
+        orientation: 'landscape',
+        showLogo: true,
+        filename: 'relatorio_dividas'
+      },
+      headers,
+      data,
+      summaryData
+    );
+
+    downloadPDF(doc, 'relatorio_dividas');
+    
+    toast({
+      title: "✅ PDF Gerado",
+      description: "Relatório de dívidas exportado com sucesso!",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -222,10 +266,16 @@ export const DebtsTable = () => {
             Controle completo das dívidas em aberto
           </p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowDebtForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Dívida
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportPDF}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Exportar PDF
+          </Button>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowDebtForm(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Dívida
+          </Button>
+        </div>
       </div>
 
       <Card>
