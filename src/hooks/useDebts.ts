@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { createInAppNotification } from '@/utils/notifications';
+import { formatCurrency } from '@/utils/currency';
 
 export interface Debt {
   id: string;
@@ -65,20 +67,35 @@ export const useDebts = () => {
         .insert([debtData])
         .select(`
           *,
-          cliente:clientes(nome, nuit)
+          cliente:clientes(nome, nuit, email, telefone)
         `)
         .single();
 
       if (error) throw error;
 
+      const clientName = data.cliente?.nome || 'Cliente';
+      const formattedValue = formatCurrency(data.valor);
+      const formattedDate = new Date(data.data_vencimento).toLocaleDateString('pt-PT');
+
       setDebts(prev => [{
         ...data,
         status: data.status as 'pendente' | 'paga' | 'vencida'
       }, ...prev]);
+      
+      // Criar notificação in-app
+      await createInAppNotification({
+        titulo: '💰 Nova Dívida Registada',
+        mensagem: `Dívida de ${formattedValue} para ${clientName} com vencimento em ${formattedDate}.`,
+        tipo: 'info',
+        divida_id: data.id,
+        categoria: 'dividas',
+      });
+      
       toast({
         title: "Sucesso",
         description: "Dívida criada com sucesso",
       });
+      
       return { success: true, data };
     } catch (error) {
       console.error('Erro ao criar dívida:', error);
@@ -170,16 +187,30 @@ export const useDebts = () => {
 
       if (error) throw error;
 
+      const clientName = data.cliente?.nome || 'Cliente';
+      const formattedValue = formatCurrency(data.valor);
+
       setDebts(prev => prev.map(debt => 
         debt.id === id ? {
           ...data,
           status: data.status as 'pendente' | 'paga' | 'vencida'
         } : debt
       ));
+      
+      // Criar notificação in-app
+      await createInAppNotification({
+        titulo: '✅ Dívida Paga',
+        mensagem: `O cliente ${clientName} pagou a dívida de ${formattedValue}.`,
+        tipo: 'success',
+        divida_id: data.id,
+        categoria: 'pagamentos',
+      });
+      
       toast({
         title: "Sucesso",
         description: "Dívida marcada como paga",
       });
+      
       return { success: true, data };
     } catch (error) {
       console.error('Erro ao marcar dívida como paga:', error);

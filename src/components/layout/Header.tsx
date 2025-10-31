@@ -80,24 +80,27 @@ export const Header = ({ onTabChange }: HeaderProps) => {
           <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="relative">
-                <Bell className="h-5 w-5" />
+                <Bell className={`h-5 w-5 ${unreadCount > 0 ? 'animate-pulse text-primary' : ''}`} />
                 {unreadCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-destructive">
-                    {unreadCount}
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-destructive animate-bounce">
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </Badge>
                 )}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-0" align="end">
-              <div className="flex items-center justify-between p-4 border-b">
-                <h3 className="font-semibold">Notificações</h3>
+              <div className="flex items-center justify-between p-4 border-b bg-muted/50">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Bell className="h-4 w-4" />
+                  Notificações
+                </h3>
                 <div className="flex items-center space-x-2">
                   {unreadCount > 0 && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={markAllAsRead}
-                      className="text-xs"
+                      className="text-xs hover:bg-primary hover:text-primary-foreground"
                     >
                       <Check className="w-3 h-3 mr-1" />
                       Marcar todas
@@ -108,7 +111,9 @@ export const Header = ({ onTabChange }: HeaderProps) => {
               <ScrollArea className="h-80">
                 {notifications.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
-                    Nenhuma notificação
+                    <Bell className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                    <p className="text-sm">Nenhuma notificação</p>
+                    <p className="text-xs mt-1">Você está em dia!</p>
                   </div>
                 ) : (
                   <div className="p-2">

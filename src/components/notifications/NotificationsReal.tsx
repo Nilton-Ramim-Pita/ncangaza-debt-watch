@@ -10,9 +10,11 @@ import { useState, useMemo, useEffect } from "react";
 import { useDebts } from "@/hooks/useDebts";
 import { useClients } from "@/hooks/useClients";
 import { NotificationTemplates } from './NotificationTemplates';
+import { NotificationCenter } from './NotificationCenter';
 import { toast } from 'sonner';
 import { formatCurrency } from "@/utils/currency";
 import { supabase } from "@/integrations/supabase/client";
+import { openWhatsApp, generateWhatsAppLink } from '@/utils/notifications';
 import { 
   Bell, 
   Mail, 
@@ -23,7 +25,8 @@ import {
   Send,
   Settings,
   Loader2,
-  MessageCircle
+  MessageCircle,
+  Info
 } from "lucide-react";
 
 interface NotificationSettings {
@@ -277,45 +280,28 @@ export const NotificationsReal = () => {
       return;
     }
 
-    // Normaliza telefone (apenas dígitos) e garante código do país (Mozambique: 258)
-    const cleanPhone = phone.replace(/\D/g, '');
-    const phoneNumber = cleanPhone.startsWith('258') ? cleanPhone : `258${cleanPhone}`;
-
-    const encodedMessage = encodeURIComponent(message);
-
-    // Evita domínio bloqueado: usa app scheme no mobile e web.whatsapp.com no desktop
-    const isMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const primaryUrl = isMobile
-      ? `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`
-      : `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-
-    // Fallback universal oficial
-    const fallbackUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-
-    // Registrar no banco (somente cria registro; abertura acontece em seguida)
+    // Registrar no banco antes de abrir WhatsApp
     if (debtId) {
-      supabase
-        .from('notificacoes')
-        .insert({
-          divida_id: debtId,
-          tipo: 'whatsapp',
-          status: 'enviada',
-          mensagem: message,
-          data_envio: new Date().toISOString(),
-          data_agendamento: new Date().toISOString(),
-        })
-        .then(() => {
+      (async () => {
+        try {
+          await supabase.from('notificacoes').insert({
+            divida_id: debtId,
+            tipo: 'whatsapp',
+            status: 'enviada',
+            mensagem: message,
+            data_envio: new Date().toISOString(),
+            data_agendamento: new Date().toISOString(),
+          });
           loadNotifications();
-        });
+        } catch (error) {
+          console.error('Erro ao registrar notificação WhatsApp:', error);
+        }
+      })();
     }
 
-    // Tenta abrir a URL principal; se o navegador bloquear, ofereça o fallback
-    const win = window.open(primaryUrl, '_blank');
-    if (!win) {
-      window.open(fallbackUrl, '_blank');
-    }
-
-    toast.success('Abrindo WhatsApp...');
+    // Abrir WhatsApp com mensagem
+    openWhatsApp(phone, message);
+    toast.success('✅ WhatsApp aberto! Envie a mensagem para o cliente.');
   };
 
   const sendWhatsAppNotification = async (debt: any) => {
@@ -383,10 +369,24 @@ export const NotificationsReal = () => {
 
   return (
     <Tabs defaultValue="notifications" className="space-y-6">
-      <TabsList>
-        <TabsTrigger value="notifications">Notificações</TabsTrigger>
-        <TabsTrigger value="templates">Templates</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="notifications">
+          <Bell className="w-4 h-4 mr-2" />
+          Notificações
+        </TabsTrigger>
+        <TabsTrigger value="center">
+          <Info className="w-4 h-4 mr-2" />
+          Central
+        </TabsTrigger>
+        <TabsTrigger value="templates">
+          <Settings className="w-4 h-4 mr-2" />
+          Templates
+        </TabsTrigger>
       </TabsList>
+
+      <TabsContent value="center" className="space-y-6">
+        <NotificationCenter />
+      </TabsContent>
 
       <TabsContent value="notifications" className="space-y-6">
         <div className="flex justify-between items-center">
@@ -647,44 +647,69 @@ export const NotificationsReal = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Histórico de Notificações</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              Histórico de Notificações
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Últimas 50 notificações enviadas pelo sistema
+            </p>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <span className="ml-2">Carregando histórico...</span>
               </div>
             ) : notifications.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">Nenhuma notificação encontrada</p>
+                <Bell className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                <p className="text-muted-foreground">Nenhuma notificação enviada ainda</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  As notificações aparecerão aqui após serem enviadas
+                </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {notifications.map((notification) => (
-                  <div key={notification.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center space-x-4 flex-1">
-                      <div className="text-muted-foreground">
-                        {getTypeIcon(notification.tipo)}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">
-                          {notification.dividas?.clientes?.nome || 'Cliente desconhecido'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {notification.mensagem?.substring(0, 60)}...
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {notification.data_envio 
-                            ? new Date(notification.data_envio).toLocaleString('pt-MZ')
-                            : 'Pendente'}
-                        </p>
-                      </div>
+                  <div
+                    key={notification.id}
+                    className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:shadow-md transition-shadow"
+                  >
+                    <div className="mt-1">
+                      {getTypeIcon(notification.tipo)}
                     </div>
-                    <div className="text-right">
-                      {getStatusBadge(notification.status)}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {notification.tipo.toUpperCase()}
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium text-sm">
+                            {notification.dividas?.clientes?.nome || 'Cliente'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {notification.dividas?.descricao || 'Sem descrição'}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          {getStatusBadge(notification.status)}
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(notification.created_at).toLocaleString('pt-PT', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {notification.mensagem}
                       </p>
+                      {notification.erro && (
+                        <div className="mt-2 p-2 bg-destructive/10 rounded text-xs text-destructive">
+                          <strong>Erro:</strong> {notification.erro}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -692,9 +717,79 @@ export const NotificationsReal = () => {
             )}
           </CardContent>
         </Card>
+
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center text-blue-900">
+              <MessageCircle className="w-5 h-5 mr-2 text-green-600" />
+              Testar Notificações
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Envie notificações de teste para verificar se tudo está funcionando
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Teste de Email */}
+              <div className="space-y-3">
+                <Label htmlFor="testEmail" className="text-base font-semibold flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-blue-600" />
+                  Teste de Email
+                </Label>
+                <Input
+                  id="testEmail"
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                />
+                <Button
+                  onClick={sendTestEmail}
+                  disabled={testingSend || !testEmail}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {testingSend && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  <Mail className="w-4 h-4 mr-2" />
+                  {testingSend ? 'Enviando...' : 'Enviar Email de Teste'}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Certifique-se de que o domínio está verificado no Resend
+                </p>
+              </div>
+
+              {/* Teste de WhatsApp */}
+              <div className="space-y-3">
+                <Label htmlFor="testPhone" className="text-base font-semibold flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-green-600" />
+                  Teste de WhatsApp
+                </Label>
+                <Input
+                  id="testPhone"
+                  type="tel"
+                  placeholder="+258 84 123 4567"
+                  value={testPhone}
+                  onChange={(e) => setTestPhone(e.target.value)}
+                />
+                <Button
+                  onClick={sendTestWhatsApp}
+                  disabled={!testPhone}
+                  variant="outline"
+                  className="w-full text-green-600 border-green-300 hover:bg-green-50"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Abrir WhatsApp Teste
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Abrirá o WhatsApp com uma mensagem de teste pré-preenchida
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </TabsContent>
 
-      <TabsContent value="templates">
+      <TabsContent value="templates" className="space-y-6">
         <NotificationTemplates />
       </TabsContent>
     </Tabs>

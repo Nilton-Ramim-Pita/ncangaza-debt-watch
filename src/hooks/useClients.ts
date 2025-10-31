@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { createInAppNotification, formatWelcomeMessage } from '@/utils/notifications';
 
 export interface Client {
   id: string;
@@ -61,10 +62,20 @@ export const useClients = () => {
       if (error) throw error;
 
       setClients(prev => [...prev, data]);
+      
+      // Criar notificação in-app
+      await createInAppNotification({
+        titulo: '🆕 Novo Cliente Adicionado',
+        mensagem: `O cliente ${data.nome} foi adicionado com sucesso ao sistema.`,
+        tipo: 'success',
+        categoria: 'clientes',
+      });
+      
       toast({
         title: "✅ Sucesso",
         description: `Cliente ${data.nome} foi criado com sucesso!`,
       });
+      
       return { success: true, data };
     } catch (error) {
       console.error('Erro ao criar cliente:', error);
