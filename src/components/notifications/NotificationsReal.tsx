@@ -22,7 +22,8 @@ import {
   AlertTriangle,
   Send,
   Settings,
-  Loader2
+  Loader2,
+  MessageCircle
 } from "lucide-react";
 
 interface NotificationSettings {
@@ -64,6 +65,10 @@ export const NotificationsReal = () => {
   const [customMessage, setCustomMessage] = useState("");
   const [testEmail, setTestEmail] = useState("");
   const [testingSend, setTestingSend] = useState(false);
+  const [testPhone, setTestPhone] = useState("");
+  const [whatsappSettings, setWhatsappSettings] = useState({
+    enabled: true,
+  });
   
   const { debts } = useDebts();
   const { clients } = useClients();
@@ -218,6 +223,12 @@ export const NotificationsReal = () => {
           successCount++;
         }
 
+        if (whatsappSettings.enabled && client.telefone) {
+          const message = customMessage || generateDefaultMessage(debt, client);
+          sendWhatsApp(client.telefone, message, debt.id);
+          successCount++;
+        }
+
         await sendNotification(debt, 'in_app');
         successCount++;
 
@@ -253,9 +264,73 @@ export const NotificationsReal = () => {
         return <Mail className="h-4 w-4 text-blue-500" />;
       case 'in_app':
         return <Bell className="h-4 w-4 text-green-500" />;
+      case 'whatsapp':
+        return <MessageCircle className="h-4 w-4 text-green-600" />;
       default:
         return <Bell className="h-4 w-4" />;
     }
+  };
+
+  const sendWhatsApp = (phone: string, message: string, debtId?: string) => {
+    if (!phone) {
+      toast.error('Cliente não possui número de telefone cadastrado');
+      return;
+    }
+
+    // Remove caracteres não numéricos do telefone
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    // Verifica se tem formato internacional (com código do país)
+    const phoneNumber = cleanPhone.startsWith('258') ? cleanPhone : `258${cleanPhone}`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    
+    // Registrar no banco de dados
+    if (debtId) {
+      supabase.from('notificacoes').insert({
+        divida_id: debtId,
+        tipo: 'whatsapp',
+        status: 'enviada',
+        mensagem: message,
+        data_envio: new Date().toISOString(),
+        data_agendamento: new Date().toISOString(),
+      }).then(() => {
+        loadNotifications();
+      });
+    }
+    
+    window.open(url, '_blank');
+    toast.success('Abrindo WhatsApp...');
+  };
+
+  const sendWhatsAppNotification = async (debt: any) => {
+    try {
+      const client = clients.find(c => c.id === debt.cliente_id);
+      if (!client) return;
+
+      if (!client.telefone) {
+        toast.error(`Cliente ${client.nome} não possui telefone cadastrado`);
+        return;
+      }
+
+      const message = customMessage || generateDefaultMessage(debt, client);
+      sendWhatsApp(client.telefone, message, debt.id);
+    } catch (error: any) {
+      console.error('Erro ao enviar WhatsApp:', error);
+      toast.error('Erro ao abrir WhatsApp');
+    }
+  };
+
+  const sendTestWhatsApp = () => {
+    if (!testPhone) {
+      toast.error('Por favor, insira um número para teste');
+      return;
+    }
+
+    const message = `🔔 *Teste de Notificação WhatsApp*\n\nOlá! Este é um teste do Sistema de Gestão de Dívidas da Ncangaza Multiservices.\n\n✅ Se você recebeu esta mensagem, significa que a integração Click to Chat está funcionando!\n\n📅 Data/Hora: ${new Date().toLocaleString('pt-MZ')}\n\n_Esta é uma mensagem de teste automática._`;
+    
+    sendWhatsApp(testPhone, message);
   };
 
   const sendTestEmail = async () => {
@@ -344,51 +419,90 @@ export const NotificationsReal = () => {
           </Card>
         </div>
 
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardHeader>
-            <CardTitle className="flex items-center text-blue-900">
-              <Mail className="w-5 h-5 mr-2" />
-              Teste de Email (Resend)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="testEmail">Email para Teste</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    id="testEmail"
-                    type="email"
-                    placeholder="seu-email@exemplo.com"
-                    value={testEmail}
-                    onChange={(e) => setTestEmail(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={sendTestEmail}
-                    disabled={testingSend || !testEmail}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {testingSend ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Enviar Teste
-                      </>
-                    )}
-                  </Button>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="border-blue-200 bg-blue-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center text-blue-900">
+                <Mail className="w-5 h-5 mr-2" />
+                Teste de Email (Resend)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="testEmail">Email para Teste</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      id="testEmail"
+                      type="email"
+                      placeholder="seu-email@exemplo.com"
+                      value={testEmail}
+                      onChange={(e) => setTestEmail(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={sendTestEmail}
+                      disabled={testingSend || !testEmail}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {testingSend ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Enviar Teste
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    ⚠️ Certifique-se de validar seu domínio no <a href="https://resend.com/domains" target="_blank" className="underline text-blue-600">Resend</a> antes de enviar emails de produção.
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  ⚠️ Certifique-se de validar seu domínio no <a href="https://resend.com/domains" target="_blank" className="underline text-blue-600">Resend</a> antes de enviar emails de produção.
-                </p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card className="border-green-200 bg-green-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center text-green-900">
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Teste de WhatsApp (Click to Chat)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="testPhone">Telefone para Teste</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      id="testPhone"
+                      type="tel"
+                      placeholder="87XXXXXXX ou 25887XXXXXXX"
+                      value={testPhone}
+                      onChange={(e) => setTestPhone(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={sendTestWhatsApp}
+                      disabled={!testPhone}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Abrir WhatsApp
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    ✅ Totalmente gratuito - Usa WhatsApp Click to Chat oficial
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card>
           <CardHeader>
@@ -408,6 +522,20 @@ export const NotificationsReal = () => {
                   <Switch 
                     checked={settings.emailEnabled}
                     onCheckedChange={(checked) => setSettings({ ...settings, emailEnabled: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4 text-green-600" />
+                      WhatsApp
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Click to Chat (gratuito)</p>
+                  </div>
+                  <Switch 
+                    checked={whatsappSettings.enabled}
+                    onCheckedChange={(checked) => setWhatsappSettings({ ...whatsappSettings, enabled: checked })}
                   />
                 </div>
                 
@@ -472,6 +600,69 @@ export const NotificationsReal = () => {
 
         <Card>
           <CardHeader>
+            <CardTitle>Envio Individual de Notificações</CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Enviar notificações para dívidas específicas
+            </p>
+          </CardHeader>
+          <CardContent>
+            {overdueDebts.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhuma dívida vencida no momento</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {overdueDebts.slice(0, 5).map((debt) => {
+                  const client = clients.find(c => c.id === debt.cliente_id);
+                  if (!client) return null;
+                  
+                  return (
+                    <div key={debt.id} className="flex items-center justify-between p-3 border rounded-lg bg-card">
+                      <div className="flex-1">
+                        <p className="font-medium">{client.nome}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatCurrency(Number(debt.valor))} - Vence em {new Date(debt.data_vencimento).toLocaleDateString('pt-MZ')}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {client.email && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => sendNotification(debt, 'email')}
+                            className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                          >
+                            <Mail className="w-4 h-4 mr-1" />
+                            Email
+                          </Button>
+                        )}
+                        {client.telefone && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => sendWhatsAppNotification(debt)}
+                            className="text-green-600 border-green-300 hover:bg-green-50"
+                          >
+                            <MessageCircle className="w-4 h-4 mr-1" />
+                            WhatsApp
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {overdueDebts.length > 5 && (
+                  <p className="text-sm text-muted-foreground text-center pt-2">
+                    E mais {overdueDebts.length - 5} dívidas...
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Histórico de Notificações</CardTitle>
           </CardHeader>
           <CardContent>
@@ -486,12 +677,12 @@ export const NotificationsReal = () => {
             ) : (
               <div className="space-y-4">
                 {notifications.map((notification) => (
-                  <div key={notification.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
+                  <div key={notification.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                    <div className="flex items-center space-x-4 flex-1">
                       <div className="text-muted-foreground">
                         {getTypeIcon(notification.tipo)}
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">
                           {notification.dividas?.clientes?.nome || 'Cliente desconhecido'}
                         </p>
