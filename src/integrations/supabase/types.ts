@@ -105,7 +105,7 @@ export type Database = {
           created_at: string
           data_agendamento: string
           data_envio: string | null
-          divida_id: string
+          divida_id: string | null
           erro: string | null
           id: string
           mensagem: string | null
@@ -116,7 +116,7 @@ export type Database = {
           created_at?: string
           data_agendamento: string
           data_envio?: string | null
-          divida_id: string
+          divida_id?: string | null
           erro?: string | null
           id?: string
           mensagem?: string | null
@@ -127,7 +127,7 @@ export type Database = {
           created_at?: string
           data_agendamento?: string
           data_envio?: string | null
-          divida_id?: string
+          divida_id?: string | null
           erro?: string | null
           id?: string
           mensagem?: string | null

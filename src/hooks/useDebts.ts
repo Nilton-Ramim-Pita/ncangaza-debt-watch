@@ -122,14 +122,27 @@ export const useDebts = () => {
 
       if (error) throw error;
 
+      const clientName = data.cliente?.nome || 'Cliente';
+      const formattedValue = formatCurrency(data.valor);
+
       setDebts(prev => prev.map(debt => 
         debt.id === id ? {
           ...data,
           status: data.status as 'pendente' | 'paga' | 'vencida'
         } : debt
       ));
+      
+      // Criar notificação in-app
+      await createInAppNotification({
+        titulo: '✏️ Dívida Atualizada',
+        mensagem: `A dívida de ${formattedValue} para o cliente ${clientName} foi atualizada.`,
+        tipo: 'info',
+        divida_id: data.id,
+        categoria: 'dividas',
+      });
+      
       toast({
-        title: "Sucesso",
+        title: "✅ Sucesso",
         description: "Dívida atualizada com sucesso",
       });
       return { success: true, data };

@@ -102,9 +102,18 @@ export const useClients = () => {
       setClients(prev => prev.map(client => 
         client.id === id ? data : client
       ));
+      
+      // Criar notificação in-app de atualização
+      await createInAppNotification({
+        titulo: '✏️ Cliente Atualizado',
+        mensagem: `Os dados do cliente ${data.nome} foram atualizados com sucesso.`,
+        tipo: 'info',
+        categoria: 'clientes',
+      });
+      
       toast({
-        title: "Sucesso",
-        description: "Cliente atualizado com sucesso",
+        title: "✅ Sucesso",
+        description: `Cliente ${data.nome} atualizado com sucesso!`,
       });
       return { success: true, data };
     } catch (error) {
