@@ -233,6 +233,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_notify_debts: { Args: never; Returns: undefined }
       create_user_profile: {
         Args: {
           email: string
