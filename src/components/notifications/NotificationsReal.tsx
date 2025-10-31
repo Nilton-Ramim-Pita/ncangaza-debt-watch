@@ -62,6 +62,8 @@ export const NotificationsReal = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [customMessage, setCustomMessage] = useState("");
+  const [testEmail, setTestEmail] = useState("");
+  const [testingSend, setTestingSend] = useState(false);
   
   const { debts } = useDebts();
   const { clients } = useClients();
@@ -256,6 +258,40 @@ export const NotificationsReal = () => {
     }
   };
 
+  const sendTestEmail = async () => {
+    if (!testEmail) {
+      toast.error('Por favor, insira um email para teste');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(testEmail)) {
+      toast.error('Email inválido');
+      return;
+    }
+
+    setTestingSend(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: testEmail,
+          subject: 'Teste de Email - Sistema de Dívidas',
+          message: `Este é um email de teste do Sistema de Gestão de Dívidas da Ncangaza Multiservices.\n\nSe você recebeu este email, significa que a integração com Resend está funcionando corretamente!\n\nData/Hora: ${new Date().toLocaleString('pt-MZ')}`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success('Email de teste enviado com sucesso!');
+      setTestEmail('');
+    } catch (error: any) {
+      console.error('Erro ao enviar email de teste:', error);
+      toast.error(`Erro ao enviar email: ${error.message || 'Erro desconhecido'}`);
+    } finally {
+      setTestingSend(false);
+    }
+  };
+
   return (
     <Tabs defaultValue="notifications" className="space-y-6">
       <TabsList>
@@ -307,6 +343,52 @@ export const NotificationsReal = () => {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center text-blue-900">
+              <Mail className="w-5 h-5 mr-2" />
+              Teste de Email (Resend)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="testEmail">Email para Teste</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    id="testEmail"
+                    type="email"
+                    placeholder="seu-email@exemplo.com"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={sendTestEmail}
+                    disabled={testingSend || !testEmail}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {testingSend ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Enviar Teste
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  ⚠️ Certifique-se de validar seu domínio no <a href="https://resend.com/domains" target="_blank" className="underline text-blue-600">Resend</a> antes de enviar emails de produção.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
