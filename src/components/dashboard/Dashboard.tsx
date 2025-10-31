@@ -9,7 +9,7 @@ export const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">Painel de Controlo</h2>
         <p className="text-muted-foreground">
           Visão geral do sistema de gestão de dívidas da Ncangaza Multiservices
         </p>

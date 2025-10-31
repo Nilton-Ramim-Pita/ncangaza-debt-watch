@@ -150,7 +150,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        toast.error('Erro ao fazer login: ' + error.message);
+        // More user-friendly error messages in Portuguese
+        const errorMessage = 
+          error.message.includes('Invalid login credentials') ? 'Email ou senha incorretos. Tente novamente.' :
+          error.message.includes('Email not confirmed') ? 'Por favor, confirme seu email antes de fazer login.' :
+          error.message.includes('User not found') ? 'Utilizador não encontrado.' :
+          `Erro ao fazer login: ${error.message}`;
+        
+        toast.error(errorMessage);
       } else {
         toast.success('Login realizado com sucesso!');
       }

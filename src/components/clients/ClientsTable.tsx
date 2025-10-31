@@ -20,12 +20,14 @@ import {
   Phone, 
   Mail,
   Calendar,
-  Loader2
+  Loader2,
+  FileDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClientForm, type ClientFormData } from "@/components/forms/ClientForm";
 import { useClients, Client } from "@/hooks/useClients";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { generatePDF, downloadPDF } from "@/utils/pdfGenerator";
 
 export const ClientsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,6 +68,29 @@ export const ClientsTable = () => {
       : <Badge variant="secondary">Inativo</Badge>;
   };
 
+  const handleExportPDF = () => {
+    const headers = ['Nome', 'NUIT', 'Email', 'Telefone', 'Status'];
+    const data = filteredClients.map(client => [
+      client.nome,
+      client.nuit || 'N/A',
+      client.email || 'N/A',
+      client.telefone || 'N/A',
+      client.ativo ? 'Ativo' : 'Inativo'
+    ]);
+
+    const doc = generatePDF(
+      {
+        title: 'Relatório de Clientes',
+        subtitle: `Total de clientes: ${filteredClients.length}`,
+        orientation: 'portrait'
+      },
+      headers,
+      data
+    );
+
+    downloadPDF(doc, 'relatorio_clientes');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -75,10 +100,20 @@ export const ClientsTable = () => {
             Gestão completa da base de clientes
           </p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowClientForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Cliente
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleExportPDF}
+            disabled={filteredClients.length === 0}
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            Exportar PDF
+          </Button>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowClientForm(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Cliente
+          </Button>
+        </div>
       </div>
 
       <Card>

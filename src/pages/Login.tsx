@@ -41,14 +41,14 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-md shadow-2xl border-primary/10">
         <CardHeader className="text-center space-y-6 pb-8">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg">
-            <Lock className="w-10 h-10 text-primary-foreground" />
+          <div className="mx-auto w-24 h-24 bg-gradient-to-br from-primary via-primary to-primary/70 rounded-3xl flex items-center justify-center shadow-2xl">
+            <Lock className="w-12 h-12 text-primary-foreground" />
           </div>
-          <div className="space-y-2">
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+          <div className="space-y-3">
+            <CardTitle className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent">
               Ncangaza Multiservices
             </CardTitle>
-            <CardDescription className="text-base">
+            <CardDescription className="text-lg font-medium">
               Sistema de Gestão de Dívidas
             </CardDescription>
           </div>
@@ -103,9 +103,12 @@ const Login = () => {
               )}
             </Button>
 
-            <div className="pt-4">
+            <div className="pt-6 space-y-2">
               <p className="text-xs text-center text-muted-foreground">
-                Acesso restrito. Apenas usuários autorizados.
+                Acesso restrito a utilizadores autorizados
+              </p>
+              <p className="text-xs text-center text-muted-foreground/60">
+                © 2025 Ncangaza Multiservices. Todos os direitos reservados.
               </p>
             </div>
           </form>

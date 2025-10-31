@@ -62,8 +62,8 @@ export const useClients = () => {
 
       setClients(prev => [...prev, data]);
       toast({
-        title: "Sucesso",
-        description: "Cliente criado com sucesso",
+        title: "✅ Sucesso",
+        description: `Cliente ${data.nome} foi criado com sucesso!`,
       });
       return { success: true, data };
     } catch (error) {

@@ -20,9 +20,9 @@ interface SidebarProps {
 const sidebarItems = [
   {
     id: "dashboard",
-    label: "Dashboard",
+    label: "Painel de Controlo",
     icon: LayoutDashboard,
-    description: "Visão geral"
+    description: "Visão geral do sistema"
   },
   {
     id: "clients",
@@ -50,7 +50,7 @@ const sidebarItems = [
   },
   {
     id: "analytics",
-    label: "Analytics",
+    label: "Estatísticas",
     icon: TrendingUp,
     description: "Métricas avançadas"
   }
