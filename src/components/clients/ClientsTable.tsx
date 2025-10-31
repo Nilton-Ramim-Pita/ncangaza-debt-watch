@@ -33,7 +33,7 @@ export const ClientsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showClientForm, setShowClientForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const { clients, loading, createClient, updateClient, deleteClient } = useClients();
+  const { clients, loading, createClient, updateClient, deleteClient, refetch } = useClients();
 
   // Filtrar clientes baseado no termo de pesquisa
   const filteredClients = clients.filter(client =>
@@ -46,6 +46,7 @@ export const ClientsTable = () => {
     const result = await createClient(clientData);
     if (result.success) {
       setShowClientForm(false);
+      await refetch(); // Recarrega a lista para garantir sincronização
     }
   };
 
@@ -55,6 +56,7 @@ export const ClientsTable = () => {
     if (result.success) {
       setShowClientForm(false);
       setEditingClient(null);
+      await refetch(); // Recarrega a lista para garantir sincronização
     }
   };
 
