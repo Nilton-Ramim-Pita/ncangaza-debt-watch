@@ -433,90 +433,60 @@ export const NotificationsReal = () => {
           </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="border-blue-200 bg-blue-50/50">
-            <CardHeader>
-              <CardTitle className="flex items-center text-blue-900">
-                <Mail className="w-5 h-5 mr-2" />
-                Teste de Email (Resend)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="testEmail">Email para Teste</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      id="testEmail"
-                      type="email"
-                      placeholder="seu-email@exemplo.com"
-                      value={testEmail}
-                      onChange={(e) => setTestEmail(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button 
-                      onClick={sendTestEmail}
-                      disabled={testingSend || !testEmail}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      {testingSend ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Enviando...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4 mr-2" />
-                          Enviar Teste
-                        </>
-                      )}
-                    </Button>
+        <Card className="border-emerald-200 bg-emerald-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center text-emerald-900">
+              <CheckCircle className="w-5 h-5 mr-2" />
+              Sistema de Notificações Automáticas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-emerald-900">✅ Emails Automáticos Ativados</h4>
+                <p className="text-sm text-muted-foreground">
+                  O sistema envia emails automaticamente nos seguintes momentos:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-4">
+                  <li><strong>Cliente adicionado:</strong> Email de boas-vindas com dados cadastrais</li>
+                  <li><strong>Dívida criada:</strong> Email detalhando valor, descrição e data de vencimento</li>
+                  <li><strong>1 dia antes do vencimento:</strong> Lembrete automático para evitar atrasos</li>
+                </ul>
+              </div>
+              
+              <div className="pt-4 border-t">
+                <h4 className="font-semibold text-emerald-900 mb-2">📧 Como funciona</h4>
+                <p className="text-sm text-muted-foreground">
+                  Todas as notificações são enviadas automaticamente quando você:
+                </p>
+                <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                    <span>Cadastra um novo cliente com email</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    ⚠️ Certifique-se de validar seu domínio no <a href="https://resend.com/domains" target="_blank" className="underline text-blue-600">Resend</a> antes de enviar emails de produção.
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                    <span>Registra uma nova dívida</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                    <span>A dívida está próxima do vencimento (1 dia antes)</span>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="border-green-200 bg-green-50/50">
-            <CardHeader>
-              <CardTitle className="flex items-center text-green-900">
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Teste de WhatsApp (Click to Chat)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="testPhone">Telefone para Teste</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      id="testPhone"
-                      type="tel"
-                      placeholder="87XXXXXXX ou 25887XXXXXXX"
-                      value={testPhone}
-                      onChange={(e) => setTestPhone(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button 
-                      onClick={sendTestWhatsApp}
-                      disabled={!testPhone}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Abrir WhatsApp
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    ✅ Totalmente gratuito - Usa WhatsApp Click to Chat oficial
-                  </p>
-                </div>
+              <div className="pt-4 border-t">
+                <p className="text-xs text-muted-foreground">
+                  ⚠️ <strong>Importante:</strong> Certifique-se de validar seu domínio no{' '}
+                  <a href="https://resend.com/domains" target="_blank" className="underline text-blue-600">
+                    Resend
+                  </a>
+                  {' '}para que os emails sejam entregues corretamente.
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
