@@ -11,12 +11,49 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Validate authentication and admin role
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized - Authentication required' }),
+      { status: 401, headers: corsHeaders }
+    );
+  }
+
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+  if (authError || !user) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized - Invalid authentication' }),
+      { status: 401, headers: corsHeaders }
+    );
+  }
+
+  // Verify admin role
+  const { data: roleData } = await supabaseClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (roleData?.role !== 'admin') {
+    return new Response(
+      JSON.stringify({ error: 'Forbidden - Admin access required' }),
+      { status: 403, headers: corsHeaders }
+    );
+  }
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log("Starting debt check...");
+    console.log("Starting debt check (authenticated admin)...");
 
     // Update debt status (call the existing SQL function)
     const { error: updateError } = await supabase.rpc('update_debt_status');

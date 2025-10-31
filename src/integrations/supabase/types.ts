@@ -253,10 +253,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      update_debt_status: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      update_debt_status: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"

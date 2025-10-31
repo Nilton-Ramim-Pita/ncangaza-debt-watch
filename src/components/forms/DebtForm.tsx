@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencySimple, parseCurrency } from "@/utils/currency";
+import { debtSchema } from "@/lib/validations";
+import { z } from "zod";
 
 interface DebtFormProps {
   open: boolean;
@@ -78,41 +80,19 @@ export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [], editData 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validações
-    if (!formData.cliente_id) {
-      toast({
-        title: "Erro",
-        description: "Selecione um cliente",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (formData.valor <= 0) {
-      toast({
-        title: "Erro",
-        description: "O valor deve ser maior que zero",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.descricao.trim()) {
-      toast({
-        title: "Erro",
-        description: "A descrição é obrigatória",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.data_vencimento) {
-      toast({
-        title: "Erro",
-        description: "A data de vencimento é obrigatória",
-        variant: "destructive",
-      });
-      return;
+    // Validate using Zod schema
+    try {
+      debtSchema.parse(formData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast({
+          title: "Erro de validação",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true);

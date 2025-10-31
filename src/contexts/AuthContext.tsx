@@ -107,17 +107,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    console.log('🔍 AuthContext: Initializing...');
-    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔍 Auth state changed:', event, 'Session:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('🔍 Fetching profile for user:', session.user.id);
           setProfile(null);
           // Use setTimeout to defer Supabase calls and prevent deadlock
           setTimeout(() => {
@@ -127,22 +123,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null);
         }
         
-        console.log('🔍 Auth loading complete');
         setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('🔍 Initial session check:', !!session);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        console.log('🔍 Fetching profile for initial session');
         fetchProfile(session.user.id);
       } else {
-        console.log('🔍 No session found, loading complete');
         setLoading(false);
       }
     });

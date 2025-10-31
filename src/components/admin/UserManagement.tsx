@@ -13,6 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
+import { userSchema } from '@/lib/validations';
+import { z } from 'zod';
 
 interface Profile {
   id: string;
@@ -87,6 +89,17 @@ const UserManagement = () => {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate using Zod schema
+    try {
+      userSchema.parse({ full_name: fullName, email, password, role });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error('Erro de validação: ' + firstError.message);
+        return;
+      }
+    }
     
     try {
       const { data, error } = await supabase.functions.invoke('create-user', {

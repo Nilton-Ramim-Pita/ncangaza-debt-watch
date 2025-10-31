@@ -8,9 +8,3 @@ verify_jwt = false
 
 [functions.create-demo-users]
 verify_jwt = false
-
-[functions.send-email]
-verify_jwt = false
-
-[functions.check-debts]
-verify_jwt = false

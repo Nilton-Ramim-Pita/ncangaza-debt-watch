@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { clientSchema } from "@/lib/validations";
+import { z } from "zod";
 
 interface ClientFormProps {
   open: boolean;
@@ -40,23 +42,19 @@ export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: Client
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validações básicas
-    if (!formData.nome.trim()) {
-      toast({
-        title: "Erro",
-        description: "O nome é obrigatório",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.nuit.trim()) {
-      toast({
-        title: "Erro", 
-        description: "O NUIT é obrigatório",
-        variant: "destructive",
-      });
-      return;
+    // Validate using Zod schema
+    try {
+      clientSchema.parse(formData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast({
+          title: "Erro de validação",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true);

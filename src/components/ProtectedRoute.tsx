@@ -10,10 +10,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
   const { user, loading, isAdmin } = useAuth();
 
-  console.log('🔍 ProtectedRoute - Loading:', loading, 'User:', !!user, 'IsAdmin:', isAdmin);
-
   if (loading) {
-    console.log('🔍 ProtectedRoute - Showing loading spinner');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -25,12 +22,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
   }
 
   if (!user) {
-    console.log('🔍 ProtectedRoute - No user, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
   if (requireAdmin && !isAdmin) {
-    console.log('🔍 ProtectedRoute - User is not admin');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -41,7 +36,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
     );
   }
 
-  console.log('🔍 ProtectedRoute - Rendering protected content');
   return <>{children}</>;
 };
 
