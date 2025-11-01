@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import logoNcangaza from "@/assets/logo-ncangaza.png";
 
 interface SidebarProps {
   activeTab: string;
@@ -73,9 +74,11 @@ export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
     <div className="w-64 bg-card border-r h-screen sticky top-0 flex flex-col">
       <div className="p-6 border-b">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">N</span>
-          </div>
+          <img 
+            src={logoNcangaza} 
+            alt="Ncangaza Logo" 
+            className="w-12 h-12 object-contain"
+          />
           <div>
             <h2 className="font-semibold text-foreground">Ncangaza</h2>
             <p className="text-sm text-muted-foreground">Multiservices</p>

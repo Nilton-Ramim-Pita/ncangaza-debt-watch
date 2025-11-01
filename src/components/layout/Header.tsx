@@ -18,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
+import logoNcangaza from "@/assets/logo-ncangaza.png";
 
 interface HeaderProps {
   onTabChange: (tab: string) => void;
@@ -64,13 +65,15 @@ export const Header = ({ onTabChange }: HeaderProps) => {
     <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">N</span>
-            </div>
+          <div className="flex items-center space-x-3">
+            <img 
+              src={logoNcangaza} 
+              alt="Ncangaza Logo" 
+              className="w-10 h-10 object-contain"
+            />
             <div>
               <h1 className="text-lg font-semibold text-foreground">Ncangaza Multiservices</h1>
-              <p className="text-xs text-muted-foreground">Gestão de Dívidas</p>
+              <p className="text-xs text-muted-foreground">Qualidade & Excelência</p>
             </div>
           </div>
         </div>
