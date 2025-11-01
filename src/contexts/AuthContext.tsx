@@ -11,6 +11,14 @@ interface Profile {
   created_at: string;
   updated_at: string;
   created_by?: string;
+  avatar_url?: string;
+  telefone?: string;
+  cargo?: string;
+  departamento?: string;
+  bio?: string;
+  email_notifications?: boolean;
+  sms_notifications?: boolean;
+  whatsapp_notifications?: boolean;
 }
 
 interface UserRole {
@@ -159,6 +167,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         toast.error(errorMessage);
       } else {
+        // Log login activity
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.functions.invoke('log-login', {
+              body: {
+                userId: user.id,
+                ipAddress: 'N/A', // In a real app, you'd get this from the request
+                userAgent: navigator.userAgent,
+              },
+            });
+          }
+        } catch (logError) {
+          console.error('Error logging login:', logError);
+          // Don't fail the login if logging fails
+        }
+        
         toast.success('Login realizado com sucesso!');
       }
 

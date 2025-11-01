@@ -100,6 +100,36 @@ export type Database = {
           },
         ]
       }
+      login_history: {
+        Row: {
+          device_info: string | null
+          id: string
+          ip_address: string | null
+          location: string | null
+          login_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          location?: string | null
+          login_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          location?: string | null
+          login_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notificacoes: {
         Row: {
           created_at: string
@@ -180,29 +210,80 @@ export type Database = {
       profiles: {
         Row: {
           active: boolean
+          avatar_url: string | null
+          bio: string | null
+          cargo: string | null
           created_at: string
           created_by: string | null
+          departamento: string | null
+          email_notifications: boolean | null
           full_name: string
           id: string
+          sms_notifications: boolean | null
+          telefone: string | null
           updated_at: string
           user_id: string
+          whatsapp_notifications: boolean | null
         }
         Insert: {
           active?: boolean
+          avatar_url?: string | null
+          bio?: string | null
+          cargo?: string | null
           created_at?: string
           created_by?: string | null
+          departamento?: string | null
+          email_notifications?: boolean | null
           full_name: string
           id?: string
+          sms_notifications?: boolean | null
+          telefone?: string | null
           updated_at?: string
           user_id: string
+          whatsapp_notifications?: boolean | null
         }
         Update: {
           active?: boolean
+          avatar_url?: string | null
+          bio?: string | null
+          cargo?: string | null
           created_at?: string
           created_by?: string | null
+          departamento?: string | null
+          email_notifications?: boolean | null
           full_name?: string
           id?: string
+          sms_notifications?: boolean | null
+          telefone?: string | null
           updated_at?: string
+          user_id?: string
+          whatsapp_notifications?: boolean | null
+        }
+        Relationships: []
+      }
+      user_activities: {
+        Row: {
+          action_type: string
+          created_at: string
+          description: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          description: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
           user_id?: string
         }
         Relationships: []
@@ -253,6 +334,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_user_activity: {
+        Args: {
+          p_action_type: string
+          p_description: string
+          p_metadata?: Json
+        }
+        Returns: string
       }
       update_debt_status: { Args: never; Returns: undefined }
     }

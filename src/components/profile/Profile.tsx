@@ -1,209 +1,68 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { User, Settings, Shield } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ProfileHeader } from './ProfileHeader';
+import { PersonalInfoForm } from './PersonalInfoForm';
+import { PasswordChange } from './PasswordChange';
+import { NotificationPreferences } from './NotificationPreferences';
+import { SecuritySettings } from './SecuritySettings';
+import { ActivityLog } from './ActivityLog';
+import { User, Lock, Bell, Shield, Activity } from 'lucide-react';
 
 export const Profile = () => {
-  const { profile, user, userRole } = useAuth();
-  const [fullName, setFullName] = useState(profile?.full_name || '');
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (profile?.full_name) {
-      setFullName(profile.full_name);
-    }
-  }, [profile]);
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profile) return;
-
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ full_name: fullName })
-        .eq('id', profile.id);
-
-      if (error) {
-        toast.error('Erro ao atualizar perfil');
-        return;
-      }
-
-      toast.success('Perfil atualizado com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao atualizar perfil');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getRoleDisplay = (role: string) => {
-    switch (role) {
-      case 'admin': return 'Administrador';
-      case 'manager': return 'Gerente';
-      case 'user': return 'Usuário';
-      default: return role;
-    }
-  };
-
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case 'admin': return 'default';
-      case 'manager': return 'secondary';
-      case 'user': return 'outline';
-      default: return 'outline';
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Perfil do Usuário</h1>
         <p className="text-muted-foreground">
-          Gerencie suas informações pessoais e configurações da conta
+          Gerencie suas informações pessoais, segurança e preferências
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-1">
-          <CardHeader className="text-center">
-            <Avatar className="w-24 h-24 mx-auto mb-4">
-              <AvatarFallback className="text-2xl">
-                {profile?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <CardTitle>{profile?.full_name}</CardTitle>
-            <CardDescription>{user?.email}</CardDescription>
-            <Badge variant={getRoleBadgeVariant(userRole || 'user')} className="w-fit mx-auto">
-              {getRoleDisplay(userRole || 'user')}
-            </Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <User className="mr-2 h-4 w-4" />
-                ID: {profile?.id?.slice(0, 8) || 'N/A'}
-              </div>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Shield className="mr-2 h-4 w-4" />
-                Conta {profile?.active ? 'Ativa' : 'Inativa'}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <ProfileHeader />
 
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Informações Pessoais</CardTitle>
-            <CardDescription>
-              Atualize suas informações pessoais aqui
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Nome Completo</Label>
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Seu nome completo"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    O email não pode ser alterado
-                  </p>
-                </div>
-              </div>
+      <Tabs defaultValue="personal" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="personal" className="flex items-center gap-2">
+            <User className="w-4 h-4" />
+            <span className="hidden sm:inline">Pessoal</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2">
+            <Lock className="w-4 h-4" />
+            <span className="hidden sm:inline">Senha</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="w-4 h-4" />
+            <span className="hidden sm:inline">Notificações</span>
+          </TabsTrigger>
+          <TabsTrigger value="advanced" className="flex items-center gap-2">
+            <Shield className="w-4 h-4" />
+            <span className="hidden sm:inline">Segurança</span>
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="flex items-center gap-2">
+            <Activity className="w-4 h-4" />
+            <span className="hidden sm:inline">Atividade</span>
+          </TabsTrigger>
+        </TabsList>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="role">Função</Label>
-                  <Input
-                    id="role"
-                    value={getRoleDisplay(userRole || 'user')}
-                    disabled
-                    className="bg-muted"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status da Conta</Label>
-                  <Input
-                    id="status"
-                    value={profile?.active ? 'Ativa' : 'Inativa'}
-                    disabled
-                    className="bg-muted"
-                  />
-                </div>
-              </div>
+        <TabsContent value="personal" className="space-y-6 mt-6">
+          <PersonalInfoForm />
+        </TabsContent>
 
-              <Separator />
+        <TabsContent value="security" className="space-y-6 mt-6">
+          <PasswordChange />
+        </TabsContent>
 
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Salvando...' : 'Salvar Alterações'}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="notifications" className="space-y-6 mt-6">
+          <NotificationPreferences />
+        </TabsContent>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações da Conta</CardTitle>
-          <CardDescription>
-            Detalhes técnicos da sua conta no sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label className="text-sm font-medium">Data de Criação</Label>
-              <p className="text-sm text-muted-foreground">
-                {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('pt-BR') : 'N/A'}
-              </p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Última Atualização</Label>
-              <p className="text-sm text-muted-foreground">
-                {profile?.updated_at ? new Date(profile.updated_at).toLocaleDateString('pt-BR') : 'N/A'}
-              </p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">ID do Usuário</Label>
-              <p className="text-sm text-muted-foreground font-mono">
-                {user?.id || 'N/A'}
-              </p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Email Verificado</Label>
-              <p className="text-sm text-muted-foreground">
-                {user?.email_confirmed_at ? 'Sim' : 'Não'}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <TabsContent value="advanced" className="space-y-6 mt-6">
+          <SecuritySettings />
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-6 mt-6">
+          <ActivityLog />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
