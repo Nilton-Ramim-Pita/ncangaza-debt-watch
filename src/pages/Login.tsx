@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Loader2, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
-import logoNcangaza from '@/assets/logo-ncangaza.png';
+import logoNcangaza from '@/assets/logo-ncangaza-full.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -50,14 +50,12 @@ const Login = () => {
       <Card className="w-full max-w-lg relative z-10 shadow-2xl border-primary/20 backdrop-blur-sm bg-card/95 animate-fade-in">
         <CardHeader className="text-center space-y-6 pb-8 pt-8">
           {/* Logo */}
-          <div className="mx-auto">
-            <div className="relative w-64 h-64 mx-auto mb-2 animate-scale-in flex items-center justify-center">
-              <img 
-                src={logoNcangaza} 
-                alt="Ncangaza Multiservices Logo" 
-                className="w-full h-full object-contain drop-shadow-2xl"
-              />
-            </div>
+          <div className="mx-auto mb-4">
+            <img 
+              src={logoNcangaza} 
+              alt="Ncangaza Multiservices Logo" 
+              className="h-40 mx-auto object-contain drop-shadow-2xl animate-scale-in"
+            />
           </div>
           
           {/* Security Badge */}
