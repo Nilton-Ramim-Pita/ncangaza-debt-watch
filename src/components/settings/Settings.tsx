@@ -7,7 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useSettings } from "@/hooks/useSettings";
 import { 
   Settings as SettingsIcon, 
   Bell, 
@@ -20,93 +22,51 @@ import {
   Download,
   Upload,
   RefreshCw,
-  Trash2,
   Save,
-  Globe
+  Globe,
+  Sun,
+  Moon,
+  Monitor,
+  Check
 } from "lucide-react";
-
-interface SystemSettings {
-  siteName: string;
-  siteUrl: string;
-  contactEmail: string;
-  contactPhone: string;
-  currency: string;
-  timezone: string;
-  language: string;
-  theme: string;
-  emailNotifications: boolean;
-  smsNotifications: boolean;
-  whatsappNotifications: boolean;
-  autoBackup: boolean;
-  backupFrequency: string;
-  dataRetention: number;
-  twoFactorAuth: boolean;
-  sessionTimeout: number;
-}
+import { cn } from "@/lib/utils";
 
 export const Settings = () => {
-  const [settings, setSettings] = useState<SystemSettings>({
-    siteName: "Ncangaza Multiservices",
-    siteUrl: "https://ncangaza.mz",
-    contactEmail: "info@ncangaza.mz",
-    contactPhone: "+258 84 123 4567",
-    currency: "MZN",
-    timezone: "Africa/Maputo",
-    language: "pt-MZ",
-    theme: "system",
-    emailNotifications: true,
-    smsNotifications: false,
-    whatsappNotifications: true,
-    autoBackup: true,
-    backupFrequency: "daily",
-    dataRetention: 365,
-    twoFactorAuth: false,
-    sessionTimeout: 30
-  });
-
+  const { theme, setTheme, actualTheme } = useTheme();
+  const { settings, updateSetting } = useSettings();
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   const handleSave = async () => {
     setLoading(true);
     
-    // Simulate API call
     setTimeout(() => {
       setLoading(false);
-      toast({
-        title: "Configurações salvas",
-        description: "Todas as configurações foram atualizadas com sucesso!",
-      });
+      toast.success("Configurações salvas com sucesso!");
     }, 1000);
   };
 
   const handleExportData = () => {
-    toast({
-      title: "Exportação iniciada",
-      description: "Os dados estão sendo preparados para download.",
-    });
+    toast.success("Os dados estão sendo preparados para download");
   };
 
   const handleImportData = () => {
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "Importação de dados será implementada em breve.",
-    });
+    toast.info("Importação de dados será implementada em breve");
   };
 
   const handleBackupNow = () => {
-    toast({
-      title: "Backup iniciado",
-      description: "Criando backup dos dados do sistema...",
-    });
+    toast.success("Backup iniciado com sucesso");
   };
 
   const handleClearCache = () => {
-    toast({
-      title: "Cache limpo",
-      description: "Cache do sistema foi limpo com sucesso.",
-    });
+    localStorage.clear();
+    toast.success("Cache limpo com sucesso");
   };
+
+  const themeOptions = [
+    { value: "light", label: "Claro", icon: Sun },
+    { value: "dark", label: "Escuro", icon: Moon },
+    { value: "system", label: "Sistema", icon: Monitor },
+  ];
 
   return (
     <div className="space-y-6">
@@ -124,6 +84,78 @@ export const Settings = () => {
       </div>
 
       <div className="grid gap-6">
+        {/* Appearance Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Palette className="w-5 h-5 mr-2" />
+              Aparência
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <Label className="text-base mb-3 block">Tema do Sistema</Label>
+                <div className="grid grid-cols-3 gap-4">
+                  {themeOptions.map((option) => {
+                    const Icon = option.icon;
+                    const isActive = theme === option.value;
+                    
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => setTheme(option.value as "light" | "dark" | "system")}
+                        className={cn(
+                          "relative flex flex-col items-center gap-3 rounded-lg border-2 p-4 transition-all hover:bg-accent",
+                          isActive 
+                            ? "border-primary bg-primary/5" 
+                            : "border-muted"
+                        )}
+                      >
+                        {isActive && (
+                          <Check className="absolute top-2 right-2 w-4 h-4 text-primary" />
+                        )}
+                        <Icon className={cn(
+                          "w-8 h-8",
+                          isActive ? "text-primary" : "text-muted-foreground"
+                        )} />
+                        <span className={cn(
+                          "text-sm font-medium",
+                          isActive ? "text-primary" : "text-muted-foreground"
+                        )}>
+                          {option.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-sm text-muted-foreground mt-3">
+                  Tema atual: <span className="font-medium">{actualTheme === "dark" ? "Escuro" : "Claro"}</span>
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="grid gap-2">
+                <Label htmlFor="language">Idioma</Label>
+                <Select 
+                  value={settings.language} 
+                  onValueChange={(value) => updateSetting("language", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pt-MZ">🇲🇿 Português (Moçambique)</SelectItem>
+                    <SelectItem value="pt-BR">🇧🇷 Português (Brasil)</SelectItem>
+                    <SelectItem value="en-US">🇺🇸 English (US)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* General Settings */}
         <Card>
           <CardHeader>
@@ -139,7 +171,7 @@ export const Settings = () => {
                 <Input
                   id="siteName"
                   value={settings.siteName}
-                  onChange={(e) => setSettings(prev => ({ ...prev, siteName: e.target.value }))}
+                  onChange={(e) => updateSetting("siteName", e.target.value)}
                 />
               </div>
 
@@ -148,7 +180,7 @@ export const Settings = () => {
                 <Input
                   id="siteUrl"
                   value={settings.siteUrl}
-                  onChange={(e) => setSettings(prev => ({ ...prev, siteUrl: e.target.value }))}
+                  onChange={(e) => updateSetting("siteUrl", e.target.value)}
                 />
               </div>
 
@@ -158,7 +190,7 @@ export const Settings = () => {
                   id="contactEmail"
                   type="email"
                   value={settings.contactEmail}
-                  onChange={(e) => setSettings(prev => ({ ...prev, contactEmail: e.target.value }))}
+                  onChange={(e) => updateSetting("contactEmail", e.target.value)}
                 />
               </div>
 
@@ -167,7 +199,7 @@ export const Settings = () => {
                 <Input
                   id="contactPhone"
                   value={settings.contactPhone}
-                  onChange={(e) => setSettings(prev => ({ ...prev, contactPhone: e.target.value }))}
+                  onChange={(e) => updateSetting("contactPhone", e.target.value)}
                 />
               </div>
 
@@ -175,15 +207,15 @@ export const Settings = () => {
                 <Label htmlFor="currency">Moeda</Label>
                 <Select 
                   value={settings.currency} 
-                  onValueChange={(value) => setSettings(prev => ({ ...prev, currency: value }))}
+                  onValueChange={(value) => updateSetting("currency", value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MZN">Metical (MZN)</SelectItem>
-                    <SelectItem value="USD">Dólar (USD)</SelectItem>
-                    <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                    <SelectItem value="MZN">💵 Metical (MZN)</SelectItem>
+                    <SelectItem value="USD">💵 Dólar (USD)</SelectItem>
+                    <SelectItem value="EUR">💶 Euro (EUR)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -192,62 +224,15 @@ export const Settings = () => {
                 <Label htmlFor="timezone">Fuso Horário</Label>
                 <Select 
                   value={settings.timezone} 
-                  onValueChange={(value) => setSettings(prev => ({ ...prev, timezone: value }))}
+                  onValueChange={(value) => updateSetting("timezone", value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Africa/Maputo">África/Maputo (CAT)</SelectItem>
-                    <SelectItem value="UTC">UTC</SelectItem>
-                    <SelectItem value="Europe/Lisbon">Europa/Lisboa</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Appearance Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Palette className="w-5 h-5 mr-2" />
-              Aparência
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="theme">Tema</Label>
-                <Select 
-                  value={settings.theme} 
-                  onValueChange={(value) => setSettings(prev => ({ ...prev, theme: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">Claro</SelectItem>
-                    <SelectItem value="dark">Escuro</SelectItem>
-                    <SelectItem value="system">Sistema</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="language">Idioma</Label>
-                <Select 
-                  value={settings.language} 
-                  onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pt-MZ">Português (Moçambique)</SelectItem>
-                    <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
-                    <SelectItem value="en-US">English (US)</SelectItem>
+                    <SelectItem value="Africa/Maputo">🌍 África/Maputo (CAT)</SelectItem>
+                    <SelectItem value="UTC">🌐 UTC</SelectItem>
+                    <SelectItem value="Europe/Lisbon">🇵🇹 Europa/Lisboa</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -275,7 +260,7 @@ export const Settings = () => {
                 </div>
                 <Switch 
                   checked={settings.emailNotifications}
-                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, emailNotifications: checked }))}
+                  onCheckedChange={(checked) => updateSetting("emailNotifications", checked)}
                 />
               </div>
 
@@ -289,7 +274,7 @@ export const Settings = () => {
                 </div>
                 <Switch 
                   checked={settings.smsNotifications}
-                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, smsNotifications: checked }))}
+                  onCheckedChange={(checked) => updateSetting("smsNotifications", checked)}
                 />
               </div>
 
@@ -303,7 +288,7 @@ export const Settings = () => {
                 </div>
                 <Switch 
                   checked={settings.whatsappNotifications}
-                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, whatsappNotifications: checked }))}
+                  onCheckedChange={(checked) => updateSetting("whatsappNotifications", checked)}
                 />
               </div>
             </div>
@@ -331,7 +316,7 @@ export const Settings = () => {
                   </Badge>
                   <Switch 
                     checked={settings.twoFactorAuth}
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, twoFactorAuth: checked }))}
+                    onCheckedChange={(checked) => updateSetting("twoFactorAuth", checked)}
                   />
                 </div>
               </div>
@@ -344,7 +329,7 @@ export const Settings = () => {
                   min="5"
                   max="480"
                   value={settings.sessionTimeout}
-                  onChange={(e) => setSettings(prev => ({ ...prev, sessionTimeout: parseInt(e.target.value) || 30 }))}
+                  onChange={(e) => updateSetting("sessionTimeout", parseInt(e.target.value) || 30)}
                 />
                 <p className="text-sm text-muted-foreground">
                   Tempo até deslogar automaticamente por inatividade
@@ -371,7 +356,7 @@ export const Settings = () => {
                 </div>
                 <Switch 
                   checked={settings.autoBackup}
-                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, autoBackup: checked }))}
+                  onCheckedChange={(checked) => updateSetting("autoBackup", checked)}
                 />
               </div>
 
@@ -380,16 +365,16 @@ export const Settings = () => {
                   <Label htmlFor="backupFrequency">Frequência do Backup</Label>
                   <Select 
                     value={settings.backupFrequency} 
-                    onValueChange={(value) => setSettings(prev => ({ ...prev, backupFrequency: value }))}
+                    onValueChange={(value) => updateSetting("backupFrequency", value)}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="hourly">A cada hora</SelectItem>
-                      <SelectItem value="daily">Diariamente</SelectItem>
-                      <SelectItem value="weekly">Semanalmente</SelectItem>
-                      <SelectItem value="monthly">Mensalmente</SelectItem>
+                      <SelectItem value="hourly">⏰ A cada hora</SelectItem>
+                      <SelectItem value="daily">📅 Diariamente</SelectItem>
+                      <SelectItem value="weekly">📆 Semanalmente</SelectItem>
+                      <SelectItem value="monthly">🗓️ Mensalmente</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -403,7 +388,7 @@ export const Settings = () => {
                   min="30"
                   max="3650"
                   value={settings.dataRetention}
-                  onChange={(e) => setSettings(prev => ({ ...prev, dataRetention: parseInt(e.target.value) || 365 }))}
+                  onChange={(e) => updateSetting("dataRetention", parseInt(e.target.value) || 365)}
                 />
                 <p className="text-sm text-muted-foreground">
                   Tempo para manter os dados antes da exclusão automática
@@ -464,7 +449,7 @@ export const Settings = () => {
               
               <div className="text-center p-4 border rounded-lg">
                 <div className="text-sm font-medium text-muted-foreground">Status</div>
-                <Badge className="bg-green-100 text-green-800">Online</Badge>
+                <Badge className="bg-success/20 text-success">Online</Badge>
               </div>
             </div>
           </CardContent>
