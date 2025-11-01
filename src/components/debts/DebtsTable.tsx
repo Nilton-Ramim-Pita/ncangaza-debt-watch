@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Filter
+  Filter,
+  Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrencySimple, formatCurrency } from "@/utils/currency";
@@ -30,6 +31,7 @@ import { DebtForm, type DebtFormData } from "@/components/forms/DebtForm";
 import { useDebts } from "@/hooks/useDebts";
 import { useClients } from "@/hooks/useClients";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface Debt {
   id: string;
@@ -399,6 +401,30 @@ export const DebtsTable = () => {
                           <Button variant="ghost" size="sm" onClick={() => handleEdit(debt)}>
                             <Edit className="h-4 w-4" />
                           </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Eliminar Dívida</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja eliminar esta dívida de {formatCurrency(Number(debt.valor))}? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteDebt(debt.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </TableCell>
                     </TableRow>
