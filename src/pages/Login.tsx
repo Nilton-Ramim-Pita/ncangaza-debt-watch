@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Loader2, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
-import logoNcangaza from '@/assets/logo-ncangaza-full.png';
+import { useLogo } from '@/hooks/useLogo';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,6 +16,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const { signIn, user, loading } = useAuth();
+  const { logo } = useLogo();
 
   // Redirect if already logged in
   if (loading) {
@@ -52,8 +53,8 @@ const Login = () => {
           {/* Logo */}
           <div className="mx-auto mb-4">
             <img 
-              src={logoNcangaza} 
-              alt="Ncangaza Multiservices Logo" 
+              src={logo} 
+              alt="Logo da Empresa" 
               className="h-40 mx-auto object-contain drop-shadow-2xl animate-scale-in"
             />
           </div>

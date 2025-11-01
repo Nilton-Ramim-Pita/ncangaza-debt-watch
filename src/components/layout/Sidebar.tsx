@@ -11,7 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import logoNcangaza from "@/assets/logo-ncangaza-full.png";
+import { useLogo } from "@/hooks/useLogo";
 
 interface SidebarProps {
   activeTab: string;
@@ -69,13 +69,14 @@ const adminItems = [
 
 export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const { isAdmin } = useAuth();
+  const { logo } = useLogo();
   
   return (
     <div className="w-64 bg-card border-r h-screen sticky top-0 flex flex-col">
       <div className="p-6 border-b flex justify-center">
         <img 
-          src={logoNcangaza} 
-          alt="Ncangaza Multiservices Logo" 
+          src={logo} 
+          alt="Logo da Empresa" 
           className="h-16 object-contain"
         />
       </div>

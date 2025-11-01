@@ -17,8 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLogo } from "@/hooks/useLogo";
 import { useState } from "react";
-import logoNcangaza from "@/assets/logo-ncangaza-full.png";
 
 interface HeaderProps {
   onTabChange: (tab: string) => void;
@@ -27,6 +27,7 @@ interface HeaderProps {
 export const Header = ({ onTabChange }: HeaderProps) => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
   const { profile, signOut, isAdmin, userRole } = useAuth();
+  const { logo } = useLogo();
   const [notificationOpen, setNotificationOpen] = useState(false);
 
   const handleProfileClick = () => {
@@ -66,8 +67,8 @@ export const Header = ({ onTabChange }: HeaderProps) => {
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center space-x-4">
           <img 
-            src={logoNcangaza} 
-            alt="Ncangaza Multiservices Logo" 
+            src={logo} 
+            alt="Logo da Empresa" 
             className="h-12 object-contain"
           />
         </div>

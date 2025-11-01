@@ -10,7 +10,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSettings } from "@/hooks/useSettings";
-import { 
+import { useLogo } from "@/hooks/useLogo";
+import {
   Settings as SettingsIcon, 
   Bell, 
   Palette, 
@@ -27,13 +28,16 @@ import {
   Sun,
   Moon,
   Monitor,
-  Check
+  Check,
+  Image as ImageIcon,
+  RotateCcw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Settings = () => {
   const { theme, setTheme, actualTheme } = useTheme();
   const { settings, updateSetting } = useSettings();
+  const { logo, setLogo, resetLogo, defaultLogo } = useLogo();
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -60,6 +64,36 @@ export const Settings = () => {
   const handleClearCache = () => {
     localStorage.clear();
     toast.success("Cache limpo com sucesso");
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Por favor, selecione um arquivo de imagem válido");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("O arquivo deve ter no máximo 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setLogo(result);
+      toast.success("Logotipo atualizado com sucesso!");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleResetLogo = () => {
+    resetLogo();
+    toast.success("Logotipo restaurado para o padrão");
   };
 
   const themeOptions = [
@@ -165,6 +199,53 @@ export const Settings = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Logo Upload */}
+            <div className="space-y-4">
+              <Label className="text-base">Logotipo da Empresa</Label>
+              <div className="flex items-start gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30 overflow-hidden">
+                    {logo ? (
+                      <img 
+                        src={logo} 
+                        alt="Logo atual" 
+                        className="w-full h-full object-contain p-2"
+                      />
+                    ) : (
+                      <ImageIcon className="w-12 h-12 text-muted-foreground" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1 space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Carregue o logotipo da sua empresa. Formatos aceitos: PNG, JPG, SVG (máx. 5MB)
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="relative" asChild>
+                      <label className="cursor-pointer">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Carregar Logo
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                      </label>
+                    </Button>
+                    {logo !== defaultLogo && (
+                      <Button variant="ghost" onClick={handleResetLogo}>
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Restaurar Padrão
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
             <div className="grid gap-6 md:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="siteName">Nome da Empresa</Label>
