@@ -26,18 +26,32 @@ export interface ClientFormData {
 }
 
 export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: ClientFormProps) => {
-  const [formData, setFormData] = useState<ClientFormData>(
-    initialData || {
-      nome: "",
-      nuit: "",
-      email: "",
-      telefone: "",
-      endereco: "",
-      ativo: true,
-    }
-  );
+  const [formData, setFormData] = useState<ClientFormData>({
+    nome: "",
+    nuit: "",
+    email: "",
+    telefone: "",
+    endereco: "",
+    ativo: true,
+  });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  // Atualizar formData quando initialData mudar
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    } else {
+      setFormData({
+        nome: "",
+        nuit: "",
+        email: "",
+        telefone: "",
+        endereco: "",
+        ativo: true,
+      });
+    }
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
