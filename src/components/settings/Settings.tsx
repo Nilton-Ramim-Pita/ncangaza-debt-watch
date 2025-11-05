@@ -5,27 +5,19 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSettings } from "@/hooks/useSettings";
 import { useLogo } from "@/hooks/useLogo";
-import { BotaoPopularDados } from "@/components/admin/BotaoPopularDados";
 import {
   Settings as SettingsIcon, 
   Bell, 
-  Palette, 
-  Database,
+  Palette,
   Mail,
   Smartphone,
   MessageSquare,
-  Shield,
-  Download,
-  Upload,
-  RefreshCw,
   Save,
-  Globe,
   Sun,
   Moon,
   Monitor,
@@ -50,34 +42,15 @@ export const Settings = () => {
     }, 1000);
   };
 
-  const handleExportData = () => {
-    toast.success("Os dados estão sendo preparados para download");
-  };
-
-  const handleImportData = () => {
-    toast.info("Importação de dados será implementada em breve");
-  };
-
-  const handleBackupNow = () => {
-    toast.success("Backup iniciado com sucesso");
-  };
-
-  const handleClearCache = () => {
-    localStorage.clear();
-    toast.success("Cache limpo com sucesso");
-  };
-
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Por favor, selecione um arquivo de imagem válido");
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("O arquivo deve ter no máximo 5MB");
       return;
@@ -119,7 +92,7 @@ export const Settings = () => {
       </div>
 
       <div className="grid gap-6">
-        {/* Appearance Settings */}
+        {/* Aparência */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -191,7 +164,7 @@ export const Settings = () => {
           </CardContent>
         </Card>
 
-        {/* General Settings */}
+        {/* Configurações Gerais */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -200,7 +173,6 @@ export const Settings = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Logo Upload */}
             <div className="space-y-4">
               <Label className="text-base">Logotipo da Empresa</Label>
               <div className="flex items-start gap-6">
@@ -224,7 +196,7 @@ export const Settings = () => {
                   <div className="flex gap-2">
                     <Button variant="outline" className="relative" asChild>
                       <label className="cursor-pointer">
-                        <Upload className="w-4 h-4 mr-2" />
+                        <ImageIcon className="w-4 h-4 mr-2" />
                         Carregar Logo
                         <input
                           type="file"
@@ -322,7 +294,7 @@ export const Settings = () => {
           </CardContent>
         </Card>
 
-        {/* Notification Settings */}
+        {/* Notificações */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -372,172 +344,6 @@ export const Settings = () => {
                   checked={settings.whatsappNotifications}
                   onCheckedChange={(checked) => updateSetting("whatsappNotifications", checked)}
                 />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Security Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Shield className="w-5 h-5 mr-2" />
-              Segurança
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Autenticação de Dois Fatores</Label>
-                  <p className="text-sm text-muted-foreground">Adicionar uma camada extra de segurança</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge variant={settings.twoFactorAuth ? "secondary" : "outline"}>
-                    {settings.twoFactorAuth ? "Ativo" : "Inativo"}
-                  </Badge>
-                  <Switch 
-                    checked={settings.twoFactorAuth}
-                    onCheckedChange={(checked) => updateSetting("twoFactorAuth", checked)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="sessionTimeout">Timeout da Sessão (minutos)</Label>
-                <Input
-                  id="sessionTimeout"
-                  type="number"
-                  min="5"
-                  max="480"
-                  value={settings.sessionTimeout}
-                  onChange={(e) => updateSetting("sessionTimeout", parseInt(e.target.value) || 30)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Tempo até deslogar automaticamente por inatividade
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Data Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Database className="w-5 h-5 mr-2" />
-              Gestão de Dados
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Backup Automático</Label>
-                  <p className="text-sm text-muted-foreground">Criar backups automaticamente</p>
-                </div>
-                <Switch 
-                  checked={settings.autoBackup}
-                  onCheckedChange={(checked) => updateSetting("autoBackup", checked)}
-                />
-              </div>
-
-              {settings.autoBackup && (
-                <div className="grid gap-2">
-                  <Label htmlFor="backupFrequency">Frequência do Backup</Label>
-                  <Select 
-                    value={settings.backupFrequency} 
-                    onValueChange={(value) => updateSetting("backupFrequency", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="hourly">⏰ A cada hora</SelectItem>
-                      <SelectItem value="daily">📅 Diariamente</SelectItem>
-                      <SelectItem value="weekly">📆 Semanalmente</SelectItem>
-                      <SelectItem value="monthly">🗓️ Mensalmente</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="grid gap-2">
-                <Label htmlFor="dataRetention">Retenção de Dados (dias)</Label>
-                <Input
-                  id="dataRetention"
-                  type="number"
-                  min="30"
-                  max="3650"
-                  value={settings.dataRetention}
-                  onChange={(e) => updateSetting("dataRetention", parseInt(e.target.value) || 365)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Tempo para manter os dados antes da exclusão automática
-                </p>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Button variant="outline" onClick={handleBackupNow}>
-                <Download className="w-4 h-4 mr-2" />
-                Backup Agora
-              </Button>
-
-              <Button variant="outline" onClick={handleExportData}>
-                <Upload className="w-4 h-4 mr-2" />
-                Exportar Dados
-              </Button>
-
-              <Button variant="outline" onClick={handleImportData}>
-                <Download className="w-4 h-4 mr-2" />
-                Importar Dados
-              </Button>
-
-              <Button variant="outline" onClick={handleClearCache}>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Limpar Cache
-              </Button>
-            </div>
-            
-            <Separator />
-            
-            <div className="flex justify-center">
-              <BotaoPopularDados />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* System Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Globe className="w-5 h-5 mr-2" />
-              Informações do Sistema
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <div className="text-center p-4 border rounded-lg">
-                <div className="text-sm font-medium text-muted-foreground">Versão</div>
-                <div className="text-lg font-semibold">v1.0.0</div>
-              </div>
-              
-              <div className="text-center p-4 border rounded-lg">
-                <div className="text-sm font-medium text-muted-foreground">Base de Dados</div>
-                <div className="text-lg font-semibold">PostgreSQL</div>
-              </div>
-              
-              <div className="text-center p-4 border rounded-lg">
-                <div className="text-sm font-medium text-muted-foreground">Último Backup</div>
-                <div className="text-lg font-semibold">Hoje</div>
-              </div>
-              
-              <div className="text-center p-4 border rounded-lg">
-                <div className="text-sm font-medium text-muted-foreground">Status</div>
-                <Badge className="bg-success/20 text-success">Online</Badge>
               </div>
             </div>
           </CardContent>
