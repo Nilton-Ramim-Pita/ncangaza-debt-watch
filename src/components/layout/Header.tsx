@@ -64,15 +64,7 @@ export const Header = ({ onTabChange }: HeaderProps) => {
 
   return (
     <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-      <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex items-center space-x-4">
-          <img 
-            src={logo} 
-            alt="Logo da Empresa" 
-            className="h-12 object-contain"
-          />
-        </div>
-
+      <div className="flex h-16 items-center justify-end px-6">
         <div className="flex items-center space-x-4">
           {/* Notifications */}
           <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
