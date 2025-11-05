@@ -61,7 +61,11 @@ export const useClients = () => {
 
       if (error) throw error;
 
-      setClients(prev => [...prev, data]);
+      // Atualiza imediatamente a UI
+      setClients(prev => [...prev, data].sort((a, b) => a.nome.localeCompare(b.nome)));
+      
+      // Garante consistência buscando novamente do servidor
+      await fetchClients();
       
       // Criar notificação in-app
       await createInAppNotification({
@@ -87,7 +91,6 @@ export const useClients = () => {
       return { success: false, error };
     }
   };
-
   const updateClient = async (id: string, clientData: Partial<ClientFormData>) => {
     try {
       const { data, error } = await supabase

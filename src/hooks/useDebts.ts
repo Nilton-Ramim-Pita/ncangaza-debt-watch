@@ -77,10 +77,14 @@ export const useDebts = () => {
       const formattedValue = formatCurrency(data.valor);
       const formattedDate = new Date(data.data_vencimento).toLocaleDateString('pt-PT');
 
+      // Atualiza imediatamente a UI
       setDebts(prev => [{
         ...data,
         status: data.status as 'pendente' | 'paga' | 'vencida'
       }, ...prev]);
+
+      // Garante consistência buscando novamente do servidor
+      await fetchDebts();
       
       // Criar notificação in-app
       await createInAppNotification({
@@ -107,7 +111,6 @@ export const useDebts = () => {
       return { success: false, error };
     }
   };
-
   const updateDebt = async (id: string, debtData: Partial<DebtFormData>) => {
     try {
       const { data, error } = await supabase
