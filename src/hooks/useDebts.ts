@@ -238,6 +238,53 @@ export const useDebts = () => {
 
   useEffect(() => {
     fetchDebts();
+
+    // Realtime: sincroniza automaticamente INSERT/UPDATE/DELETE em 'dividas'
+    const channel = supabase
+      .channel('realtime:dividas')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'dividas' }, async (payload) => {
+        // Buscar o registo completo com o join do cliente
+        const { data } = await supabase
+          .from('dividas')
+          .select('*, cliente:clientes(nome, nuit)')
+          .eq('id', (payload.new as any).id)
+          .single();
+        if (data) {
+          setDebts((prev) => [
+            { ...data, status: data.status as 'pendente' | 'paga' | 'vencida' },
+            ...prev.filter((d) => d.id !== data.id),
+          ].sort((a, b) => new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime()));
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'dividas' }, async (payload) => {
+        const { data } = await supabase
+          .from('dividas')
+          .select('*, cliente:clientes(nome, nuit)')
+          .eq('id', (payload.new as any).id)
+          .single();
+        if (data) {
+          setDebts((prev) => prev
+            .map((d) => d.id === data.id ? { ...data, status: data.status as 'pendente' | 'paga' | 'vencida' } : d)
+            .sort((a, b) => new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime()));
+        }
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'dividas' }, (payload) => {
+        setDebts((prev) => prev.filter((d) => d.id !== (payload.old as any).id));
+      })
+      .subscribe();
+
+    // Recarrega quando a aba volta a ficar visível
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchDebts();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
