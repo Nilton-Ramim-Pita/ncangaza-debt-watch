@@ -1,13 +1,20 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Notification {
+export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'error' | 'success';
+  type: 'info' | 'warning' | 'error' | 'success' | 'in_app' | 'email' | 'whatsapp';
   read: boolean;
   created_at: string;
+  dividas?: {
+    id: string;
+    valor: number;
+    clientes?: {
+      nome: string;
+    };
+  };
 }
 
 export const useNotifications = () => {
@@ -15,7 +22,6 @@ export const useNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Load initial notifications
   useEffect(() => {
     loadNotifications();
     
@@ -27,9 +33,11 @@ export const useNotifications = () => {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'notificacoes'
+          table: 'notificacoes',
+          filter: `tipo=eq.in_app`
         },
-        () => {
+        (payload) => {
+          console.log('Nova notificação recebida:', payload);
           loadNotifications();
         }
       )
@@ -42,6 +50,7 @@ export const useNotifications = () => {
 
   const loadNotifications = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('notificacoes')
         .select(`
@@ -49,8 +58,10 @@ export const useNotifications = () => {
           mensagem,
           status,
           tipo,
+          lida,
           created_at,
           dividas (
+            id,
             valor,
             clientes (
               nome
@@ -65,11 +76,12 @@ export const useNotifications = () => {
 
       const formattedNotifications: Notification[] = (data || []).map(n => ({
         id: n.id,
-        title: n.status === 'enviada' ? 'Dívida Vencida' : 'Notificação',
+        title: n.status === 'enviada' ? 'Notificação do Sistema' : 'Notificação',
         message: n.mensagem || 'Sem mensagem',
-        type: n.status === 'erro' ? 'error' : n.status === 'enviada' ? 'warning' : 'info',
-        read: false,
-        created_at: n.created_at
+        type: (n.tipo as any) || 'info',
+        read: n.lida || false,
+        created_at: n.created_at,
+        dividas: n.dividas as any
       }));
 
       setNotifications(formattedNotifications);
@@ -81,32 +93,58 @@ export const useNotifications = () => {
     }
   };
 
-  const markAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === notificationId 
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notificacoes')
+        .update({ lida: true })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === notificationId 
+            ? { ...notification, read: true }
+            : notification
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Erro ao marcar notificação como lida:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
-    setUnreadCount(0);
+  const markAllAsRead = async () => {
+    try {
+      const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+      
+      if (unreadIds.length === 0) return;
+
+      const { error } = await supabase
+        .from('notificacoes')
+        .update({ lida: true })
+        .in('id', unreadIds);
+
+      if (error) throw error;
+
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, read: true }))
+      );
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Erro ao marcar todas como lidas:', error);
+    }
   };
 
   const addNotification = (notification: Omit<Notification, 'id' | 'created_at'>) => {
     const newNotification: Notification = {
       ...notification,
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
       created_at: new Date().toISOString()
     };
     
-    setNotifications(prev => [newNotification, ...prev]);
+    setNotifications(prev => [newNotification, ...prev].slice(0, 10));
     if (!notification.read) {
       setUnreadCount(prev => prev + 1);
     }
@@ -122,13 +160,14 @@ export const useNotifications = () => {
   };
 
   return {
-    notifications: notifications.slice(0, 10), // Limit to 10 most recent
+    notifications,
     unreadCount,
     loading,
     markAsRead,
     markAllAsRead,
     addNotification,
     deleteNotification,
-    refreshNotifications: loadNotifications
+    refreshNotifications: loadNotifications,
+    refetch: loadNotifications
   };
 };

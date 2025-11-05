@@ -8,6 +8,7 @@ import { useClients } from "@/hooks/useClients";
 import { NotificationTemplates } from './NotificationTemplates';
 import { NotificationCenter } from './NotificationCenter';
 import { NotificationSettings } from './NotificationSettings';
+import { NotificationList } from './NotificationList';
 import { toast } from 'sonner';
 import { formatCurrency } from "@/utils/currency";
 import { supabase } from "@/integrations/supabase/client";
@@ -197,6 +198,7 @@ export const NotificationsReal = () => {
 
       <TabsContent value="center" className="space-y-6">
         <NotificationCenter />
+        <NotificationList />
       </TabsContent>
 
       <TabsContent value="config" className="space-y-6">
