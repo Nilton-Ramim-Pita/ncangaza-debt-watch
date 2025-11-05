@@ -51,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "Ncangaza Multiservices <noreply@ncangazanms.net.com>",
+      from: "Ncangaza Multiservices <onboarding@resend.dev>",
       to: [to],
       subject: subject,
       html: `
