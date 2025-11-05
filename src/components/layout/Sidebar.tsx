@@ -47,7 +47,7 @@ const sidebarItems = [
     id: "notifications",
     label: "Notificações",
     icon: Calendar,
-    description: "Alertas automáticos"
+    description: "Gestão de notificações"
   },
   {
     id: "analytics",

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import defaultLogo from "@/assets/logo-ncangaza-hq.png";
+import defaultLogo from "@/assets/logo-ncangaza-full.png";
 
 export const useLogo = () => {
   const [logo, setLogoState] = useState<string>(() => {
