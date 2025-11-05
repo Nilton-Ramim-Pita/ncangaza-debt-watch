@@ -155,6 +155,40 @@ export const useClients = () => {
 
   useEffect(() => {
     fetchClients();
+
+    // Realtime: atualiza automaticamente quando clientes forem criados/atualizados/excluídos em qualquer lugar do sistema
+    const channel = supabase
+      .channel('realtime:clientes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'clientes' }, (payload) => {
+        setClients((prev) => {
+          const exists = prev.some((c) => c.id === (payload.new as any).id);
+          const next = exists ? prev : [...prev, payload.new as Client];
+          return next.sort((a, b) => a.nome.localeCompare(b.nome));
+        });
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'clientes' }, (payload) => {
+        setClients((prev) => prev
+          .map((c) => (c.id === (payload.new as any).id ? (payload.new as Client) : c))
+          .sort((a, b) => a.nome.localeCompare(b.nome))
+        );
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'clientes' }, (payload) => {
+        setClients((prev) => prev.filter((c) => c.id !== (payload.old as any).id));
+      })
+      .subscribe();
+
+    // Recarrega quando a aba volta a ficar visível (garante sincronização)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchClients();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
