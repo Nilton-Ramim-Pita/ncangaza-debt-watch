@@ -3,7 +3,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface Profile {
+// Interface para o perfil do utilizador
+interface Perfil {
   id: string;
   user_id: string;
   full_name: string;
@@ -21,204 +22,225 @@ interface Profile {
   whatsapp_notifications?: boolean;
 }
 
-interface UserRole {
+// Interface para a função do utilizador
+interface FuncaoUtilizador {
   user_id: string;
   role: 'admin' | 'user';
 }
 
-interface AuthContextType {
+// Interface do contexto de autenticação
+interface ContextoAutenticacao {
+  // Propriedades em português
+  utilizador: User | null;
+  perfil: Perfil | null;
+  sessao: Session | null;
+  carregando: boolean;
+  iniciarSessao: (email: string, senha: string) => Promise<{ erro: any }>;
+  terminarSessao: () => Promise<void>;
+  ehAdmin: boolean;
+  funcaoUtilizador: 'admin' | 'user' | null;
+  // Manter compatibilidade com código existente em inglês
   user: User | null;
-  profile: Profile | null;
+  profile: Perfil | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, senha: string) => Promise<{ erro: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
   userRole: 'admin' | 'user' | null;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const ContextoAutenticacao = createContext<ContextoAutenticacao | undefined>(undefined);
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  const contexto = useContext(ContextoAutenticacao);
+  if (contexto === undefined) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
-  return context;
+  return contexto;
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null);
+  const [utilizador, setUtilizador] = useState<User | null>(null);
+  const [perfil, setPerfil] = useState<Perfil | null>(null);
+  const [sessao, setSessao] = useState<Session | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [funcaoUtilizador, setFuncaoUtilizador] = useState<'admin' | 'user' | null>(null);
 
-  const fetchProfile = async (userId: string) => {
+  const buscarPerfil = async (idUtilizador: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', idUtilizador)
         .single();
 
       if (error) {
-        // If profile doesn't exist, create one
+        // Se o perfil não existir, criar um
         if (error.code === 'PGRST116') {
-          await createProfile(userId);
+          await criarPerfil(idUtilizador);
           return;
         }
-        console.error('Error fetching profile:', error);
+        console.error('Erro ao buscar perfil:', error);
         return;
       }
 
-      setProfile(data);
+      setPerfil(data);
       
-      // Fetch user role separately
-      const { data: roleData } = await supabase
+      // Buscar função do utilizador separadamente
+      const { data: dadosFuncao } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
+        .eq('user_id', idUtilizador)
         .single();
       
-      setUserRole(roleData?.role || 'user');
-    } catch (error) {
-      console.error('Error fetching profile:', error);
+      setFuncaoUtilizador(dadosFuncao?.role || 'user');
+    } catch (erro) {
+      console.error('Erro ao buscar perfil:', erro);
     }
   };
 
-  const createProfile = async (userId: string) => {
+  const criarPerfil = async (idUtilizador: string) => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const fullName = userData.user?.user_metadata?.full_name || userData.user?.email || 'Usuário';
+      const { data: dadosUtilizador } = await supabase.auth.getUser();
+      const nomeCompleto = dadosUtilizador.user?.user_metadata?.full_name || dadosUtilizador.user?.email || 'Utilizador';
       
       const { data, error } = await supabase
         .from('profiles')
         .insert({
-          user_id: userId,
-          full_name: fullName,
+          user_id: idUtilizador,
+          full_name: nomeCompleto,
           active: true
         })
         .select()
         .single();
 
       if (error) {
-        console.error('Error creating profile:', error);
+        console.error('Erro ao criar perfil:', error);
         return;
       }
 
-      setProfile(data);
-      setUserRole('user'); // Default role
-    } catch (error) {
-      console.error('Error creating profile:', error);
+      setPerfil(data);
+      setFuncaoUtilizador('user'); // Função padrão
+    } catch (erro) {
+      console.error('Erro ao criar perfil:', erro);
     }
   };
 
   useEffect(() => {
-    // Set up auth state listener
+    // Configurar listener do estado de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      (evento, sessao) => {
+        setSessao(sessao);
+        setUtilizador(sessao?.user ?? null);
         
-        if (session?.user) {
-          setProfile(null);
-          // Use setTimeout to defer Supabase calls and prevent deadlock
+        if (sessao?.user) {
+          setPerfil(null);
+          // Usar setTimeout para adiar chamadas do Supabase e prevenir deadlock
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            buscarPerfil(sessao.user.id);
           }, 0);
         } else {
-          setProfile(null);
+          setPerfil(null);
         }
         
-        setLoading(false);
+        setCarregando(false);
       }
     );
 
-    // Check for existing session
+    // Verificar sessão existente
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      setSessao(session);
+      setUtilizador(session?.user ?? null);
       
       if (session?.user) {
-        fetchProfile(session.user.id);
+        buscarPerfil(session.user.id);
       } else {
-        setLoading(false);
+        setCarregando(false);
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const iniciarSessao = async (email: string, senha: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password: senha,
       });
 
       if (error) {
-        // More user-friendly error messages in Portuguese
-        const errorMessage = 
+        // Mensagens de erro mais amigáveis em português
+        const mensagemErro = 
           error.message.includes('Invalid login credentials') ? 'Email ou senha incorretos. Tente novamente.' :
           error.message.includes('Email not confirmed') ? 'Por favor, confirme seu email antes de fazer login.' :
           error.message.includes('User not found') ? 'Utilizador não encontrado.' :
           `Erro ao fazer login: ${error.message}`;
         
-        toast.error(errorMessage);
+        toast.error(mensagemErro);
       } else {
-        // Log login activity
+        // Registar atividade de login
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
             await supabase.functions.invoke('log-login', {
               body: {
                 userId: user.id,
-                ipAddress: 'N/A', // In a real app, you'd get this from the request
+                ipAddress: 'N/A', // Numa aplicação real, obteria isso da requisição
                 userAgent: navigator.userAgent,
               },
             });
           }
-        } catch (logError) {
-          console.error('Error logging login:', logError);
-          // Don't fail the login if logging fails
+        } catch (erroLog) {
+          console.error('Erro ao registar login:', erroLog);
+          // Não falhar o login se o registo falhar
         }
         
         toast.success('Login realizado com sucesso!');
       }
 
-      return { error };
-    } catch (error) {
+      return { erro: error };
+    } catch (erro) {
       toast.error('Erro inesperado ao fazer login');
-      return { error };
+      return { erro };
     }
   };
 
-  const signOut = async () => {
+  const terminarSessao = async () => {
     try {
       await supabase.auth.signOut();
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      setUserRole(null);
+      setUtilizador(null);
+      setPerfil(null);
+      setSessao(null);
+      setFuncaoUtilizador(null);
       toast.success('Logout realizado com sucesso!');
-    } catch (error) {
+    } catch (erro) {
       toast.error('Erro ao fazer logout');
     }
   };
 
-  const isAdmin = userRole === 'admin';
+  const ehAdmin = funcaoUtilizador === 'admin';
 
-  const value = {
-    user,
-    profile,
-    session,
-    loading,
-    signIn,
-    signOut,
-    isAdmin,
-    userRole,
+  const valor = {
+    utilizador,
+    perfil,
+    sessao,
+    carregando,
+    iniciarSessao,
+    terminarSessao,
+    ehAdmin,
+    funcaoUtilizador,
+    // Manter compatibilidade com código existente
+    user: utilizador,
+    profile: perfil,
+    session: sessao,
+    loading: carregando,
+    signIn: iniciarSessao,
+    signOut: terminarSessao,
+    isAdmin: ehAdmin,
+    userRole: funcaoUtilizador,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <ContextoAutenticacao.Provider value={valor}>{children}</ContextoAutenticacao.Provider>;
 };
