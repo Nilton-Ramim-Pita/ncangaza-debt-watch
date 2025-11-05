@@ -18,13 +18,13 @@ export const usePopularDadosAutomatico = () => {
           return;
         }
 
-        // Verificar se já existem clientes na base de dados
+        // Verificar se já existem clientes suficientes na base de dados (pelo menos 20)
         const { count } = await supabase
           .from('clientes')
           .select('*', { count: 'exact', head: true });
 
-        if (count && count > 0) {
-          // Já existem dados, marcar como populado
+        if (count && count >= 20) {
+          // Já existem dados suficientes, marcar como populado
           localStorage.setItem('dados_teste_populados', 'true');
           setJaPopulado(true);
           setVerificando(false);
