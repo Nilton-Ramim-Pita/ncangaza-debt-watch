@@ -132,39 +132,52 @@ export type Database = {
       }
       notificacoes: {
         Row: {
+          cliente_id: string | null
           created_at: string
           data_agendamento: string
           data_envio: string | null
           divida_id: string | null
           erro: string | null
           id: string
+          lida: boolean | null
           mensagem: string | null
           status: string
           tipo: string
         }
         Insert: {
+          cliente_id?: string | null
           created_at?: string
           data_agendamento: string
           data_envio?: string | null
           divida_id?: string | null
           erro?: string | null
           id?: string
+          lida?: boolean | null
           mensagem?: string | null
           status?: string
           tipo: string
         }
         Update: {
+          cliente_id?: string | null
           created_at?: string
           data_agendamento?: string
           data_envio?: string | null
           divida_id?: string | null
           erro?: string | null
           id?: string
+          lida?: boolean | null
           mensagem?: string | null
           status?: string
           tipo?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notificacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notificacoes_divida_id_fkey"
             columns: ["divida_id"]
