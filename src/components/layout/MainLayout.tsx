@@ -10,9 +10,13 @@ import { AnalyticsReal } from "../analytics/AnalyticsReal";
 import { Profile } from "../profile/Profile";
 import { Settings } from "../settings/Settings";
 import UserManagement from "../admin/UserManagement";
+import { usePopularDadosAutomatico } from "@/hooks/usePopularDadosAutomatico";
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  
+  // Popular dados automaticamente se a base de dados estiver vazia
+  usePopularDadosAutomatico();
 
   const renderContent = () => {
     switch (activeTab) {

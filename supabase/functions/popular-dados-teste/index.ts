@@ -23,36 +23,36 @@ serve(async (req) => {
       }
     )
 
-    // Dados dos 25 clientes
+    // Dados dos 25 clientes moçambicanos
     const clientes = [
       // 18 Clientes ativos
-      { nome: 'João Silva', nuit: '123456789', telefone: '+258 84 123 4567', email: 'joao.silva@email.com', endereco: 'Av. Julius Nyerere, Maputo', ativo: true },
-      { nome: 'Maria Santos', nuit: '234567890', telefone: '+258 85 234 5678', email: 'maria.santos@email.com', endereco: 'Av. 24 de Julho, Maputo', ativo: true },
-      { nome: 'António Costa', nuit: '345678901', telefone: '+258 86 345 6789', email: 'antonio.costa@email.com', endereco: 'Bairro Central, Matola', ativo: true },
-      { nome: 'Ana Rodrigues', nuit: '456789012', telefone: '+258 87 456 7890', email: 'ana.rodrigues@email.com', endereco: 'Av. Samora Machel, Beira', ativo: true },
-      { nome: 'Carlos Pereira', nuit: '567890123', telefone: '+258 84 567 8901', email: 'carlos.pereira@email.com', endereco: 'Rua da Resistência, Nampula', ativo: true },
-      { nome: 'Beatriz Fernandes', nuit: '678901234', telefone: '+258 85 678 9012', email: 'beatriz.f@email.com', endereco: 'Av. Marginal, Maputo', ativo: true },
-      { nome: 'Paulo Gomes', nuit: '789012345', telefone: '+258 86 789 0123', email: 'paulo.gomes@email.com', endereco: 'Bairro do Jardim, Matola', ativo: true },
-      { nome: 'Sofia Alves', nuit: '890123456', telefone: '+258 87 890 1234', email: 'sofia.alves@email.com', endereco: 'Av. Eduardo Mondlane, Maputo', ativo: true },
-      { nome: 'Ricardo Martins', nuit: '901234567', telefone: '+258 84 901 2345', email: 'ricardo.m@email.com', endereco: 'Rua da Liberdade, Beira', ativo: true },
-      { nome: 'Inês Carvalho', nuit: '012345678', telefone: '+258 85 012 3456', email: 'ines.carvalho@email.com', endereco: 'Av. Acordos de Lusaka, Maputo', ativo: true },
-      { nome: 'Manuel Sousa', nuit: '112345679', telefone: '+258 86 112 3457', email: 'manuel.sousa@email.com', endereco: 'Bairro Hulene, Maputo', ativo: true },
-      { nome: 'Teresa Dias', nuit: '223456780', telefone: '+258 87 223 4568', email: 'teresa.dias@email.com', endereco: 'Av. Mao Tse Tung, Maputo', ativo: true },
-      { nome: 'Fernando Lopes', nuit: '334567891', telefone: '+258 84 334 5679', email: 'fernando.lopes@email.com', endereco: 'Rua do Bagamoyo, Maputo', ativo: true },
-      { nome: 'Cristina Ribeiro', nuit: '445678902', telefone: '+258 85 445 6790', email: 'cristina.r@email.com', endereco: 'Av. Vlademir Lenine, Maputo', ativo: true },
-      { nome: 'Jorge Ferreira', nuit: '556789013', telefone: '+258 86 556 7901', email: 'jorge.ferreira@email.com', endereco: 'Bairro da Polana, Maputo', ativo: true },
-      { nome: 'Luísa Monteiro', nuit: '667890124', telefone: '+258 87 667 8902', email: 'luisa.monteiro@email.com', endereco: 'Av. Karl Marx, Maputo', ativo: true },
-      { nome: 'Pedro Oliveira', nuit: '778901235', telefone: '+258 84 778 9013', email: 'pedro.oliveira@email.com', endereco: 'Rua da Mesquita, Maputo', ativo: true },
-      { nome: 'Mariana Nunes', nuit: '889012346', telefone: '+258 85 889 0124', email: 'mariana.nunes@email.com', endereco: 'Av. Ahmed Sekou Toure, Maputo', ativo: true },
+      { nome: 'Armando Zavale', nuit: '100234567', telefone: '+258 84 123 4567', email: 'armando.zavale@gmail.com', endereco: 'Bairro da Polana Cimento, Maputo', ativo: true },
+      { nome: 'Célia Macuácua', nuit: '100345678', telefone: '+258 85 234 5678', email: 'celia.macuacua@gmail.com', endereco: 'Av. Julius Nyerere, Maputo', ativo: true },
+      { nome: 'Domingos Nhantumbo', nuit: '100456789', telefone: '+258 86 345 6789', email: 'domingos.nhantumbo@gmail.com', endereco: 'Bairro Central, Matola', ativo: true },
+      { nome: 'Fátima Massinga', nuit: '100567890', telefone: '+258 87 456 7890', email: 'fatima.massinga@gmail.com', endereco: 'Av. Samora Machel, Beira', ativo: true },
+      { nome: 'Hélder Sitoe', nuit: '100678901', telefone: '+258 84 567 8901', email: 'helder.sitoe@gmail.com', endereco: 'Rua da Resistência, Nampula', ativo: true },
+      { nome: 'Ivone Chissano', nuit: '100789012', telefone: '+258 85 678 9012', email: 'ivone.chissano@gmail.com', endereco: 'Av. Marginal, Maputo', ativo: true },
+      { nome: 'João Cumbane', nuit: '100890123', telefone: '+258 86 789 0123', email: 'joao.cumbane@gmail.com', endereco: 'Bairro do Jardim, Matola', ativo: true },
+      { nome: 'Lurdes Tembe', nuit: '100901234', telefone: '+258 87 890 1234', email: 'lurdes.tembe@gmail.com', endereco: 'Av. Eduardo Mondlane, Maputo', ativo: true },
+      { nome: 'Mário Nguenha', nuit: '101012345', telefone: '+258 84 901 2345', email: 'mario.nguenha@gmail.com', endereco: 'Rua da Liberdade, Beira', ativo: true },
+      { nome: 'Nazaré Mabote', nuit: '101123456', telefone: '+258 85 012 3456', email: 'nazare.mabote@gmail.com', endereco: 'Av. Acordos de Lusaka, Maputo', ativo: true },
+      { nome: 'Olívio Manjate', nuit: '101234567', telefone: '+258 86 112 3457', email: 'olivio.manjate@gmail.com', endereco: 'Bairro Hulene, Maputo', ativo: true },
+      { nome: 'Palmira Uamusse', nuit: '101345678', telefone: '+258 87 223 4568', email: 'palmira.uamusse@gmail.com', endereco: 'Av. Mao Tse Tung, Maputo', ativo: true },
+      { nome: 'Quirino Mathe', nuit: '101456789', telefone: '+258 84 334 5679', email: 'quirino.mathe@gmail.com', endereco: 'Rua do Bagamoyo, Maputo', ativo: true },
+      { nome: 'Rosa Bila', nuit: '101567890', telefone: '+258 85 445 6790', email: 'rosa.bila@gmail.com', endereco: 'Av. Vlademir Lenine, Maputo', ativo: true },
+      { nome: 'Salomão Nkavandame', nuit: '101678901', telefone: '+258 86 556 7901', email: 'salomao.nkavandame@gmail.com', endereco: 'Bairro da Polana, Maputo', ativo: true },
+      { nome: 'Teresa Mondlane', nuit: '101789012', telefone: '+258 87 667 8902', email: 'teresa.mondlane@gmail.com', endereco: 'Av. Karl Marx, Maputo', ativo: true },
+      { nome: 'Ulisses Macaringue', nuit: '101890123', telefone: '+258 84 778 9013', email: 'ulisses.macaringue@gmail.com', endereco: 'Rua da Mesquita, Maputo', ativo: true },
+      { nome: 'Vitória Guambe', nuit: '101901234', telefone: '+258 85 889 0124', email: 'vitoria.guambe@gmail.com', endereco: 'Av. Ahmed Sekou Toure, Maputo', ativo: true },
       
       // 7 Clientes inativos
-      { nome: 'André Barbosa', nuit: '990123457', telefone: '+258 86 990 1235', email: 'andre.barbosa@email.com', endereco: 'Bairro Maxaquene, Maputo', ativo: false },
-      { nome: 'Patrícia Moreira', nuit: '101234568', telefone: '+258 87 101 2346', email: 'patricia.moreira@email.com', endereco: 'Av. de Moçambique, Maputo', ativo: false },
-      { nome: 'Rui Correia', nuit: '211234569', telefone: '+258 84 211 2347', email: 'rui.correia@email.com', endereco: 'Rua da Imprensa, Maputo', ativo: false },
-      { nome: 'Vera Teixeira', nuit: '321234570', telefone: '+258 85 321 2348', email: 'vera.teixeira@email.com', endereco: 'Av. Julius Nyerere, Maputo', ativo: false },
-      { nome: 'Miguel Castro', nuit: '431234571', telefone: '+258 86 431 2349', email: 'miguel.castro@email.com', endereco: 'Bairro do Chamanculo, Maputo', ativo: false },
-      { nome: 'Helena Pinto', nuit: '541234572', telefone: '+258 87 541 2350', email: 'helena.pinto@email.com', endereco: 'Av. Frente de Libertação, Maputo', ativo: false },
-      { nome: 'Vítor Azevedo', nuit: '651234573', telefone: '+258 84 651 2351', email: 'vitor.azevedo@email.com', endereco: 'Rua do Zimpeto, Maputo', ativo: false },
+      { nome: 'Wilson Chitará', nuit: '102012345', telefone: '+258 86 990 1235', email: 'wilson.chitara@gmail.com', endereco: 'Bairro Maxaquene, Maputo', ativo: false },
+      { nome: 'Xana Muchanga', nuit: '102123456', telefone: '+258 87 101 2346', email: 'xana.muchanga@gmail.com', endereco: 'Av. de Moçambique, Maputo', ativo: false },
+      { nome: 'Yolanda Mahumane', nuit: '102234567', telefone: '+258 84 211 2347', email: 'yolanda.mahumane@gmail.com', endereco: 'Rua da Imprensa, Maputo', ativo: false },
+      { nome: 'Zacarias Malate', nuit: '102345678', telefone: '+258 85 321 2348', email: 'zacarias.malate@gmail.com', endereco: 'Av. Vladimir Lenine, Maputo', ativo: false },
+      { nome: 'Alberto Nhamirre', nuit: '102456789', telefone: '+258 86 431 2349', email: 'alberto.nhamirre@gmail.com', endereco: 'Bairro do Chamanculo, Maputo', ativo: false },
+      { nome: 'Berta Chitsondzo', nuit: '102567890', telefone: '+258 87 541 2350', email: 'berta.chitsondzo@gmail.com', endereco: 'Av. Frente de Libertação, Maputo', ativo: false },
+      { nome: 'Carlos Nhanale', nuit: '102678901', telefone: '+258 84 651 2351', email: 'carlos.nhanale@gmail.com', endereco: 'Rua do Zimpeto, Maputo', ativo: false },
     ];
 
     // Inserir clientes
@@ -76,60 +76,202 @@ serve(async (req) => {
       return data.toISOString().split('T')[0];
     };
 
+    // Produtos e serviços moçambicanos realistas
+    const produtos = [
+      'Perfume importado Versace',
+      'Goma eletrónica JBL',
+      'Fone Bluetooth Samsung',
+      'Relógio Casio original',
+      'Sapatos de couro italiano',
+      'Mochila escolar Nike',
+      'Telemóvel Samsung Galaxy',
+      'Carregador portátil Xiaomi',
+      'Óculos de sol Ray-Ban',
+      'Carteira de couro Gucci',
+      'Camisola Adidas original',
+      'Ténis Nike Air Max',
+      'Bolsa feminina Louis Vuitton',
+      'Capulana estampada de luxo',
+      'Conjunto de panelas Tramontina',
+      'Ventilador de tecto Arno',
+      'Ferro de engomar Philips',
+      'Liquidificador Oster',
+      'Sofá de 3 lugares importado',
+      'Mesa de jantar com 6 cadeiras',
+    ];
+
     // Criar 27 dívidas
     const dividas = [];
     
-    // 5 vencidas
-    for (let i = 0; i < 5; i++) {
-      dividas.push({
-        cliente_id: clientesInseridos[i].id,
-        valor: Math.floor(Math.random() * 50000) + 5000,
-        descricao: `Fornecimento de materiais - ${Math.floor(Math.random() * 3) + 1} meses atrás`,
-        data_vencimento: obterData(Math.floor(Math.random() * 60) + 30),
+    // 5 vencidas (clientes 0-4)
+    dividas.push(
+      {
+        cliente_id: clientesInseridos[0].id,
+        valor: 8500,
+        descricao: produtos[0],
+        data_vencimento: obterData(45),
         status: 'vencida'
-      });
-    }
+      },
+      {
+        cliente_id: clientesInseridos[1].id,
+        valor: 12000,
+        descricao: produtos[1],
+        data_vencimento: obterData(60),
+        status: 'vencida'
+      },
+      {
+        cliente_id: clientesInseridos[2].id,
+        valor: 5500,
+        descricao: produtos[2],
+        data_vencimento: obterData(30),
+        status: 'vencida'
+      },
+      {
+        cliente_id: clientesInseridos[3].id,
+        valor: 15000,
+        descricao: produtos[3],
+        data_vencimento: obterData(90),
+        status: 'vencida'
+      },
+      {
+        cliente_id: clientesInseridos[4].id,
+        valor: 7800,
+        descricao: produtos[4],
+        data_vencimento: obterData(50),
+        status: 'vencida'
+      }
+    );
 
-    // 6 pendentes
-    for (let i = 5; i < 11; i++) {
-      dividas.push({
-        cliente_id: clientesInseridos[i].id,
-        valor: Math.floor(Math.random() * 30000) + 3000,
-        descricao: `Serviços prestados - Fatura ${1000 + i}`,
-        data_vencimento: obterDataFutura(Math.floor(Math.random() * 30) + 5),
+    // 6 pendentes (clientes 5-10)
+    dividas.push(
+      {
+        cliente_id: clientesInseridos[5].id,
+        valor: 3200,
+        descricao: produtos[5],
+        data_vencimento: obterDataFutura(10),
         status: 'pendente'
-      });
-    }
+      },
+      {
+        cliente_id: clientesInseridos[6].id,
+        valor: 9500,
+        descricao: produtos[6],
+        data_vencimento: obterDataFutura(15),
+        status: 'pendente'
+      },
+      {
+        cliente_id: clientesInseridos[7].id,
+        valor: 4700,
+        descricao: produtos[7],
+        data_vencimento: obterDataFutura(20),
+        status: 'pendente'
+      },
+      {
+        cliente_id: clientesInseridos[8].id,
+        valor: 6300,
+        descricao: produtos[8],
+        data_vencimento: obterDataFutura(25),
+        status: 'pendente'
+      },
+      {
+        cliente_id: clientesInseridos[9].id,
+        valor: 11000,
+        descricao: produtos[9],
+        data_vencimento: obterDataFutura(30),
+        status: 'pendente'
+      },
+      {
+        cliente_id: clientesInseridos[10].id,
+        valor: 2800,
+        descricao: produtos[10],
+        data_vencimento: obterDataFutura(12),
+        status: 'pendente'
+      }
+    );
 
-    // 8 pagas
-    for (let i = 11; i < 19; i++) {
-      const dataVenc = obterData(Math.floor(Math.random() * 90) + 10);
-      const dataPag = new Date(dataVenc);
-      dataPag.setDate(dataPag.getDate() - Math.floor(Math.random() * 5));
-      
+    // 8 pagas (clientes 11-18)
+    const datasPagas = [
+      { venc: obterData(20), pag: obterData(18) },
+      { venc: obterData(35), pag: obterData(32) },
+      { venc: obterData(50), pag: obterData(45) },
+      { venc: obterData(65), pag: obterData(60) },
+      { venc: obterData(40), pag: obterData(38) },
+      { venc: obterData(55), pag: obterData(50) },
+      { venc: obterData(70), pag: obterData(65) },
+      { venc: obterData(25), pag: obterData(20) },
+    ];
+
+    for (let i = 0; i < 8; i++) {
       dividas.push({
-        cliente_id: clientesInseridos[i].id,
-        valor: Math.floor(Math.random() * 40000) + 2000,
-        descricao: `Pagamento de fatura - Ref: ${Math.floor(Math.random() * 9000) + 1000}`,
-        data_vencimento: dataVenc,
-        data_pagamento: dataPag.toISOString(),
+        cliente_id: clientesInseridos[11 + i].id,
+        valor: [5000, 8200, 10500, 3500, 12000, 4800, 9700, 6400][i],
+        descricao: produtos[11 + i],
+        data_vencimento: datasPagas[i].venc,
+        data_pagamento: new Date(datasPagas[i].pag).toISOString(),
         status: 'paga'
       });
     }
 
-    // Mais 8 dívidas extras distribuídas
-    for (let i = 0; i < 8; i++) {
-      const idx = i * 2;
-      if (idx < clientesInseridos.length) {
-        dividas.push({
-          cliente_id: clientesInseridos[idx].id,
-          valor: Math.floor(Math.random() * 20000) + 1000,
-          descricao: `Adiantamento de serviços`,
-          data_vencimento: obterDataFutura(Math.floor(Math.random() * 45) + 15),
-          status: 'pendente'
-        });
+    // 8 extras - dívidas adicionais para alguns clientes (produtos/serviços variados)
+    dividas.push(
+      {
+        cliente_id: clientesInseridos[0].id,
+        valor: 1500,
+        descricao: 'Manutenção de telemóvel',
+        data_vencimento: obterDataFutura(8),
+        status: 'pendente'
+      },
+      {
+        cliente_id: clientesInseridos[2].id,
+        valor: 2200,
+        descricao: 'Acessórios para carro',
+        data_vencimento: obterDataFutura(18),
+        status: 'pendente'
+      },
+      {
+        cliente_id: clientesInseridos[5].id,
+        valor: 3800,
+        descricao: 'Creme de cabelo profissional',
+        data_vencimento: obterDataFutura(22),
+        status: 'pendente'
+      },
+      {
+        cliente_id: clientesInseridos[7].id,
+        valor: 5500,
+        descricao: 'Jogo de lençóis importado',
+        data_vencimento: obterData(10),
+        status: 'vencida'
+      },
+      {
+        cliente_id: clientesInseridos[9].id,
+        valor: 4200,
+        descricao: 'Kit de ferramentas completo',
+        data_vencimento: obterDataFutura(35),
+        status: 'pendente'
+      },
+      {
+        cliente_id: clientesInseridos[12].id,
+        valor: 6800,
+        descricao: 'Aparelhagem de som JBL',
+        data_vencimento: obterData(5),
+        status: 'paga',
+        data_pagamento: new Date(obterData(3)).toISOString()
+      },
+      {
+        cliente_id: clientesInseridos[14].id,
+        valor: 3100,
+        descricao: 'Decoração para casa',
+        data_vencimento: obterDataFutura(40),
+        status: 'pendente'
+      },
+      {
+        cliente_id: clientesInseridos[16].id,
+        valor: 7200,
+        descricao: 'Bicicleta mountain bike',
+        data_vencimento: obterData(15),
+        status: 'paga',
+        data_pagamento: new Date(obterData(12)).toISOString()
       }
-    }
+    );
 
     // Inserir dívidas
     const { data: dividasInseridas, error: erroDividas } = await supabaseClient
