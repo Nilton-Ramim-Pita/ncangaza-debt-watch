@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSettings } from "@/hooks/useSettings";
 import { useLogo } from "@/hooks/useLogo";
+import { BotaoPopularDados } from "@/components/admin/BotaoPopularDados";
 import {
   Settings as SettingsIcon, 
   Bell, 
@@ -499,6 +500,12 @@ export const Settings = () => {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Limpar Cache
               </Button>
+            </div>
+            
+            <Separator />
+            
+            <div className="flex justify-center">
+              <BotaoPopularDados />
             </div>
           </CardContent>
         </Card>
