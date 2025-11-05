@@ -11,6 +11,7 @@ import { useDebts } from "@/hooks/useDebts";
 import { useClients } from "@/hooks/useClients";
 import { NotificationTemplates } from './NotificationTemplates';
 import { NotificationCenter } from './NotificationCenter';
+import { NotificationSettings } from './NotificationSettings';
 import { toast } from 'sonner';
 import { formatCurrency } from "@/utils/currency";
 import { supabase } from "@/integrations/supabase/client";
@@ -369,7 +370,7 @@ export const NotificationsReal = () => {
 
   return (
     <Tabs defaultValue="notifications" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="notifications">
           <Bell className="w-4 h-4 mr-2" />
           Notificações
@@ -378,14 +379,22 @@ export const NotificationsReal = () => {
           <Info className="w-4 h-4 mr-2" />
           Central
         </TabsTrigger>
-        <TabsTrigger value="templates">
+        <TabsTrigger value="config">
           <Settings className="w-4 h-4 mr-2" />
+          Configurações
+        </TabsTrigger>
+        <TabsTrigger value="templates">
+          <Calendar className="w-4 h-4 mr-2" />
           Templates
         </TabsTrigger>
       </TabsList>
 
       <TabsContent value="center" className="space-y-6">
         <NotificationCenter />
+      </TabsContent>
+
+      <TabsContent value="config" className="space-y-6">
+        <NotificationSettings />
       </TabsContent>
 
       <TabsContent value="notifications" className="space-y-6">
