@@ -32,6 +32,7 @@ import { useDebts } from "@/hooks/useDebts";
 import { useClients } from "@/hooks/useClients";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { DebtActions } from "./DebtActions";
 
 interface Debt {
   id: string;
@@ -394,7 +395,10 @@ export const DebtsTable = () => {
                       </TableCell>
                       <TableCell>{getStatusBadge(debt.status)}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end space-x-2">
+                        <div className="flex items-center justify-end gap-2">
+                          {client && (debt.status === 'vencida' || debt.status === 'pendente') && (
+                            <DebtActions debt={debt} client={client} />
+                          )}
                           <Button variant="ghost" size="sm">
                             <Eye className="h-4 w-4" />
                           </Button>
