@@ -74,10 +74,18 @@ export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: Client
     setLoading(true);
     
     try {
-      let result: any = { success: true };
-      if (onSubmit) {
-        result = await onSubmit(formData as any);
+      let result: any = { success: false };
+      if (!onSubmit) {
+        toast({
+          title: "Erro",
+          description: "Ação indisponível no momento. Tente novamente.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
       }
+
+      result = await onSubmit(formData as any);
       
       if (result && result.success) {
         // Reset form only if not editing
@@ -101,7 +109,7 @@ export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: Client
       } else {
         toast({
           title: "Erro",
-          description: initialData ? "Erro ao atualizar cliente" : "Erro ao adicionar cliente",
+          description: (result?.error?.code === '23505') ? "NUIT já existe. Escolha outro." : (initialData ? "Erro ao atualizar cliente" : "Erro ao adicionar cliente"),
           variant: "destructive",
         });
         return;

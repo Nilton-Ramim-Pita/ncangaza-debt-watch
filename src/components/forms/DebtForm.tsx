@@ -98,10 +98,17 @@ export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [], editData 
     setLoading(true);
     
     try {
-      let result: any = { success: true };
-      if (onSubmit) {
-        result = await onSubmit(formData as any);
+      let result: any = { success: false };
+      if (!onSubmit) {
+        toast({
+          title: "Erro",
+          description: "Ação indisponível no momento. Tente novamente.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
       }
+      result = await onSubmit(formData as any);
       
       if (result && result.success) {
         // Reset form
