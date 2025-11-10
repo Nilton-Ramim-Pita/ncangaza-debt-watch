@@ -74,28 +74,38 @@ export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: Client
     setLoading(true);
     
     try {
+      let result: any = { success: true };
       if (onSubmit) {
-        await onSubmit(formData);
+        result = await onSubmit(formData as any);
       }
       
-      // Reset form only if not editing
-      if (!initialData) {
-        setFormData({
-          nome: "",
-          nuit: "",
-          email: "",
-          telefone: "",
-          endereco: "",
-          ativo: true,
+      if (result && result.success) {
+        // Reset form only if not editing
+        if (!initialData) {
+          setFormData({
+            nome: "",
+            nuit: "",
+            email: "",
+            telefone: "",
+            endereco: "",
+            ativo: true,
+          });
+        }
+        
+        onOpenChange(false);
+        
+        toast({
+          title: "Sucesso",
+          description: initialData ? "Cliente atualizado com sucesso!" : "Cliente adicionado com sucesso!",
         });
+      } else {
+        toast({
+          title: "Erro",
+          description: initialData ? "Erro ao atualizar cliente" : "Erro ao adicionar cliente",
+          variant: "destructive",
+        });
+        return;
       }
-      
-      onOpenChange(false);
-      
-      toast({
-        title: "Sucesso",
-        description: initialData ? "Cliente atualizado com sucesso!" : "Cliente adicionado com sucesso!",
-      });
     } catch (error) {
       console.error("Erro ao salvar cliente:", error);
       toast({

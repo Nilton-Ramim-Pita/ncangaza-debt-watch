@@ -85,7 +85,7 @@ export const useClients = () => {
       console.error('Erro ao criar cliente:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível criar o cliente",
+        description: (error as any)?.code === '23505' ? "NUIT já existe. Escolha outro." : "Não foi possível criar o cliente",
         variant: "destructive",
       });
       return { success: false, error };

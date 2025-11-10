@@ -98,26 +98,36 @@ export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [], editData 
     setLoading(true);
     
     try {
+      let result: any = { success: true };
       if (onSubmit) {
-        await onSubmit(formData);
+        result = await onSubmit(formData as any);
       }
       
-      // Reset form
-      setFormData({
-        cliente_id: "",
-        valor: 0,
-        descricao: "",
-        data_vencimento: "",
-        status: "pendente",
-      });
-      setValorDisplay("");
-      
-      onOpenChange(false);
-      
-      toast({
-        title: "Sucesso",
-        description: "Dívida adicionada com sucesso!",
-      });
+      if (result && result.success) {
+        // Reset form
+        setFormData({
+          cliente_id: "",
+          valor: 0,
+          descricao: "",
+          data_vencimento: "",
+          status: "pendente",
+        });
+        setValorDisplay("");
+        
+        onOpenChange(false);
+        
+        toast({
+          title: "Sucesso",
+          description: editData ? "Dívida actualizada com sucesso!" : "Dívida adicionada com sucesso!",
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: editData ? "Erro ao actualizar dívida" : "Erro ao adicionar dívida",
+          variant: "destructive",
+        });
+        return;
+      }
     } catch (error) {
       console.error("Erro ao salvar dívida:", error);
       toast({
