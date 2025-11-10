@@ -44,20 +44,13 @@ export const ClientsTable = () => {
 
   const handleAddClient = async (clientData: ClientFormData) => {
     const result = await createClient(clientData);
-    if (result.success) {
-      setShowClientForm(false);
-      await refetch(); // Recarrega a lista para garantir sincronização
-    }
+    return result; // Devolve para o formulário tratar toasts/fechar modal
   };
 
   const handleEditClient = async (clientData: ClientFormData) => {
-    if (!editingClient) return;
+    if (!editingClient) return { success: false, error: { message: 'Cliente não selecionado' } } as any;
     const result = await updateClient(editingClient.id, clientData);
-    if (result.success) {
-      setShowClientForm(false);
-      setEditingClient(null);
-      await refetch(); // Recarrega a lista para garantir sincronização
-    }
+    return result; // Devolve para o formulário tratar toasts/fechar modal
   };
 
   const handleDeleteClient = async (id: string) => {
