@@ -128,9 +128,23 @@ export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [], editData 
           description: editData ? "Dívida actualizada com sucesso!" : "Dívida adicionada com sucesso!",
         });
       } else {
+        // Display detailed error message
+        let errorMessage = editData ? "Erro ao actualizar dívida" : "Erro ao adicionar dívida";
+        
+        if (result?.error) {
+          const error = result.error;
+          if (error.message) {
+            errorMessage = `${errorMessage}: ${error.message}`;
+          } else if (error.code) {
+            errorMessage = `${errorMessage} (Código: ${error.code})`;
+          }
+        }
+        
+        console.error("Erro detalhado ao salvar dívida:", result);
+        
         toast({
           title: "Erro",
-          description: editData ? "Erro ao actualizar dívida" : "Erro ao adicionar dívida",
+          description: errorMessage,
           variant: "destructive",
         });
         return;

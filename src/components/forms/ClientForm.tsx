@@ -107,9 +107,25 @@ export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: Client
           description: initialData ? "Cliente atualizado com sucesso!" : "Cliente adicionado com sucesso!",
         });
       } else {
+        // Display detailed error message
+        let errorMessage = initialData ? "Erro ao atualizar cliente" : "Erro ao adicionar cliente";
+        
+        if (result?.error) {
+          const error = result.error;
+          if (error.code === '23505') {
+            errorMessage = "NUIT já existe. Escolha outro NUIT.";
+          } else if (error.message) {
+            errorMessage = `${errorMessage}: ${error.message}`;
+          } else if (error.code) {
+            errorMessage = `${errorMessage} (Código: ${error.code})`;
+          }
+        }
+        
+        console.error("Erro detalhado ao salvar cliente:", result);
+        
         toast({
           title: "Erro",
-          description: (result?.error?.code === '23505') ? "NUIT já existe. Escolha outro." : (initialData ? "Erro ao atualizar cliente" : "Erro ao adicionar cliente"),
+          description: errorMessage,
           variant: "destructive",
         });
         return;
