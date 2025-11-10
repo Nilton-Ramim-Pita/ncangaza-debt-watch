@@ -132,18 +132,34 @@ export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [], editData 
         return;
       }
       
-      // Trata erro com mensagem específica
+      // Trata erro com mensagens contextuais e dicas úteis
       const error = result?.error;
+      let errorTitle = "Erro";
       let errorMessage = editData ? "Erro ao actualizar dívida" : "Erro ao adicionar dívida";
       
-      if (error?.message) {
+      if (error?.code === '23502') {
+        errorTitle = "❌ Dados Obrigatórios";
+        errorMessage = "Por favor, preencha todos os campos obrigatórios:\n\n• Cliente\n• Valor\n• Descrição\n• Data de vencimento";
+      } else if (error?.code === '23503') {
+        errorTitle = "❌ Cliente Inválido";
+        errorMessage = "O cliente selecionado não existe ou foi removido.\n\n💡 Dica: Recarregue a página e tente novamente.";
+      } else if (error?.message?.includes('invalid input syntax for type numeric')) {
+        errorTitle = "❌ Valor Inválido";
+        errorMessage = "O valor inserido está incorreto.\n\n💡 Dica: Use apenas números e vírgula para decimais (ex: 15000,00).";
+      } else if (error?.message?.includes('date')) {
+        errorTitle = "❌ Data Inválida";
+        errorMessage = "A data de vencimento está incorreta.\n\n💡 Dica: Selecione uma data válida no calendário.";
+      } else if (error?.message?.includes('permission')) {
+        errorTitle = "🔒 Sem Permissão";
+        errorMessage = "Você não tem permissão para realizar esta ação. Contacte o administrador.";
+      } else if (error?.message) {
         errorMessage = `${errorMessage}: ${error.message}`;
       }
       
       console.error("Erro ao salvar dívida:", error);
       
       toast({
-        title: "Erro",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });

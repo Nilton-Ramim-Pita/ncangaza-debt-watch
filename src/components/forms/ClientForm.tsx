@@ -109,12 +109,26 @@ export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: Client
         return;
       }
       
-      // Trata erro com mensagem específica
+      // Trata erro com mensagens contextuais e dicas úteis
       const error = result?.error;
+      let errorTitle = "Erro";
       let errorMessage = initialData ? "Erro ao atualizar cliente" : "Erro ao adicionar cliente";
       
       if (error?.code === '23505') {
-        errorMessage = "❌ NUIT já existe no sistema. Por favor, use outro NUIT.";
+        errorTitle = "⚠️ NUIT Duplicado";
+        errorMessage = `O NUIT "${formData.nuit}" já está registado no sistema.\n\n💡 Dica: Verifique se este cliente já existe na lista ou use um NUIT diferente.`;
+      } else if (error?.code === '23502') {
+        errorTitle = "❌ Dados Obrigatórios";
+        errorMessage = "Por favor, preencha todos os campos obrigatórios (Nome e NUIT).";
+      } else if (error?.code === '23503') {
+        errorTitle = "❌ Referência Inválida";
+        errorMessage = "Erro de referência nos dados. Verifique as informações inseridas.";
+      } else if (error?.message?.includes('invalid input syntax')) {
+        errorTitle = "❌ Formato Inválido";
+        errorMessage = "O formato dos dados está incorreto. Verifique os campos e tente novamente.";
+      } else if (error?.message?.includes('permission')) {
+        errorTitle = "🔒 Sem Permissão";
+        errorMessage = "Você não tem permissão para realizar esta ação. Contacte o administrador.";
       } else if (error?.message) {
         errorMessage = `${errorMessage}: ${error.message}`;
       }
@@ -122,7 +136,7 @@ export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: Client
       console.error("Erro ao salvar cliente:", error);
       
       toast({
-        title: "Erro",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });
