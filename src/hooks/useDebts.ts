@@ -82,9 +82,6 @@ export const useDebts = () => {
         ...data,
         status: data.status as 'pendente' | 'paga' | 'vencida'
       }, ...prev]);
-
-      // Garante consistência buscando novamente do servidor
-      await fetchDebts();
       
       // Criar notificação in-app
       await createInAppNotification({
@@ -95,19 +92,9 @@ export const useDebts = () => {
         categoria: 'dividas',
       });
       
-      toast({
-        title: "Sucesso",
-        description: "Dívida criada com sucesso",
-      });
-      
       return { success: true, data };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar dívida:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar a dívida",
-        variant: "destructive",
-      });
       return { success: false, error };
     }
   };
@@ -144,18 +131,9 @@ export const useDebts = () => {
         categoria: 'dividas',
       });
       
-      toast({
-        title: "✅ Sucesso",
-        description: "Dívida atualizada com sucesso",
-      });
       return { success: true, data };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar dívida:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a dívida",
-        variant: "destructive",
-      });
       return { success: false, error };
     }
   };

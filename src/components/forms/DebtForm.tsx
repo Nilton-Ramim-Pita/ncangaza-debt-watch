@@ -110,45 +110,44 @@ export const DebtForm = ({ open, onOpenChange, onSubmit, clients = [], editData 
       }
       result = await onSubmit(formData as any);
       
-      if (result && result.success) {
-        // Reset form
-        setFormData({
-          cliente_id: "",
-          valor: 0,
-          descricao: "",
-          data_vencimento: "",
-          status: "pendente",
-        });
-        setValorDisplay("");
-        
-        onOpenChange(false);
-        
-        toast({
-          title: "Sucesso",
-          description: editData ? "Dívida actualizada com sucesso!" : "Dívida adicionada com sucesso!",
-        });
-      } else {
-        // Display detailed error message
-        let errorMessage = editData ? "Erro ao actualizar dívida" : "Erro ao adicionar dívida";
-        
-        if (result?.error) {
-          const error = result.error;
-          if (error.message) {
-            errorMessage = `${errorMessage}: ${error.message}`;
-          } else if (error.code) {
-            errorMessage = `${errorMessage} (Código: ${error.code})`;
-          }
+      if (result?.success) {
+        // Reset form only if not editing
+        if (!editData) {
+          setFormData({
+            cliente_id: "",
+            valor: 0,
+            descricao: "",
+            data_vencimento: "",
+            status: "pendente",
+          });
+          setValorDisplay("");
         }
         
-        console.error("Erro detalhado ao salvar dívida:", result);
-        
         toast({
-          title: "Erro",
-          description: errorMessage,
-          variant: "destructive",
+          title: "✅ Sucesso",
+          description: editData ? "Dívida actualizada com sucesso!" : "Dívida adicionada com sucesso!",
         });
+        
+        onOpenChange(false);
         return;
       }
+      
+      // Trata erro com mensagem específica
+      const error = result?.error;
+      let errorMessage = editData ? "Erro ao actualizar dívida" : "Erro ao adicionar dívida";
+      
+      if (error?.message) {
+        errorMessage = `${errorMessage}: ${error.message}`;
+      }
+      
+      console.error("Erro ao salvar dívida:", error);
+      
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      return;
     } catch (error) {
       console.error("Erro ao salvar dívida:", error);
       toast({

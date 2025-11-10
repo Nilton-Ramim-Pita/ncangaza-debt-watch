@@ -87,7 +87,7 @@ export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: Client
 
       result = await onSubmit(formData as any);
       
-      if (result && result.success) {
+      if (result?.success) {
         // Reset form only if not editing
         if (!initialData) {
           setFormData({
@@ -100,36 +100,33 @@ export const ClientForm = ({ open, onOpenChange, onSubmit, initialData }: Client
           });
         }
         
-        onOpenChange(false);
-        
         toast({
-          title: "Sucesso",
+          title: "✅ Sucesso",
           description: initialData ? "Cliente atualizado com sucesso!" : "Cliente adicionado com sucesso!",
         });
-      } else {
-        // Display detailed error message
-        let errorMessage = initialData ? "Erro ao atualizar cliente" : "Erro ao adicionar cliente";
         
-        if (result?.error) {
-          const error = result.error;
-          if (error.code === '23505') {
-            errorMessage = "NUIT já existe. Escolha outro NUIT.";
-          } else if (error.message) {
-            errorMessage = `${errorMessage}: ${error.message}`;
-          } else if (error.code) {
-            errorMessage = `${errorMessage} (Código: ${error.code})`;
-          }
-        }
-        
-        console.error("Erro detalhado ao salvar cliente:", result);
-        
-        toast({
-          title: "Erro",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        onOpenChange(false);
         return;
       }
+      
+      // Trata erro com mensagem específica
+      const error = result?.error;
+      let errorMessage = initialData ? "Erro ao atualizar cliente" : "Erro ao adicionar cliente";
+      
+      if (error?.code === '23505') {
+        errorMessage = "❌ NUIT já existe no sistema. Por favor, use outro NUIT.";
+      } else if (error?.message) {
+        errorMessage = `${errorMessage}: ${error.message}`;
+      }
+      
+      console.error("Erro ao salvar cliente:", error);
+      
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      return;
     } catch (error) {
       console.error("Erro ao salvar cliente:", error);
       toast({

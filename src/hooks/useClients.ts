@@ -64,9 +64,6 @@ export const useClients = () => {
       // Atualiza imediatamente a UI
       setClients(prev => [...prev, data].sort((a, b) => a.nome.localeCompare(b.nome)));
       
-      // Garante consistência buscando novamente do servidor
-      await fetchClients();
-      
       // Criar notificação in-app
       await createInAppNotification({
         titulo: '🆕 Novo Cliente Adicionado',
@@ -75,19 +72,9 @@ export const useClients = () => {
         categoria: 'clientes',
       });
       
-      toast({
-        title: "✅ Sucesso",
-        description: `Cliente ${data.nome} foi criado com sucesso!`,
-      });
-      
       return { success: true, data };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar cliente:', error);
-      toast({
-        title: "Erro",
-        description: (error as any)?.code === '23505' ? "NUIT já existe. Escolha outro." : "Não foi possível criar o cliente",
-        variant: "destructive",
-      });
       return { success: false, error };
     }
   };
@@ -114,18 +101,9 @@ export const useClients = () => {
         categoria: 'clientes',
       });
       
-      toast({
-        title: "✅ Sucesso",
-        description: `Cliente ${data.nome} atualizado com sucesso!`,
-      });
       return { success: true, data };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar cliente:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o cliente",
-        variant: "destructive",
-      });
       return { success: false, error };
     }
   };
