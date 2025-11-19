@@ -31,9 +31,23 @@ export const createInAppNotification = async (params: CreateNotificationParams) 
 };
 
 /**
- * Gera link do WhatsApp Click to Chat
+ * Copia texto para área de transferência
  */
-export const generateWhatsAppLink = (phone: string, message: string): string => {
+export const copyToClipboard = async (text: string): Promise<boolean> => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    console.error('Erro ao copiar para área de transferência:', error);
+    return false;
+  }
+};
+
+/**
+ * Abre o WhatsApp com mensagem pré-preenchida
+ * Prioriza wa.me que é mais confiável e não bloqueado por redes
+ */
+export const openWhatsApp = (phone: string, message: string) => {
   // Normaliza telefone (apenas dígitos)
   const cleanPhone = phone.replace(/\D/g, '');
   
@@ -43,28 +57,36 @@ export const generateWhatsAppLink = (phone: string, message: string): string => 
   // Codifica mensagem para URL
   const encodedMessage = encodeURIComponent(message);
   
-  // Detecta se é mobile para usar link adequado
+  // Detecta se é mobile
   const isMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
   
-  if (isMobile) {
-    return `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`;
-  } else {
-    return `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-  }
-};
-
-/**
- * Abre o WhatsApp com mensagem pré-preenchida
- */
-export const openWhatsApp = (phone: string, message: string) => {
-  const link = generateWhatsAppLink(phone, message);
-  const fallbackLink = `https://wa.me/${phone.replace(/\D/g, '').startsWith('258') ? phone.replace(/\D/g, '') : '258' + phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+  // PRIORIDADE 1: wa.me (funciona melhor, menos bloqueado)
+  const waLink = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
   
-  const win = window.open(link, '_blank');
+  // PRIORIDADE 2: App nativo mobile
+  const mobileLink = `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`;
   
-  // Fallback se o navegador bloquear o popup
-  if (!win || win.closed || typeof win.closed === 'undefined') {
-    window.open(fallbackLink, '_blank');
+  // PRIORIDADE 3: Web WhatsApp (mais bloqueado)
+  const webLink = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+  
+  try {
+    if (isMobile) {
+      // Mobile: tenta app nativo primeiro, depois wa.me
+      const win = window.open(mobileLink, '_blank');
+      
+      setTimeout(() => {
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+          window.open(waLink, '_blank');
+        }
+      }, 1000);
+    } else {
+      // Desktop: usa wa.me diretamente (mais confiável)
+      window.open(waLink, '_blank');
+    }
+  } catch (error) {
+    console.error('Erro ao abrir WhatsApp:', error);
+    // Último fallback: copia número e mensagem
+    copyToClipboard(`Número: ${phoneNumber}\n\nMensagem:\n${message}`);
   }
 };
 
