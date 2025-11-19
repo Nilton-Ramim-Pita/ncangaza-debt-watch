@@ -111,7 +111,7 @@ export const NotificationsReal = () => {
   };
 
   // Abre WhatsApp com mensagem pré-formatada
-  const handleWhatsAppContact = (debt: any) => {
+  const handleWhatsAppContact = async (debt: any) => {
     const client = clients.find(c => c.id === debt.cliente_id);
     if (!client?.telefone) {
       toast.error('Cliente não possui telefone cadastrado');
@@ -120,11 +120,28 @@ export const NotificationsReal = () => {
 
     const message = generateMessage(debt, client);
     openWhatsApp(client.telefone, message);
-    toast.success('WhatsApp aberto! Envie a mensagem ao cliente.');
+    
+    // Registra notificação in-app
+    try {
+      await supabase.from('notificacoes').insert({
+        tipo: 'whatsapp',
+        status: 'enviada',
+        mensagem: `WhatsApp enviado para ${client.nome}: ${message}`,
+        divida_id: debt.id,
+        data_envio: new Date().toISOString(),
+        data_agendamento: new Date().toISOString(),
+        cliente_id: client.id
+      });
+      loadNotifications();
+    } catch (error) {
+      console.error('Erro ao registrar notificação:', error);
+    }
+    
+    toast.success('WhatsApp aberto! Mensagem registrada.');
   };
 
-  // Abre cliente de email com mensagem pré-formatada
-  const handleEmailContact = (debt: any) => {
+  // Envia email via edge function
+  const handleEmailContact = async (debt: any) => {
     const client = clients.find(c => c.id === debt.cliente_id);
     if (!client?.email) {
       toast.error('Cliente não possui email cadastrado');
@@ -133,22 +150,69 @@ export const NotificationsReal = () => {
 
     const message = generateMessage(debt, client);
     const subject = 'Lembrete de Dívida - Ncangaza Multiservices';
-    const mailtoLink = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
     
-    window.location.href = mailtoLink;
-    toast.success('Cliente de email aberto!');
+    try {
+      toast.loading('Enviando email...');
+      
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: client.email,
+          subject: subject,
+          message: message
+        }
+      });
+
+      if (error) throw error;
+
+      // Registra notificação in-app
+      await supabase.from('notificacoes').insert({
+        tipo: 'email',
+        status: 'enviada',
+        mensagem: `Email enviado para ${client.nome} (${client.email}): ${subject}`,
+        divida_id: debt.id,
+        data_envio: new Date().toISOString(),
+        data_agendamento: new Date().toISOString(),
+        cliente_id: client.id
+      });
+      
+      loadNotifications();
+      toast.dismiss();
+      toast.success('Email enviado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao enviar email:', error);
+      toast.dismiss();
+      toast.error('Erro ao enviar email. Tente novamente.');
+    }
   };
 
-  // Copia número de telefone para clipboard
-  const handlePhoneContact = (debt: any) => {
+  // Abre app de chamadas
+  const handlePhoneContact = async (debt: any) => {
     const client = clients.find(c => c.id === debt.cliente_id);
     if (!client?.telefone) {
       toast.error('Cliente não possui telefone cadastrado');
       return;
     }
 
-    navigator.clipboard.writeText(client.telefone);
-    toast.success(`Telefone copiado: ${client.telefone}`);
+    // Abre o app de chamadas
+    window.location.href = `tel:${client.telefone}`;
+    
+    // Registra notificação in-app
+    try {
+      await supabase.from('notificacoes').insert({
+        tipo: 'in_app',
+        status: 'enviada',
+        mensagem: `Chamada iniciada para ${client.nome} (${client.telefone})`,
+        divida_id: debt.id,
+        data_envio: new Date().toISOString(),
+        data_agendamento: new Date().toISOString(),
+        cliente_id: client.id
+      });
+      loadNotifications();
+    } catch (error) {
+      console.error('Erro ao registrar notificação:', error);
+    }
+    
+    toast.success(`Ligando para ${client.telefone}...`);
   };
 
   const getStatusBadge = (status: string) => {
