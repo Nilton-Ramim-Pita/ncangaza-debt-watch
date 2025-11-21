@@ -1,17 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { FileText, Download, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import mermaid from 'mermaid';
-import html2pdf from 'html2pdf.js';
-import documentacaoContent from '../../../DOCUMENTACAO_TECNICA_COMPLETA.md?raw';
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { FileText, Download, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import mermaid from "mermaid";
+import html2pdf from "html2pdf.js";
+import documentacaoContent from "../../../DOCUMENTACAO_TECNICA_COMPLETA.md?raw";
 
 // Inicializar Mermaid
 mermaid.initialize({
   startOnLoad: false,
-  theme: 'default',
-  securityLevel: 'loose',
-  fontFamily: 'Times New Roman, serif',
+  theme: "default",
+  securityLevel: "loose",
+  fontFamily: "Times New Roman, serif",
 });
 
 export const DocumentacaoTecnica = () => {
@@ -26,69 +26,69 @@ export const DocumentacaoTecnica = () => {
   const renderMermaidDiagrams = async () => {
     if (!contentRef.current) return;
 
-    const mermaidBlocks = contentRef.current.querySelectorAll('.mermaid-diagram');
-    
+    const mermaidBlocks = contentRef.current.querySelectorAll(".mermaid-diagram");
+
     for (let i = 0; i < mermaidBlocks.length; i++) {
       const block = mermaidBlocks[i] as HTMLElement;
-      const code = block.textContent || '';
-      
+      const code = block.textContent || "";
+
       try {
         const id = `mermaid-${i}-${Date.now()}`;
         const { svg } = await mermaid.render(id, code);
         block.innerHTML = svg;
-        block.classList.add('mermaid-rendered');
+        block.classList.add("mermaid-rendered");
       } catch (error) {
-        console.error('Erro ao renderizar diagrama Mermaid:', error);
+        console.error("Erro ao renderizar diagrama Mermaid:", error);
         block.innerHTML = `<pre class="error-diagram">${code}</pre>`;
       }
     }
-    
+
     setIsRendered(true);
   };
 
   const generatePDF = async () => {
     if (!contentRef.current || !isRendered) {
-      toast.error('Aguarde a renderização dos diagramas...');
+      toast.error("Aguarde a renderização dos diagramas...");
       return;
     }
 
     setIsGenerating(true);
-    toast.info('Gerando PDF profissional... Isso pode levar alguns minutos.');
+    toast.info("Gerando PDF profissional... Isso pode levar alguns minutos.");
 
     try {
       const element = contentRef.current;
-      
+
       const options = {
         margin: [25, 25, 25, 25] as [number, number, number, number],
-        filename: 'Documentacao_Tecnica_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf',
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { 
+        filename: "Documentacao_Tecnica_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf",
+        image: { type: "jpeg" as const, quality: 0.98 },
+        html2canvas: {
           scale: 2,
           useCORS: true,
           letterRendering: true,
           scrollY: 0,
           scrollX: 0,
         },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
-          orientation: 'portrait' as const,
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait" as const,
           compress: true,
         },
-        pagebreak: { 
-          mode: ['avoid-all', 'css', 'legacy'],
-          before: '.page-break-before',
-          after: '.page-break-after',
-          avoid: ['.avoid-break', '.mermaid-rendered', 'table', 'pre', 'code']
+        pagebreak: {
+          mode: ["avoid-all", "css", "legacy"],
+          before: ".page-break-before",
+          after: ".page-break-after",
+          avoid: [".avoid-break", ".mermaid-rendered", "table", "pre", "code"],
         },
       };
 
       await html2pdf().set(options).from(element).save();
-      
-      toast.success('PDF gerado com sucesso!');
+
+      toast.success("PDF gerado com sucesso!");
     } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
-      toast.error('Erro ao gerar PDF. Tente novamente.');
+      console.error("Erro ao gerar PDF:", error);
+      toast.error("Erro ao gerar PDF. Tente novamente.");
     } finally {
       setIsGenerating(false);
     }
@@ -97,54 +97,60 @@ export const DocumentacaoTecnica = () => {
   const processContent = () => {
     // Processar o conteúdo Markdown
     let processed = documentacaoContent;
-    
+
     // Extrair e marcar blocos Mermaid
     processed = processed.replace(/```mermaid\n([\s\S]*?)```/g, (_, code) => {
       return `<div class="mermaid-diagram avoid-break">${code.trim()}</div>`;
     });
-    
+
     // Processar código normal
     processed = processed.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
-      return `<pre class="code-block avoid-break"><code class="language-${lang || 'text'}">${code}</code></pre>`;
+      return `<pre class="code-block avoid-break"><code class="language-${lang || "text"}">${code}</code></pre>`;
     });
-    
+
     // Processar tabelas
     processed = processed.replace(/\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)*)/g, (match) => {
-      const lines = match.trim().split('\n');
-      const headers = lines[0].split('|').filter(h => h.trim()).map(h => h.trim());
-      const rows = lines.slice(2).map(line => 
-        line.split('|').filter(c => c.trim()).map(c => c.trim())
+      const lines = match.trim().split("\n");
+      const headers = lines[0]
+        .split("|")
+        .filter((h) => h.trim())
+        .map((h) => h.trim());
+      const rows = lines.slice(2).map((line) =>
+        line
+          .split("|")
+          .filter((c) => c.trim())
+          .map((c) => c.trim()),
       );
-      
+
       let html = '<table class="doc-table avoid-break"><thead><tr>';
-      headers.forEach(h => html += `<th>${h}</th>`);
-      html += '</tr></thead><tbody>';
-      rows.forEach(row => {
-        html += '<tr>';
-        row.forEach(cell => html += `<td>${cell}</td>`);
-        html += '</tr>';
+      headers.forEach((h) => (html += `<th>${h}</th>`));
+      html += "</tr></thead><tbody>";
+      rows.forEach((row) => {
+        html += "<tr>";
+        row.forEach((cell) => (html += `<td>${cell}</td>`));
+        html += "</tr>";
       });
-      html += '</tbody></table>';
+      html += "</tbody></table>";
       return html;
     });
-    
+
     // Processar títulos
     processed = processed.replace(/^# (.+)$/gm, '<h1 class="doc-h1 page-break-before">$1</h1>');
     processed = processed.replace(/^## (.+)$/gm, '<h2 class="doc-h2 page-break-before">$1</h2>');
     processed = processed.replace(/^### (.+)$/gm, '<h3 class="doc-h3">$1</h3>');
     processed = processed.replace(/^#### (.+)$/gm, '<h4 class="doc-h4">$1</h4>');
-    
+
     // Processar listas
     processed = processed.replace(/^- (.+)$/gm, '<li class="doc-li">$1</li>');
     processed = processed.replace(/(<li class="doc-li">.*<\/li>\n?)+/g, '<ul class="doc-ul">$&</ul>');
-    
+
     // Processar negrito e itálico
-    processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    processed = processed.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    
+    processed = processed.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    processed = processed.replace(/\*(.+?)\*/g, "<em>$1</em>");
+
     // Processar parágrafos
     processed = processed.replace(/^(?!<[^>]+>)(.+)$/gm, '<p class="doc-p">$1</p>');
-    
+
     return processed;
   };
 
@@ -160,11 +166,7 @@ export const DocumentacaoTecnica = () => {
               <p className="text-sm text-muted-foreground">Sistema de Gestão de Dívidas</p>
             </div>
           </div>
-          <Button 
-            onClick={generatePDF} 
-            disabled={isGenerating || !isRendered}
-            size="lg"
-          >
+          <Button onClick={generatePDF} disabled={isGenerating || !isRendered} size="lg">
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -182,7 +184,7 @@ export const DocumentacaoTecnica = () => {
 
       {/* Conteúdo da documentação */}
       <div className="pt-24 print:pt-0">
-        <div 
+        <div
           ref={contentRef}
           className="documentation-content"
           dangerouslySetInnerHTML={{ __html: processContent() }}
