@@ -1,0 +1,342 @@
+/* ============================================
+   ESTILOS PARA DOCUMENTAÇÃO TÉCNICA ACADÉMICA
+   Formato: UCM - Universidade Católica de Moçambique
+   Autor: Nilton Ramim Pita
+   ============================================ */
+
+.documentation-content {
+  max-width: 210mm; /* A4 width */
+  margin: 0 auto;
+  padding: 25mm;
+  background: white;
+  color: #000;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+}
+
+/* ============================================
+   TIPOGRAFIA - TÍTULOS E SUBTÍTULOS
+   ============================================ */
+
+.doc-h1 {
+  font-size: 18pt;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 30pt;
+  margin-bottom: 20pt;
+  page-break-after: avoid;
+  text-transform: uppercase;
+  color: #1e3a8a;
+  border-bottom: 2pt solid #1e3a8a;
+  padding-bottom: 10pt;
+}
+
+.doc-h2 {
+  font-size: 16pt;
+  font-weight: bold;
+  margin-top: 24pt;
+  margin-bottom: 12pt;
+  page-break-after: avoid;
+  color: #1e40af;
+  border-left: 4pt solid #1e40af;
+  padding-left: 10pt;
+}
+
+.doc-h3 {
+  font-size: 14pt;
+  font-weight: bold;
+  margin-top: 18pt;
+  margin-bottom: 10pt;
+  page-break-after: avoid;
+  color: #1e40af;
+}
+
+.doc-h4 {
+  font-size: 12pt;
+  font-weight: bold;
+  margin-top: 14pt;
+  margin-bottom: 8pt;
+  page-break-after: avoid;
+  color: #334155;
+}
+
+/* ============================================
+   PARÁGRAFOS E TEXTO
+   ============================================ */
+
+.doc-p {
+  margin-bottom: 10pt;
+  text-align: justify;
+  text-indent: 0;
+  orphans: 3;
+  widows: 3;
+}
+
+.doc-p:empty {
+  display: none;
+}
+
+/* ============================================
+   LISTAS
+   ============================================ */
+
+.doc-ul {
+  margin: 10pt 0;
+  padding-left: 30pt;
+  list-style-type: disc;
+}
+
+.doc-li {
+  margin-bottom: 6pt;
+  text-align: justify;
+}
+
+.doc-ul .doc-ul {
+  list-style-type: circle;
+  margin-top: 4pt;
+}
+
+/* ============================================
+   TABELAS
+   ============================================ */
+
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15pt 0;
+  page-break-inside: avoid;
+  font-size: 11pt;
+}
+
+.doc-table th {
+  background-color: #1e3a8a;
+  color: white;
+  font-weight: bold;
+  padding: 8pt;
+  text-align: left;
+  border: 1pt solid #1e3a8a;
+}
+
+.doc-table td {
+  padding: 6pt 8pt;
+  border: 1pt solid #cbd5e1;
+}
+
+.doc-table tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+/* ============================================
+   BLOCOS DE CÓDIGO
+   ============================================ */
+
+.code-block {
+  background-color: #f1f5f9;
+  border: 1pt solid #cbd5e1;
+  border-radius: 4pt;
+  padding: 10pt;
+  margin: 12pt 0;
+  overflow-x: auto;
+  page-break-inside: avoid;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10pt;
+  line-height: 1.4;
+}
+
+.code-block code {
+  font-family: 'Courier New', Courier, monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* ============================================
+   DIAGRAMAS MERMAID
+   ============================================ */
+
+.mermaid-diagram {
+  margin: 20pt 0;
+  padding: 15pt;
+  background-color: #fefefe;
+  border: 1pt solid #e2e8f0;
+  border-radius: 4pt;
+  page-break-inside: avoid;
+  text-align: center;
+}
+
+.mermaid-rendered {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.mermaid-rendered svg {
+  max-width: 100%;
+  height: auto;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.error-diagram {
+  color: #dc2626;
+  background-color: #fee2e2;
+  padding: 10pt;
+  border: 1pt solid #dc2626;
+  border-radius: 4pt;
+  font-size: 10pt;
+}
+
+/* ============================================
+   QUEBRAS DE PÁGINA
+   ============================================ */
+
+.page-break-before {
+  page-break-before: always;
+}
+
+.page-break-after {
+  page-break-after: always;
+}
+
+.avoid-break {
+  page-break-inside: avoid;
+}
+
+/* ============================================
+   FORMATAÇÃO PARA IMPRESSÃO / PDF
+   ============================================ */
+
+@media print {
+  .documentation-content {
+    margin: 0;
+    padding: 25mm;
+    max-width: 100%;
+  }
+
+  /* Cabeçalho de cada página */
+  @page {
+    size: A4 portrait;
+    margin: 25mm;
+    
+    @top-center {
+      content: "Documentação Técnica — Sistema de Gestão de Dívidas";
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 10pt;
+      color: #64748b;
+    }
+    
+    @bottom-right {
+      content: counter(page);
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 10pt;
+      color: #64748b;
+    }
+    
+    @bottom-center {
+      content: "© 2025 Nilton Ramim Pita - UCM";
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 9pt;
+      color: #94a3b8;
+    }
+  }
+
+  /* Primeira página sem numeração */
+  @page :first {
+    @top-center {
+      content: none;
+    }
+    @bottom-right {
+      content: none;
+    }
+  }
+
+  /* Otimizações de impressão */
+  .doc-h1,
+  .doc-h2,
+  .doc-h3,
+  .doc-h4 {
+    page-break-after: avoid;
+  }
+
+  .doc-table,
+  .code-block,
+  .mermaid-diagram {
+    page-break-inside: avoid;
+  }
+
+  /* Remover sombras e bordas complexas */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Links */
+  a {
+    text-decoration: none;
+    color: #1e40af;
+  }
+
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #64748b;
+  }
+}
+
+/* ============================================
+   PÁGINA DE TÍTULO (CAPA)
+   ============================================ */
+
+.doc-h1:first-of-type {
+  margin-top: 80pt;
+  font-size: 22pt;
+  text-align: center;
+  border: none;
+  padding-bottom: 20pt;
+}
+
+/* ============================================
+   DESTAQUE DE TEXTO
+   ============================================ */
+
+strong {
+  font-weight: bold;
+  color: #0f172a;
+}
+
+em {
+  font-style: italic;
+}
+
+code {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #f1f5f9;
+  padding: 2pt 4pt;
+  border-radius: 2pt;
+  font-size: 10pt;
+}
+
+/* ============================================
+   AJUSTES RESPONSIVOS
+   ============================================ */
+
+@media screen and (max-width: 768px) {
+  .documentation-content {
+    padding: 15mm;
+    font-size: 11pt;
+  }
+
+  .doc-h1 {
+    font-size: 16pt;
+  }
+
+  .doc-h2 {
+    font-size: 14pt;
+  }
+
+  .doc-table {
+    font-size: 10pt;
+  }
+
+  .code-block {
+    font-size: 9pt;
+  }
+}
