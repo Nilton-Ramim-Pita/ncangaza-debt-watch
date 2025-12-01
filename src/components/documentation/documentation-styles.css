@@ -295,6 +295,79 @@
   padding-bottom: 20pt;
 }
 
+/* CAPA E ÍNDICE ESPECÍFICOS PARA PDF GERADO */
+
+.cover-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 260mm;
+  text-align: center;
+}
+
+.cover-logo {
+  width: 80pt;
+  height: auto;
+  margin-bottom: 24pt;
+}
+
+.cover-title {
+  font-size: 20pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #1e3a8a;
+  margin-bottom: 12pt;
+}
+
+.cover-subtitle {
+  font-size: 14pt;
+  color: #334155;
+  margin-bottom: 20pt;
+}
+
+.cover-info {
+  font-size: 12pt;
+  color: #0f172a;
+  line-height: 1.6;
+}
+
+.toc-page {
+  padding-top: 40pt;
+}
+
+.toc-title {
+  font-size: 16pt;
+  font-weight: bold;
+  margin-bottom: 16pt;
+  color: #1e40af;
+}
+
+.toc-content {
+  font-size: 12pt;
+}
+
+.toc-item {
+  margin-bottom: 6pt;
+}
+
+.toc-level-1 {
+  font-weight: bold;
+}
+
+.toc-level-2 {
+  margin-left: 12pt;
+}
+
+.toc-level-3 {
+  margin-left: 24pt;
+  font-size: 11pt;
+}
+
+.report-content {
+  margin-top: 10pt;
+}
+
 /* ============================================
    DESTAQUE DE TEXTO
    ============================================ */
