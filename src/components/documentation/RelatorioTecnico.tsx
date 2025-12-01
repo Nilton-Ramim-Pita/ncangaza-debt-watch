@@ -106,15 +106,8 @@ export function RelatorioTecnico() {
     setIsGenerating(true);
     toast.info('A gerar PDF profissional... Por favor aguarde.');
 
-    const element = contentRef.current;
-    const originalHtml = element.innerHTML;
-
     try {
-      const mainContentHtml = originalHtml;
-      const tocHtml = buildTOCHtml(relatorioContent);
-
-      // Substitui temporariamente o conteúdo visível pela estrutura com capa + índice
-      element.innerHTML = buildPdfHtml(mainContentHtml, tocHtml);
+      const element = contentRef.current;
 
       const options = {
         margin: [25, 25, 25, 25] as [number, number, number, number],
@@ -149,9 +142,6 @@ export function RelatorioTecnico() {
       console.error('Erro ao gerar PDF:', error);
       toast.error('Erro ao gerar PDF. Tente novamente.');
     } finally {
-      if (element) {
-        element.innerHTML = originalHtml;
-      }
       setIsGenerating(false);
     }
   };
@@ -216,6 +206,7 @@ export function RelatorioTecnico() {
   };
 
   const processedContent = processContent(relatorioContent);
+  const tocHtml = buildTOCHtml(relatorioContent);
 
   return (
     <div className="min-h-screen bg-background">
@@ -251,11 +242,37 @@ export function RelatorioTecnico() {
 
       {/* Content with top padding to avoid header overlap */}
       <div className="pt-24 px-4 pb-8">
-        <div
-          ref={contentRef}
-          className="documentation-content"
-          dangerouslySetInnerHTML={{ __html: processedContent }}
-        />
+        <div ref={contentRef} className="documentation-content">
+          <section className="cover-page page-break-after">
+            <img
+              src={logoImage}
+              alt="Logotipo Ncangaza Multiservices"
+              className="cover-logo"
+            />
+            <h1 className="cover-title">Relatório Técnico do Sistema de Gestão de Dívidas</h1>
+            <p className="cover-subtitle">Ncangaza Multiservices</p>
+            <div className="cover-info">
+              <p>
+                Autor: <strong>Nilton Ramim Pita</strong>
+              </p>
+              <p>Instituição: Universidade Católica de Moçambique (UCM)</p>
+              <p>Ano: {new Date().getFullYear()}</p>
+            </div>
+          </section>
+
+          <section className="toc-page page-break-after">
+            <h2 className="toc-title">Índice</h2>
+            <div
+              className="toc-content"
+              dangerouslySetInnerHTML={{ __html: tocHtml }}
+            />
+          </section>
+
+          <section
+            className="report-content"
+            dangerouslySetInnerHTML={{ __html: processedContent }}
+          />
+        </div>
       </div>
     </div>
   );
