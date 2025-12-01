@@ -48,7 +48,10 @@ export function RelatorioTecnico() {
   };
 
   const generatePDF = async () => {
-    if (!contentRef.current) return;
+    if (!contentRef.current || !isRendered) {
+      toast.error('Aguarde a renderização completa...');
+      return;
+    }
 
     setIsGenerating(true);
     toast.info('A gerar PDF profissional... Por favor aguarde.');
@@ -58,13 +61,16 @@ export function RelatorioTecnico() {
       
       const opt = {
         margin: [20, 15, 20, 15] as [number, number, number, number],
-        filename: 'Documentacao_Tecnica_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf',
+        filename: 'Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf',
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { 
           scale: 2,
           useCORS: true,
-          logging: false,
+          logging: true,
           letterRendering: true,
+          backgroundColor: '#ffffff',
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight,
         },
         jsPDF: { 
           unit: 'mm', 
