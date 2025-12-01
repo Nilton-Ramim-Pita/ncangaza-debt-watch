@@ -41,29 +41,27 @@ const buildTOCHtml = (content: string) => {
 };
 
 const buildPdfHtml = (mainContentHtml: string, tocHtml: string) => `
-  <div class="documentation-content">
-    <section class="cover-page page-break-after">
-      <img src="${logoImage}" alt="Logotipo Ncangaza Multiservices" class="cover-logo" />
-      <h1 class="cover-title">Relatório Técnico do Sistema de Gestão de Dívidas</h1>
-      <p class="cover-subtitle">Ncangaza Multiservices</p>
-      <div class="cover-info">
-        <p>Autor: <strong>Nilton Ramim Pita</strong></p>
-        <p>Instituição: Universidade Católica de Moçambique (UCM)</p>
-        <p>Ano: ${new Date().getFullYear()}</p>
-      </div>
-    </section>
+  <section class="cover-page page-break-after">
+    <img src="${logoImage}" alt="Logotipo Ncangaza Multiservices" class="cover-logo" />
+    <h1 class="cover-title">Relatório Técnico do Sistema de Gestão de Dívidas</h1>
+    <p class="cover-subtitle">Ncangaza Multiservices</p>
+    <div class="cover-info">
+      <p>Autor: <strong>Nilton Ramim Pita</strong></p>
+      <p>Instituição: Universidade Católica de Moçambique (UCM)</p>
+      <p>Ano: ${new Date().getFullYear()}</p>
+    </div>
+  </section>
 
-    <section class="toc-page page-break-after">
-      <h2 class="toc-title">Índice</h2>
-      <div class="toc-content">
-        ${tocHtml}
-      </div>
-    </section>
+  <section class="toc-page page-break-after">
+    <h2 class="toc-title">Índice</h2>
+    <div class="toc-content">
+      ${tocHtml}
+    </div>
+  </section>
 
-    <section class="report-content">
-      ${mainContentHtml}
-    </section>
-  </div>
+  <section class="report-content">
+    ${mainContentHtml}
+  </section>
 `;
 
 export function RelatorioTecnico() {
@@ -108,29 +106,27 @@ export function RelatorioTecnico() {
     setIsGenerating(true);
     toast.info('A gerar PDF profissional... Por favor aguarde.');
 
+    const element = contentRef.current;
+    const originalHtml = element.innerHTML;
+
     try {
-      const element = contentRef.current;
-      const mainContentHtml = element.innerHTML;
+      const mainContentHtml = originalHtml;
       const tocHtml = buildTOCHtml(relatorioContent);
 
-      const pdfContainer = document.createElement('div');
-      pdfContainer.innerHTML = buildPdfHtml(mainContentHtml, tocHtml);
-      document.body.appendChild(pdfContainer);
+      // Substitui temporariamente o conteúdo visível pela estrutura com capa + índice
+      element.innerHTML = buildPdfHtml(mainContentHtml, tocHtml);
 
-      const pdfElement = (pdfContainer.firstElementChild as HTMLElement) || pdfContainer;
-
-      const opt = {
-        margin: [20, 15, 20, 15] as [number, number, number, number],
+      const options = {
+        margin: [25, 25, 25, 25] as [number, number, number, number],
         filename: 'Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf',
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
           scale: 2,
           useCORS: true,
-          logging: true,
           letterRendering: true,
+          scrollY: 0,
+          scrollX: 0,
           backgroundColor: '#ffffff',
-          windowWidth: pdfElement.scrollWidth,
-          windowHeight: pdfElement.scrollHeight,
         },
         jsPDF: {
           unit: 'mm',
@@ -142,25 +138,21 @@ export function RelatorioTecnico() {
           mode: ['avoid-all', 'css', 'legacy'],
           before: '.page-break-before',
           after: '.page-break-after',
-          avoid: '.avoid-break',
+          avoid: ['.avoid-break', '.mermaid-rendered', 'table', 'pre', 'code'],
         },
       };
 
-      await html2pdf().set(opt).from(pdfElement).save();
+      await html2pdf().set(options).from(element).save();
 
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       toast.error('Erro ao gerar PDF. Tente novamente.');
     } finally {
-      setIsGenerating(false);
-      const containers = document.querySelectorAll('.documentation-content');
-      if (containers.length > 1) {
-        const last = containers[containers.length - 1];
-        if (last.parentElement && last.parentElement !== document.querySelector('.documentation-content')?.parentElement) {
-          last.parentElement.remove();
-        }
+      if (element) {
+        element.innerHTML = originalHtml;
       }
+      setIsGenerating(false);
     }
   };
 
