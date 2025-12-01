@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import DocumentacaoPage from "./pages/DocumentacaoPage";
+import RelatorioTecnicoPage from "./pages/RelatorioTecnicoPage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/documentacao" element={<DocumentacaoPage />} />
+              <Route path="/relatorio-tecnico" element={<RelatorioTecnicoPage />} />
               <Route 
                 path="/" 
                 element={
