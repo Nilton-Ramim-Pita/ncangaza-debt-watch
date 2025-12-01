@@ -6,6 +6,7 @@ import mermaid from 'mermaid';
 import html2pdf from 'html2pdf.js';
 import relatorioContent from '../../../RELATORIO_TECNICO_SISTEMA.md?raw';
 import './documentation-styles.css';
+import logoImage from '@/assets/logo-ncangaza-full.png';
 
 // Initialize Mermaid
 mermaid.initialize({
@@ -13,6 +14,57 @@ mermaid.initialize({
   theme: 'default',
   securityLevel: 'loose',
 });
+
+const buildTOCHtml = (content: string) => {
+  const lines = content.split('\n');
+  const items: { level: number; title: string }[] = [];
+
+  lines.forEach((line) => {
+    const match = /^(#{1,3})\s+(.+)$/.exec(line.trim());
+    if (match) {
+      const level = match[1].length;
+      const title = match[2].trim();
+      items.push({ level, title });
+    }
+  });
+
+  if (!items.length) {
+    return '<p class="doc-p">Índice não disponível.</p>';
+  }
+
+  return items
+    .map(
+      (item) =>
+        `<div class="toc-item toc-level-${item.level}">${item.title}</div>`
+    )
+    .join('');
+};
+
+const buildPdfHtml = (mainContentHtml: string, tocHtml: string) => `
+  <div class="documentation-content">
+    <section class="cover-page page-break-after">
+      <img src="${logoImage}" alt="Logotipo Ncangaza Multiservices" class="cover-logo" />
+      <h1 class="cover-title">Relatório Técnico do Sistema de Gestão de Dívidas</h1>
+      <p class="cover-subtitle">Ncangaza Multiservices</p>
+      <div class="cover-info">
+        <p>Autor: <strong>Nilton Ramim Pita</strong></p>
+        <p>Instituição: Universidade Católica de Moçambique (UCM)</p>
+        <p>Ano: ${new Date().getFullYear()}</p>
+      </div>
+    </section>
+
+    <section class="toc-page page-break-after">
+      <h2 class="toc-title">Índice</h2>
+      <div class="toc-content">
+        ${tocHtml}
+      </div>
+    </section>
+
+    <section class="report-content">
+      ${mainContentHtml}
+    </section>
+  </div>
+`;
 
 export function RelatorioTecnico() {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -58,42 +110,57 @@ export function RelatorioTecnico() {
 
     try {
       const element = contentRef.current;
-      
+      const mainContentHtml = element.innerHTML;
+      const tocHtml = buildTOCHtml(relatorioContent);
+
+      const pdfContainer = document.createElement('div');
+      pdfContainer.innerHTML = buildPdfHtml(mainContentHtml, tocHtml);
+      document.body.appendChild(pdfContainer);
+
+      const pdfElement = (pdfContainer.firstElementChild as HTMLElement) || pdfContainer;
+
       const opt = {
         margin: [20, 15, 20, 15] as [number, number, number, number],
         filename: 'Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf',
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { 
+        html2canvas: {
           scale: 2,
           useCORS: true,
           logging: true,
           letterRendering: true,
           backgroundColor: '#ffffff',
-          windowWidth: element.scrollWidth,
-          windowHeight: element.scrollHeight,
+          windowWidth: pdfElement.scrollWidth,
+          windowHeight: pdfElement.scrollHeight,
         },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
           orientation: 'portrait' as const,
           compress: true,
         },
-        pagebreak: { 
+        pagebreak: {
           mode: ['avoid-all', 'css', 'legacy'],
           before: '.page-break-before',
           after: '.page-break-after',
-          avoid: '.avoid-break'
+          avoid: '.avoid-break',
         },
       };
 
-      await html2pdf().set(opt).from(element).save();
-      
+      await html2pdf().set(opt).from(pdfElement).save();
+
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       toast.error('Erro ao gerar PDF. Tente novamente.');
     } finally {
       setIsGenerating(false);
+      const containers = document.querySelectorAll('.documentation-content');
+      if (containers.length > 1) {
+        const last = containers[containers.length - 1];
+        if (last.parentElement && last.parentElement !== document.querySelector('.documentation-content')?.parentElement) {
+          last.parentElement.remove();
+        }
+      }
     }
   };
 
