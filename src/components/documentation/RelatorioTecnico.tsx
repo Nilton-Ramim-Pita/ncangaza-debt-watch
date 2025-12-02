@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { FileDown, FileText, Loader2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import mermaid from 'mermaid';
-import html2pdf from 'html2pdf.js';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
 import {
@@ -140,41 +141,65 @@ export function RelatorioTecnico() {
     setIsGeneratingPDF(true);
     toast.info('A gerar PDF profissional... Isso pode levar alguns minutos.');
 
+    const element = contentRef.current;
+
+    // Guardar estilos originais
+    const originalStyle = {
+      position: element.style.position,
+      overflow: element.style.overflow,
+      transform: element.style.transform,
+      maxHeight: element.style.maxHeight,
+    };
+
     try {
-      const element = contentRef.current;
+      // Garantir que todo o conteúdo está visível para captura
+      element.style.position = 'static';
+      element.style.overflow = 'visible';
+      element.style.transform = 'none';
+      element.style.maxHeight = 'none';
 
-      const options = {
-        margin: [25, 25, 25, 25] as [number, number, number, number],
-        filename: 'Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf',
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-          scrollY: 0,
-          scrollX: 0,
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait' as const,
-          compress: true,
-        },
-        pagebreak: {
-          mode: ['avoid-all', 'css', 'legacy'] as const,
-          before: '.page-break-before',
-          after: '.page-break-after',
-          avoid: ['.avoid-break', '.mermaid-rendered', 'table', 'pre', 'code'],
-        },
-      };
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        backgroundColor: '#ffffff',
+      });
 
-      await html2pdf().set(options).from(element).save();
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210; // Largura da página A4 em mm
+      const pageHeight = 297; // Altura da página A4 em mm
+
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save('Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf');
 
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       toast.error('Erro ao gerar PDF. Tente novamente.');
     } finally {
+      // Restaurar estilos originais
+      element.style.position = originalStyle.position;
+      element.style.overflow = originalStyle.overflow;
+      element.style.transform = originalStyle.transform;
+      element.style.maxHeight = originalStyle.maxHeight;
+
       setIsGeneratingPDF(false);
     }
   };
