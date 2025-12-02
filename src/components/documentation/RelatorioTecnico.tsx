@@ -17,14 +17,34 @@ mermaid.initialize({
 
 const buildTOCHtml = (content: string) => {
   const lines = content.split('\n');
-  const items: { level: number; title: string }[] = [];
+  const items: { level: number; title: string; number: string }[] = [];
+  
+  let h1Counter = 0;
+  let h2Counter = 0;
+  let h3Counter = 0;
 
   lines.forEach((line) => {
     const match = /^(#{1,3})\s+(.+)$/.exec(line.trim());
     if (match) {
       const level = match[1].length;
       const title = match[2].trim();
-      items.push({ level, title });
+      
+      let sectionNumber = '';
+      if (level === 1) {
+        h1Counter++;
+        h2Counter = 0;
+        h3Counter = 0;
+        sectionNumber = `${h1Counter}`;
+      } else if (level === 2) {
+        h2Counter++;
+        h3Counter = 0;
+        sectionNumber = `${h1Counter}.${h2Counter}`;
+      } else if (level === 3) {
+        h3Counter++;
+        sectionNumber = `${h1Counter}.${h2Counter}.${h3Counter}`;
+      }
+      
+      items.push({ level, title, number: sectionNumber });
     }
   });
 
@@ -35,7 +55,7 @@ const buildTOCHtml = (content: string) => {
   return items
     .map(
       (item) =>
-        `<div class="toc-item toc-level-${item.level}">${item.title}</div>`
+        `<div class="toc-item toc-level-${item.level}"><strong>${item.number}.</strong> ${item.title}</div>`
     )
     .join('');
 };
@@ -144,6 +164,10 @@ export function RelatorioTecnico() {
 
   const processContent = (content: string) => {
     let processed = content;
+    
+    let h1Counter = 0;
+    let h2Counter = 0;
+    let h3Counter = 0;
 
     // Process Mermaid diagrams
     processed = processed.replace(/```mermaid\n([\s\S]*?)```/g, (_, code) => {
@@ -180,10 +204,25 @@ export function RelatorioTecnico() {
       return table;
     });
 
-    // Process headings (with page breaks for h1 and h2)
-    processed = processed.replace(/^# (.+)$/gm, '<h1 class="doc-h1 page-break-before">$1</h1>');
-    processed = processed.replace(/^## (.+)$/gm, '<h2 class="doc-h2 page-break-before">$1</h2>');
-    processed = processed.replace(/^### (.+)$/gm, '<h3 class="doc-h3">$1</h3>');
+    // Process headings with automatic numbering
+    processed = processed.replace(/^# (.+)$/gm, (match, title) => {
+      h1Counter++;
+      h2Counter = 0;
+      h3Counter = 0;
+      return `<h1 class="doc-h1 page-break-before"><span class="section-number">${h1Counter}.</span> ${title}</h1>`;
+    });
+    
+    processed = processed.replace(/^## (.+)$/gm, (match, title) => {
+      h2Counter++;
+      h3Counter = 0;
+      return `<h2 class="doc-h2 page-break-before"><span class="section-number">${h1Counter}.${h2Counter}.</span> ${title}</h2>`;
+    });
+    
+    processed = processed.replace(/^### (.+)$/gm, (match, title) => {
+      h3Counter++;
+      return `<h3 class="doc-h3"><span class="section-number">${h1Counter}.${h2Counter}.${h3Counter}.</span> ${title}</h3>`;
+    });
+    
     processed = processed.replace(/^#### (.+)$/gm, '<h4 class="doc-h4">$1</h4>');
 
     // Process lists
