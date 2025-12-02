@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import mermaid from "mermaid";
-import html2pdf from "html2pdf.js";
+import { generatePdfFromHtml } from "@/utils/htmlToPdfGenerator";
 import documentacaoContent from "../../../DOCUMENTACAO_TECNICA_COMPLETA.md?raw";
 
 // Inicializar Mermaid
@@ -56,39 +56,14 @@ export const DocumentacaoTecnica = () => {
     toast.info("Gerando PDF profissional... Isso pode levar alguns minutos.");
 
     try {
-      const element = contentRef.current;
-
-      const options = {
-        margin: [25, 25, 25, 25] as [number, number, number, number],
-        filename: "Documentacao_Tecnica_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf",
-        image: { type: "jpeg" as const, quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-          scrollY: 0,
-          scrollX: 0,
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait" as const,
-          compress: true,
-        },
-        pagebreak: {
-          mode: ["avoid-all", "css", "legacy"],
-          before: ".page-break-before",
-          after: ".page-break-after",
-          avoid: [".avoid-break", ".mermaid-rendered", "table", "pre", "code"],
-        },
-      };
-
-      await html2pdf().set(options).from(element).save();
-
-      toast.success("PDF gerado com sucesso!");
+      await generatePdfFromHtml(contentRef.current, {
+        filename: "Documentacao_Tecnica_Sistema_Gestao_Dividas_Nilton_Ramim_Pita",
+        scale: 2,
+        quality: 0.98,
+        orientation: "portrait",
+      });
     } catch (error) {
-      console.error("Erro ao gerar PDF:", error);
-      toast.error("Erro ao gerar PDF. Tente novamente.");
+      // Erro já tratado na função utilitária
     } finally {
       setIsGenerating(false);
     }
