@@ -161,7 +161,8 @@ export function RelatorioTecnico() {
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        allowTaint: true,
+        // Evita erro de "canvas tainted" com imagens externas
+        allowTaint: false,
         scrollX: 0,
         scrollY: -window.scrollY,
         backgroundColor: '#ffffff',
