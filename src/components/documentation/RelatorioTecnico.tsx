@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import mermaid from 'mermaid';
-import jsPDF from 'jspdf';
+import html2pdf from 'html2pdf.js';
 import relatorioContent from '../../../RELATORIO_TECNICO_SISTEMA.md?raw';
 import './documentation-styles.css';
 import logoImage from '@/assets/logo-ncangaza-full.png';
@@ -109,28 +109,33 @@ export function RelatorioTecnico() {
     try {
       const element = contentRef.current;
 
-      const doc = new jsPDF({
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait',
-      });
-
-      const docAny = doc as any;
-
-      await docAny.html(element, {
-        x: 10,
-        y: 10,
-        autoPaging: 'text',
+      const options = {
+        margin: [25, 25, 25, 25] as [number, number, number, number],
+        filename: 'Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf',
+        image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
-          scale: 0.8,
+          scale: 2,
           useCORS: true,
-          scrollX: 0,
+          letterRendering: true,
           scrollY: 0,
+          scrollX: 0,
           backgroundColor: '#ffffff',
         },
-      });
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait' as const,
+          compress: true,
+        },
+        pagebreak: {
+          mode: ['avoid-all', 'css', 'legacy'],
+          before: '.page-break-before',
+          after: '.page-break-after',
+          avoid: ['.avoid-break', '.mermaid-rendered', 'table', 'pre', 'code'],
+        },
+      };
 
-      doc.save('Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.pdf');
+      await html2pdf().set(options).from(element).save();
 
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
