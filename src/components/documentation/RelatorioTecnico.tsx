@@ -1,11 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileDown, FileText, Loader2 } from 'lucide-react';
+import { FileDown, FileText, Loader2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import mermaid from 'mermaid';
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import relatorioContent from '../../../RELATORIO_TECNICO_SISTEMA.md?raw';
 import './documentation-styles.css';
 import logoImage from '@/assets/logo-ncangaza-full.png';
@@ -91,6 +100,8 @@ export function RelatorioTecnico() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isGeneratingWord, setIsGeneratingWord] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewTab, setPreviewTab] = useState<'pdf' | 'word'>('pdf');
 
   useEffect(() => {
     renderMermaidDiagrams();
@@ -505,6 +516,141 @@ export function RelatorioTecnico() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  disabled={!isRendered}
+                  size="lg"
+                  variant="secondary"
+                  className="gap-2"
+                >
+                  <Eye className="h-5 w-5" />
+                  Pré-visualizar
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
+                <DialogHeader>
+                  <DialogTitle>Pré-visualização do Relatório Técnico</DialogTitle>
+                  <DialogDescription>
+                    Visualize como o documento ficará antes de exportar
+                  </DialogDescription>
+                </DialogHeader>
+
+                <Tabs value={previewTab} onValueChange={(v) => setPreviewTab(v as 'pdf' | 'word')} className="flex-1 flex flex-col">
+                  <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto">
+                    <TabsTrigger value="pdf" className="gap-2">
+                      <FileDown className="h-4 w-4" />
+                      Visualização PDF
+                    </TabsTrigger>
+                    <TabsTrigger value="word" className="gap-2">
+                      <FileText className="h-4 w-4" />
+                      Visualização Word
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="pdf" className="flex-1 overflow-auto border rounded-lg mt-4 bg-white">
+                    <div className="documentation-content p-8">
+                      <section className="cover-page">
+                        <img
+                          src={logoImage}
+                          alt="Logotipo Ncangaza Multiservices"
+                          className="cover-logo"
+                        />
+                        <h1 className="cover-title">Relatório Técnico do Sistema de Gestão de Dívidas</h1>
+                        <p className="cover-subtitle">Ncangaza Multiservices</p>
+                        <div className="cover-info">
+                          <p>
+                            Autor: <strong>Nilton Ramim Pita</strong>
+                          </p>
+                          <p>Instituição: Universidade Católica de Moçambique (UCM)</p>
+                          <p>Ano: {new Date().getFullYear()}</p>
+                        </div>
+                      </section>
+
+                      <div className="border-t-2 border-dashed my-8" />
+
+                      <section className="toc-page">
+                        <h2 className="toc-title">Índice</h2>
+                        <div
+                          className="toc-content"
+                          dangerouslySetInnerHTML={{ __html: buildTOCHtml(relatorioContent) }}
+                        />
+                      </section>
+
+                      <div className="border-t-2 border-dashed my-8" />
+
+                      <section
+                        className="report-content"
+                        dangerouslySetInnerHTML={{ __html: processedContent }}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="word" className="flex-1 overflow-auto border rounded-lg mt-4 bg-white">
+                    <div className="p-8 space-y-6 max-w-4xl mx-auto">
+                      <div className="text-center space-y-4">
+                        <h1 className="text-3xl font-bold uppercase text-blue-900">
+                          Relatório Técnico do Sistema de Gestão de Dívidas
+                        </h1>
+                        <p className="text-xl text-gray-700">Ncangaza Multiservices</p>
+                        <div className="text-base space-y-2 pt-6">
+                          <p>
+                            Autor: <strong>Nilton Ramim Pita</strong>
+                          </p>
+                          <p>Instituição: Universidade Católica de Moçambique (UCM)</p>
+                          <p>Ano: {new Date().getFullYear()}</p>
+                        </div>
+                      </div>
+
+                      <div className="border-t-2 border-dashed my-8" />
+
+                      <div>
+                        <h2 className="text-2xl font-bold mb-4 text-blue-800">ÍNDICE</h2>
+                        <div
+                          className="space-y-2 text-sm"
+                          dangerouslySetInnerHTML={{ __html: buildTOCHtml(relatorioContent) }}
+                        />
+                      </div>
+
+                      <div className="border-t-2 border-dashed my-8" />
+
+                      <div
+                        className="prose max-w-none"
+                        dangerouslySetInnerHTML={{ __html: processedContent }}
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button
+                    onClick={() => {
+                      setIsPreviewOpen(false);
+                      if (previewTab === 'pdf') {
+                        generatePDF();
+                      } else {
+                        generateWord();
+                      }
+                    }}
+                    disabled={isGeneratingPDF || isGeneratingWord}
+                    className="gap-2"
+                  >
+                    {previewTab === 'pdf' ? (
+                      <>
+                        <FileDown className="h-4 w-4" />
+                        Exportar como PDF
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4" />
+                        Exportar como Word
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             <Button
               onClick={generatePDF}
               disabled={isGeneratingPDF || isGeneratingWord || !isRendered}
