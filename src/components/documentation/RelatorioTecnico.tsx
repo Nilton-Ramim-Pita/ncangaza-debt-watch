@@ -168,7 +168,7 @@ export function RelatorioTecnico() {
         backgroundColor: '#ffffff',
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
       const pdf = new jsPDF('p', 'mm', 'a4');
       const imgWidth = 210; // Largura da página A4 em mm
