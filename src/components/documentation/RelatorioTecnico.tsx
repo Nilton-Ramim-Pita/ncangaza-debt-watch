@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileDown, Loader2 } from 'lucide-react';
+import { FileDown, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import mermaid from 'mermaid';
 import jsPDF from 'jspdf';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import { saveAs } from 'file-saver';
 import relatorioContent from '../../../RELATORIO_TECNICO_SISTEMA.md?raw';
 import './documentation-styles.css';
 import logoImage from '@/assets/logo-ncangaza-full.png';
@@ -86,7 +88,8 @@ const buildPdfHtml = (mainContentHtml: string, tocHtml: string) => `
 
 export function RelatorioTecnico() {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isGeneratingWord, setIsGeneratingWord] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
 
   useEffect(() => {
@@ -123,7 +126,7 @@ export function RelatorioTecnico() {
       return;
     }
 
-    setIsGenerating(true);
+    setIsGeneratingPDF(true);
     toast.info('A gerar PDF profissional... Por favor aguarde.');
 
     try {
@@ -158,7 +161,254 @@ export function RelatorioTecnico() {
       console.error('Erro ao gerar PDF:', error);
       toast.error('Erro ao gerar PDF. Tente novamente.');
     } finally {
-      setIsGenerating(false);
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const generateWord = async () => {
+    if (!isRendered) {
+      toast.error('Aguarde a renderização completa...');
+      return;
+    }
+
+    setIsGeneratingWord(true);
+    toast.info('A gerar documento Word... Por favor aguarde.');
+
+    try {
+      const lines = relatorioContent.split('\n');
+      const children: any[] = [];
+
+      // Capa
+      children.push(
+        new Paragraph({
+          text: 'RELATÓRIO TÉCNICO DO SISTEMA DE GESTÃO DE DÍVIDAS',
+          heading: HeadingLevel.TITLE,
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 3000, after: 400 },
+        }),
+        new Paragraph({
+          text: 'Ncangaza Multiservices',
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
+        }),
+        new Paragraph({
+          text: '',
+          spacing: { after: 400 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Autor: ', bold: false }),
+            new TextRun({ text: 'Nilton Ramim Pita', bold: true }),
+          ],
+          alignment: AlignmentType.CENTER,
+        }),
+        new Paragraph({
+          text: 'Instituição: Universidade Católica de Moçambique (UCM)',
+          alignment: AlignmentType.CENTER,
+        }),
+        new Paragraph({
+          text: `Ano: ${new Date().getFullYear()}`,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 600 },
+        })
+      );
+
+      // Índice
+      children.push(
+        new Paragraph({
+          text: 'ÍNDICE',
+          heading: HeadingLevel.HEADING_1,
+          pageBreakBefore: true,
+          spacing: { after: 400 },
+        })
+      );
+
+      let h1Counter = 0;
+      let h2Counter = 0;
+      let h3Counter = 0;
+
+      // Gerar índice
+      lines.forEach((line) => {
+        const match = /^(#{1,3})\s+(.+)$/.exec(line.trim());
+        if (match) {
+          const level = match[1].length;
+          const title = match[2].trim();
+          
+          let sectionNumber = '';
+          if (level === 1) {
+            h1Counter++;
+            h2Counter = 0;
+            h3Counter = 0;
+            sectionNumber = `${h1Counter}`;
+          } else if (level === 2) {
+            h2Counter++;
+            h3Counter = 0;
+            sectionNumber = `${h1Counter}.${h2Counter}`;
+          } else if (level === 3) {
+            h3Counter++;
+            sectionNumber = `${h1Counter}.${h2Counter}.${h3Counter}`;
+          }
+
+          children.push(
+            new Paragraph({
+              text: `${sectionNumber}. ${title}`,
+              spacing: { after: 100 },
+              indent: { left: (level - 1) * 400 },
+            })
+          );
+        }
+      });
+
+      // Reset counters para conteúdo
+      h1Counter = 0;
+      h2Counter = 0;
+      h3Counter = 0;
+
+      // Processar conteúdo
+      children.push(
+        new Paragraph({
+          text: '',
+          pageBreakBefore: true,
+        })
+      );
+
+      let inCodeBlock = false;
+      let codeContent = '';
+      let inList = false;
+
+      for (const line of lines) {
+        // Code blocks
+        if (line.startsWith('```')) {
+          if (inCodeBlock) {
+            children.push(
+              new Paragraph({
+                text: codeContent,
+                shading: { fill: 'F1F5F9' },
+                spacing: { before: 200, after: 200 },
+              })
+            );
+            codeContent = '';
+          }
+          inCodeBlock = !inCodeBlock;
+          continue;
+        }
+
+        if (inCodeBlock) {
+          codeContent += line + '\n';
+          continue;
+        }
+
+        // Headings
+        const h1Match = /^# (.+)$/.exec(line);
+        if (h1Match) {
+          h1Counter++;
+          h2Counter = 0;
+          h3Counter = 0;
+          inList = false;
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({ text: `${h1Counter}. `, bold: true, color: '1E3A8A' }),
+                new TextRun({ text: h1Match[1], bold: true }),
+              ],
+              heading: HeadingLevel.HEADING_1,
+              spacing: { before: 400, after: 200 },
+              pageBreakBefore: true,
+            })
+          );
+          continue;
+        }
+
+        const h2Match = /^## (.+)$/.exec(line);
+        if (h2Match) {
+          h2Counter++;
+          h3Counter = 0;
+          inList = false;
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({ text: `${h1Counter}.${h2Counter}. `, bold: true, color: '1E40AF' }),
+                new TextRun({ text: h2Match[1], bold: true }),
+              ],
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 300, after: 150 },
+            })
+          );
+          continue;
+        }
+
+        const h3Match = /^### (.+)$/.exec(line);
+        if (h3Match) {
+          h3Counter++;
+          inList = false;
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({ text: `${h1Counter}.${h2Counter}.${h3Counter}. `, bold: true, color: '1E40AF' }),
+                new TextRun({ text: h3Match[1], bold: true }),
+              ],
+              heading: HeadingLevel.HEADING_3,
+              spacing: { before: 250, after: 100 },
+            })
+          );
+          continue;
+        }
+
+        // Lists
+        const listMatch = /^[-*]\s+(.+)$/.exec(line);
+        if (listMatch) {
+          inList = true;
+          children.push(
+            new Paragraph({
+              text: listMatch[1],
+              bullet: { level: 0 },
+              spacing: { after: 100 },
+            })
+          );
+          continue;
+        }
+
+        // Regular paragraphs
+        if (line.trim() && !inList) {
+          children.push(
+            new Paragraph({
+              text: line.trim(),
+              spacing: { after: 150 },
+              alignment: AlignmentType.JUSTIFIED,
+            })
+          );
+        } else if (!line.trim()) {
+          inList = false;
+        }
+      }
+
+      const doc = new Document({
+        sections: [
+          {
+            properties: {
+              page: {
+                margin: {
+                  top: 1440, // 1 inch = 1440 twips
+                  right: 1440,
+                  bottom: 1440,
+                  left: 1440,
+                },
+              },
+            },
+            children,
+          },
+        ],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, 'Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita.docx');
+
+      toast.success('Documento Word gerado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar Word:', error);
+      toast.error('Erro ao gerar documento Word. Tente novamente.');
+    } finally {
+      setIsGeneratingWord(false);
     }
   };
 
@@ -254,24 +504,45 @@ export function RelatorioTecnico() {
               Sistema de Gestão de Dívidas - Ncangaza Multiservices
             </p>
           </div>
-          <Button
-            onClick={generatePDF}
-            disabled={isGenerating || !isRendered}
-            size="lg"
-            className="gap-2"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                A gerar PDF...
-              </>
-            ) : (
-              <>
-                <FileDown className="h-5 w-5" />
-                Gerar PDF Profissional
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={generatePDF}
+              disabled={isGeneratingPDF || isGeneratingWord || !isRendered}
+              size="lg"
+              className="gap-2"
+            >
+              {isGeneratingPDF ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  A gerar PDF...
+                </>
+              ) : (
+                <>
+                  <FileDown className="h-5 w-5" />
+                  Gerar PDF
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={generateWord}
+              disabled={isGeneratingPDF || isGeneratingWord || !isRendered}
+              size="lg"
+              variant="outline"
+              className="gap-2"
+            >
+              {isGeneratingWord ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  A gerar Word...
+                </>
+              ) : (
+                <>
+                  <FileText className="h-5 w-5" />
+                  Gerar Word
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
