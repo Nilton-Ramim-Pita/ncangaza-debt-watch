@@ -1,28 +1,24 @@
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { FileDown, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import mermaid from "mermaid";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import relatorioContent from "../../../RELATORIO_TECNICO_SISTEMA.md?raw";
-import "./documentation-styles.css";
-import logoImage from "@/assets/logo-ncangaza-full.png";
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { FileDown, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import mermaid from 'mermaid';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import relatorioContent from '../../../RELATORIO_TECNICO_SISTEMA.md?raw';
+import './documentation-styles.css';
+import logoImage from '@/assets/logo-ncangaza-full.png';
 
 // Initialize Mermaid
 mermaid.initialize({
   startOnLoad: false,
-  theme: "default",
-  securityLevel: "loose",
+  theme: 'default',
+  securityLevel: 'loose',
 });
 
-/* -------------------------
-   Helpers
-   ------------------------*/
-
-/** Extrai headings do markdown (TOC) */
+// Extrai os títulos mantendo a numeração original do markdown
 const buildTOCHtml = (content: string) => {
-  const lines = content.split("\n");
+  const lines = content.split('\n');
   const items: { level: number; title: string }[] = [];
 
   lines.forEach((line) => {
@@ -38,36 +34,45 @@ const buildTOCHtml = (content: string) => {
     return '<p class="doc-p">Índice não disponível.</p>';
   }
 
-  return items.map((item) => `<div class="toc-item toc-level-${item.level}">${item.title}</div>`).join("");
+  return items
+    .map(
+      (item) =>
+        `<div class="toc-item toc-level-${item.level}">${item.title}</div>`
+    )
+    .join('');
 };
 
-/** Converte SVG string para PNG data URL (usando base64 inline) */
+/** Converte SVG string para PNG data URL de forma segura (sem tainted canvas) */
 async function svgToPngDataUrl(svgString: string, scale = 2): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
+      // Criar SVG data URL diretamente (evita blob URL que causa tainted canvas)
       const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
       const svgDataUrl = `data:image/svg+xml;base64,${svgBase64}`;
-
+      
       const img = new Image();
       img.onload = () => {
         try {
-          const canvas = document.createElement("canvas");
-          canvas.width = Math.max(1, Math.ceil(img.width * scale));
-          canvas.height = Math.max(1, Math.ceil(img.height * scale));
-          const ctx = canvas.getContext("2d");
-          if (!ctx) return reject(new Error("2D context not available"));
-          ctx.fillStyle = "#ffffff";
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.ceil(img.width * scale);
+          canvas.height = Math.ceil(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            return reject(new Error('Não foi possível obter contexto 2D'));
+          }
+          ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.setTransform(scale, 0, 0, scale, 0, 0);
           ctx.drawImage(img, 0, 0);
-          const dataUrl = canvas.toDataURL("image/png", 0.95);
+          const dataUrl = canvas.toDataURL('image/png', 0.95);
           resolve(dataUrl);
         } catch (e) {
           reject(e);
         }
       };
-      img.onerror = (err) => reject(err);
-      img.crossOrigin = "anonymous";
+      img.onerror = (err) => {
+        reject(err);
+      };
       img.src = svgDataUrl;
     } catch (err) {
       reject(err);
@@ -75,7 +80,7 @@ async function svgToPngDataUrl(svgString: string, scale = 2): Promise<string> {
   });
 }
 
-/** Aguarda que todas as imagens e fontes dentro de root estejam carregadas */
+/** Aguarda que todas as imagens e fontes estejam carregadas */
 function waitForImagesAndFonts(root: HTMLElement, timeout = 8000): Promise<void> {
   return new Promise((resolve) => {
     let finished = false;
@@ -86,16 +91,16 @@ function waitForImagesAndFonts(root: HTMLElement, timeout = 8000): Promise<void>
       }
     }, timeout);
 
-    const imgs = Array.from(root.querySelectorAll("img"));
+    const imgs = Array.from(root.querySelectorAll('img'));
     const imgPromises = imgs.map((img) => {
       if ((img as HTMLImageElement).complete) return Promise.resolve();
       return new Promise<void>((res) => {
-        (img as HTMLImageElement).addEventListener("load", () => res());
-        (img as HTMLImageElement).addEventListener("error", () => res());
+        img.addEventListener('load', () => res());
+        img.addEventListener('error', () => res());
       });
     });
 
-    const fontPromise = (document as any).fonts ? (document as any).fonts.ready : Promise.resolve();
+    const fontPromise = document.fonts ? document.fonts.ready : Promise.resolve();
 
     Promise.all([...imgPromises, fontPromise]).then(() => {
       if (!finished) {
@@ -107,79 +112,222 @@ function waitForImagesAndFonts(root: HTMLElement, timeout = 8000): Promise<void>
   });
 }
 
-/* -------------------------
-   Component
-   ------------------------*/
-
 export function RelatorioTecnico() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
 
-  /* Preprocess markdown to HTML (basic) */
+  useEffect(() => {
+    renderMermaidDiagrams();
+  }, []);
+
+  const renderMermaidDiagrams = async () => {
+    try {
+      // Aguarda um pouco para o DOM estar pronto
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const mermaidElements = document.querySelectorAll('.mermaid-diagram');
+      console.log(`Encontrados ${mermaidElements.length} diagramas Mermaid`);
+      
+      for (let i = 0; i < mermaidElements.length; i++) {
+        const element = mermaidElements[i] as HTMLElement;
+        const code = element.textContent || '';
+        
+        if (!code.trim()) continue;
+        
+        try {
+          const uniqueId = `mermaid-${i}-${Date.now()}`;
+          const { svg } = await mermaid.render(uniqueId, code);
+          
+          // Converte SVG para PNG usando data URL (evita tainted canvas)
+          try {
+            const pngDataUrl = await svgToPngDataUrl(svg, 2);
+            element.innerHTML = `<img src="${pngDataUrl}" alt="Diagrama ${i + 1}" class="mermaid-png" style="max-width:100%;height:auto;display:block;margin:16px auto;" />`;
+            console.log(`Diagrama ${i + 1} convertido para PNG com sucesso`);
+          } catch (pngError) {
+            // Se falhar PNG, usa o SVG diretamente (melhor que nada)
+            console.warn(`Falha ao converter para PNG, usando SVG:`, pngError);
+            element.innerHTML = `<div class="mermaid-rendered">${svg}</div>`;
+          }
+        } catch (error) {
+          console.error('Erro ao renderizar diagrama Mermaid:', error);
+          element.innerHTML = `<div class="error-diagram" style="color:#b91c1c;padding:8px;border:1px solid #fca5a5;border-radius:6px;">Erro ao renderizar diagrama</div>`;
+        }
+      }
+      
+      setIsRendered(true);
+    } catch (error) {
+      console.error('Erro geral ao renderizar diagramas:', error);
+      setIsRendered(true);
+    }
+  };
+
+  const generatePDF = async () => {
+    if (!contentRef.current || !isRendered) {
+      toast.error('Aguarde a renderização completa...');
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    toast.info('A gerar PDF profissional... Isso pode levar alguns minutos.');
+
+    const element = contentRef.current;
+
+    // Guardar estilos originais
+    const originalStyle = {
+      position: element.style.position,
+      overflow: element.style.overflow,
+      transform: element.style.transform,
+      maxHeight: element.style.maxHeight,
+      width: element.style.width,
+      height: element.style.height,
+    };
+
+    try {
+      // Aguardar imagens e fontes
+      await waitForImagesAndFonts(element, 10000);
+
+      // Preparar elemento para captura completa
+      element.style.position = 'static';
+      element.style.overflow = 'visible';
+      element.style.transform = 'none';
+      element.style.maxHeight = 'none';
+      element.style.width = '794px'; // Largura A4 em pixels (210mm * 3.78)
+
+      // Aguardar reflow
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      console.log('Iniciando captura html2canvas...');
+      console.log('Dimensões do elemento:', element.scrollWidth, 'x', element.scrollHeight);
+
+      // Capturar com html2canvas
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        scrollX: 0,
+        scrollY: 0,
+        backgroundColor: '#ffffff',
+        logging: true,
+        imageTimeout: 30000,
+        windowWidth: 794,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+      });
+
+      console.log('Canvas capturado:', canvas.width, 'x', canvas.height);
+
+      // Converter para JPEG
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+      // Criar PDF A4
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 10;
+      const imgWidth = pageWidth - (margin * 2);
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = margin;
+      let pageNum = 0;
+
+      // Primeira página
+      pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - margin * 2);
+      pageNum++;
+
+      // Páginas adicionais
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight + margin;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+        heightLeft -= (pageHeight - margin * 2);
+        pageNum++;
+      }
+
+      // Salvar
+      const timestamp = new Date().toISOString().split('T')[0];
+      pdf.save(`Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita_${timestamp}.pdf`);
+
+      toast.success(`PDF gerado com sucesso! (${pageNum} páginas)`);
+
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar PDF. Verifique o console.');
+    } finally {
+      // Restaurar estilos
+      element.style.position = originalStyle.position;
+      element.style.overflow = originalStyle.overflow;
+      element.style.transform = originalStyle.transform;
+      element.style.maxHeight = originalStyle.maxHeight;
+      element.style.width = originalStyle.width;
+      element.style.height = originalStyle.height;
+      setIsGeneratingPDF(false);
+    }
+  };
+
   const processContent = (content: string) => {
     let processed = content;
 
-    // Mermaid blocks kept as markers for rendering
+    // Process Mermaid diagrams - marca para conversão posterior
     processed = processed.replace(/```mermaid\n([\s\S]*?)```/g, (_, code) => {
-      return `<div class="mermaid-diagram avoid-break">${code.replace(/</g, "&lt;")}</div>`;
+      return `<div class="mermaid-diagram avoid-break">${code}</div>`;
     });
 
-    // Code blocks
+    // Process code blocks
     processed = processed.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
-      const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      return `<div class="code-block avoid-break"><pre><code class="language-${lang || "text"}">${escaped}</code></pre></div>`;
+      const escaped = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<div class="code-block avoid-break"><pre><code class="language-${lang || 'text'}">${escaped}</code></pre></div>`;
     });
 
-    // Tables (simple markdown pipes)
-    processed = processed.replace(
-      /\n\|(.*?)\|\n\|([-:\s|]+)\|\n((?:\|.*?\|\n)+)/g,
-      (match, header, separator, rows) => {
-        const headers = header
-          .split("|")
-          .map((h: string) => h.trim())
-          .filter(Boolean);
-        const rowData = rows
-          .trim()
-          .split("\n")
-          .map((r: string) =>
-            r
-              .split("|")
-              .map((c) => c.trim())
-              .filter(Boolean),
-          );
-        let table = '<table class="doc-table avoid-break"><thead><tr>';
-        headers.forEach((h) => (table += `<th>${h}</th>`));
-        table += "</tr></thead><tbody>";
-        rowData.forEach((row) => {
-          table += "<tr>";
-          row.forEach((cell) => (table += `<td>${cell}</td>`));
-          table += "</tr>";
-        });
-        table += "</tbody></table>";
-        return table;
-      },
-    );
+    // Process tables
+    processed = processed.replace(/\n\|(.*?)\|\n\|([-:\s|]+)\|\n((?:\|.*?\|\n)+)/g, (match, header, separator, rows) => {
+      const headers = header.split('|').filter(Boolean).map((h: string) => h.trim());
+      const rowData = rows.trim().split('\n').map((row: string) => 
+        row.split('|').filter(Boolean).map((cell: string) => cell.trim())
+      );
 
-    // Headings
+      let table = '<table class="doc-table avoid-break"><thead><tr>';
+      headers.forEach((h: string) => {
+        table += `<th>${h}</th>`;
+      });
+      table += '</tr></thead><tbody>';
+      
+      rowData.forEach((row: string[]) => {
+        table += '<tr>';
+        row.forEach((cell: string) => {
+          table += `<td>${cell}</td>`;
+        });
+        table += '</tr>';
+      });
+      
+      table += '</tbody></table>';
+      return table;
+    });
+
+    // Process headings
     processed = processed.replace(/^# (.+)$/gm, '<h1 class="doc-h1 page-break-before">$1</h1>');
     processed = processed.replace(/^## (.+)$/gm, '<h2 class="doc-h2">$1</h2>');
     processed = processed.replace(/^### (.+)$/gm, '<h3 class="doc-h3">$1</h3>');
     processed = processed.replace(/^#### (.+)$/gm, '<h4 class="doc-h4">$1</h4>');
 
-    // Lists
+    // Process lists
     processed = processed.replace(/^\d+\.\s+(.+)$/gm, '<li class="doc-li">$1</li>');
     processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li class="doc-li">$1</li>');
-    processed = processed.replace(/(<li class="doc-li">[\s\S]*?<\/li>)/g, '<ul class="doc-ul">$1</ul>');
+    processed = processed.replace(/(<li class="doc-li">.*<\/li>)/s, '<ul class="doc-ul">$1</ul>');
 
-    // Bold / italic
-    processed = processed.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    processed = processed.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    // Process bold and italic
+    processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    processed = processed.replace(/\*(.+?)\*/g, '<em>$1</em>');
 
-    // Paragraphs (simple)
-    processed = processed.replace(/\n\n+/g, '</p><p class="doc-p">');
-    processed = `<p class="doc-p">${processed}</p>`;
-    processed = processed.replace(/<\/p><p class="doc-p"><\/p>/g, "");
+    // Process paragraphs
+    processed = processed.replace(/\n\n(.+?)\n\n/g, '<p class="doc-p">$1</p>');
 
     return processed;
   };
@@ -187,197 +335,27 @@ export function RelatorioTecnico() {
   const processedContent = processContent(relatorioContent);
   const tocHtml = buildTOCHtml(relatorioContent);
 
-  /* Render Mermaid diagrams in DOM and convert to PNG images (so html2canvas captures reliably) */
-  useEffect(() => {
-    let mounted = true;
-
-    (async () => {
-      try {
-        // short delay to allow initial DOM paint
-        await new Promise((r) => setTimeout(r, 120));
-        const root = contentRef.current;
-        if (!root) return;
-
-        // We inserted the mermaid blocks as HTML when rendering via dangerouslySetInnerHTML,
-        // so select them and render
-        const mermaidEls = Array.from(root.querySelectorAll(".mermaid-diagram")) as HTMLElement[];
-
-        for (let i = 0; i < mermaidEls.length; i++) {
-          const el = mermaidEls[i];
-          const rawCode = (el.textContent || "").trim();
-          if (!rawCode) continue;
-          try {
-            const uid = `mermaid-${i}-${Date.now()}`;
-            const { svg } = await mermaid.render(uid, rawCode);
-            // try convert to PNG - if fails, fall back to inline SVG
-            try {
-              const png = await svgToPngDataUrl(svg, 2);
-              const img = document.createElement("img");
-              img.src = png;
-              img.alt = `Diagrama ${i + 1}`;
-              img.className = "mermaid-png";
-              img.style.maxWidth = "100%";
-              img.style.display = "block";
-              img.style.margin = "16px auto";
-              el.innerHTML = "";
-              el.appendChild(img);
-            } catch (err) {
-              // fallback: set svg (inline)
-              el.innerHTML = `<div class="mermaid-rendered">${svg}</div>`;
-              console.warn("svg->png falhou, usando svg inline", err);
-            }
-          } catch (err) {
-            el.innerHTML = `<div class="error-diagram" style="color:#b91c1c;padding:8px;border:1px solid #fca5a5;border-radius:6px">Erro ao renderizar diagrama</div>`;
-            console.error("mermaid render error", err);
-          }
-        }
-
-        // Wait for any newly inserted images to load
-        if (mounted && root) {
-          await waitForImagesAndFonts(root, 4000);
-        }
-
-        if (mounted) setIsRendered(true);
-      } catch (err) {
-        console.error("Erro ao renderizar diagrams:", err);
-        if (mounted) setIsRendered(true);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  /* Full PDF generation using html2canvas + jsPDF (fixed & robust) */
-  const generatePDF = async () => {
-    if (!contentRef.current || !isRendered) {
-      toast.error("Aguarde a renderização completa...");
-      return;
-    }
-
-    setIsGeneratingPDF(true);
-    toast.info("A gerar PDF... Isso pode levar alguns segundos.");
-
-    try {
-      const original = contentRef.current;
-      // Clone the node so we don't disturb UI
-      const clone = original.cloneNode(true) as HTMLElement;
-
-      // Remove fixed headers/footers / interactive elements from clone
-      // We look for elements with class 'fixed' or role banner or data-no-print
-      const fixedEls = Array.from(
-        clone.querySelectorAll(".fixed, [data-no-print], header, .no-print"),
-      ) as HTMLElement[];
-      fixedEls.forEach((el) => el.remove());
-
-      // Force certain styles on clone to ensure correct width
-      clone.style.boxSizing = "border-box";
-      clone.style.width = "794px"; // roughly A4 portrait at 96dpi
-      clone.style.maxWidth = "794px";
-      clone.style.background = "#ffffff";
-
-      // Create an offscreen container but VISIBLE to the renderer (not visibility:hidden)
-      const container = document.createElement("div");
-      container.style.cssText = [
-        "position:absolute",
-        "top:-99999px", // off screen but renderable
-        "left:0",
-        "width:794px",
-        "background:#ffffff",
-        "z-index:10000",
-        "visibility:visible",
-        "display:block",
-        "padding:0",
-        "margin:0",
-      ].join(";");
-
-      container.appendChild(clone);
-      document.body.appendChild(container);
-
-      // Give browser time to layout and to load images/fonts
-      await new Promise((r) => setTimeout(r, 500));
-      await waitForImagesAndFonts(clone, 5000);
-
-      // Debug sizes
-      const scrollW = clone.scrollWidth || clone.offsetWidth || 794;
-      const scrollH = clone.scrollHeight || clone.offsetHeight || 1123;
-      console.log("clone dimensions", { scrollW, scrollH });
-
-      // Capture with html2canvas
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: "#ffffff",
-        logging: false,
-        width: scrollW,
-        height: scrollH,
-        windowWidth: Math.max(window.innerWidth, 794),
-      });
-
-      // Remove container
-      document.body.removeChild(container);
-
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        throw new Error("Canvas inválido/zero — captura falhou");
-      }
-
-      // Convert to image and create PDF pages
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 10;
-      const contentWidth = pageWidth - margin * 2;
-      const contentHeight = (canvas.height * contentWidth) / canvas.width;
-
-      // First page
-      pdf.addImage(imgData, "JPEG", margin, margin, contentWidth, contentHeight);
-
-      let heightLeft = contentHeight - (pageHeight - margin * 2);
-      let offset = 0;
-
-      while (heightLeft > -1) {
-        offset += pageHeight - margin * 2;
-        if (heightLeft <= 0) break;
-        pdf.addPage();
-        // On each additional page, place slice by using negative y offset on the same large image
-        pdf.addImage(imgData, "JPEG", margin, margin - offset, contentWidth, contentHeight);
-        heightLeft -= pageHeight - margin * 2;
-      }
-
-      const timestamp = new Date().toISOString().split("T")[0];
-      pdf.save(`Relatorio_Tecnico_Sistema_Gestao_Dividas_${timestamp}.pdf`);
-
-      toast.success("PDF gerado com sucesso!");
-    } catch (err) {
-      console.error("Erro ao gerar PDF:", err);
-      toast.error("Erro ao gerar PDF. Verifique o console.");
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Header (visual only) */}
+      {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Relatório Técnico do Sistema</h1>
-            <p className="text-sm text-muted-foreground mt-1">Sistema de Gestão de Dívidas - Ncangaza Multiservices</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Sistema de Gestão de Dívidas - Ncangaza Multiservices
+            </p>
           </div>
-          <Button onClick={generatePDF} disabled={isGeneratingPDF || !isRendered} size="lg" className="gap-2">
+          <Button
+            onClick={generatePDF}
+            disabled={isGeneratingPDF || !isRendered}
+            size="lg"
+            className="gap-2"
+          >
             {isGeneratingPDF ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />A gerar PDF...
+                <Loader2 className="h-5 w-5 animate-spin" />
+                A gerar PDF...
               </>
             ) : (
               <>
@@ -389,11 +367,15 @@ export function RelatorioTecnico() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content with top padding to avoid header overlap */}
       <div className="pt-24 px-4 pb-8">
         <div ref={contentRef} className="documentation-content">
           <section className="cover-page page-break-after">
-            <img src={logoImage} alt="Logotipo Ncangaza Multiservices" className="cover-logo" />
+            <img
+              src={logoImage}
+              alt="Logotipo Ncangaza Multiservices"
+              className="cover-logo"
+            />
             <h1 className="cover-title">Relatório Técnico do Sistema de Gestão de Dívidas</h1>
             <p className="cover-subtitle">Ncangaza Multiservices</p>
             <div className="cover-info">
@@ -407,14 +389,18 @@ export function RelatorioTecnico() {
 
           <section className="toc-page page-break-after">
             <h2 className="toc-title">Índice</h2>
-            <div className="toc-content" dangerouslySetInnerHTML={{ __html: tocHtml }} />
+            <div
+              className="toc-content"
+              dangerouslySetInnerHTML={{ __html: tocHtml }}
+            />
           </section>
 
-          <section className="report-content" dangerouslySetInnerHTML={{ __html: processedContent }} />
+          <section
+            className="report-content"
+            dangerouslySetInnerHTML={{ __html: processedContent }}
+          />
         </div>
       </div>
     </div>
   );
 }
-
-export default RelatorioTecnico;
