@@ -1,6 +1,7 @@
 /* ============================================
    ESTILOS PARA DOCUMENTAÇÃO TÉCNICA ACADÉMICA
    Formato: UCM - Universidade Católica de Moçambique
+   Normas: Times New Roman, Títulos 16/14pt, Texto 12pt, Espaçamento 1.5
    Autor: Nilton Ramim Pita
    ============================================ */
 
@@ -10,8 +11,8 @@
   padding: 25mm;
   background: white !important;
   background-color: #ffffff !important;
-  color: #000 !important;
-  font-family: 'Times New Roman', Times, serif;
+  color: #000000 !important;
+  font-family: 'Times New Roman', Times, serif !important;
   font-size: 12pt;
   line-height: 1.5;
   min-height: 100vh;
@@ -21,49 +22,54 @@
 }
 
 /* ============================================
-   TIPOGRAFIA - TÍTULOS E SUBTÍTULOS
+   TIPOGRAFIA - TÍTULOS E SUBTÍTULOS (PRETO)
+   UCM: H1=16pt, H2=14pt, H3=12pt bold
    ============================================ */
 
 .doc-h1 {
-  font-size: 18pt;
+  font-family: 'Times New Roman', Times, serif !important;
+  font-size: 16pt;
   font-weight: bold;
   text-align: center;
-  margin-top: 30pt;
-  margin-bottom: 20pt;
+  margin-top: 24pt;
+  margin-bottom: 18pt;
   page-break-after: avoid;
   text-transform: uppercase;
-  color: #1e3a8a;
-  border-bottom: 2pt solid #1e3a8a;
-  padding-bottom: 10pt;
+  color: #000000 !important;
+  border-bottom: 1pt solid #000000;
+  padding-bottom: 8pt;
 }
 
 .doc-h2 {
-  font-size: 16pt;
-  font-weight: bold;
-  margin-top: 24pt;
-  margin-bottom: 12pt;
-  page-break-after: avoid;
-  color: #1e40af;
-  border-left: 4pt solid #1e40af;
-  padding-left: 10pt;
-}
-
-.doc-h3 {
+  font-family: 'Times New Roman', Times, serif !important;
   font-size: 14pt;
   font-weight: bold;
   margin-top: 18pt;
-  margin-bottom: 10pt;
+  margin-bottom: 12pt;
   page-break-after: avoid;
-  color: #1e40af;
+  color: #000000 !important;
+  border-left: none;
+  padding-left: 0;
 }
 
-.doc-h4 {
+.doc-h3 {
+  font-family: 'Times New Roman', Times, serif !important;
   font-size: 12pt;
   font-weight: bold;
   margin-top: 14pt;
+  margin-bottom: 10pt;
+  page-break-after: avoid;
+  color: #000000 !important;
+}
+
+.doc-h4 {
+  font-family: 'Times New Roman', Times, serif !important;
+  font-size: 12pt;
+  font-weight: bold;
+  margin-top: 12pt;
   margin-bottom: 8pt;
   page-break-after: avoid;
-  color: #334155;
+  color: #000000 !important;
 }
 
 /* ============================================
@@ -71,21 +77,25 @@
    ============================================ */
 
 .section-number {
-  color: #1e3a8a;
+  color: #000000 !important;
   font-weight: bold;
   margin-right: 8pt;
 }
 
 /* ============================================
-   PARÁGRAFOS E TEXTO
+   PARÁGRAFOS E TEXTO - Espaçamento 1.5
    ============================================ */
 
 .doc-p {
-  margin-bottom: 10pt;
+  font-family: 'Times New Roman', Times, serif !important;
+  font-size: 12pt;
+  line-height: 1.5;
+  margin-bottom: 12pt;
   text-align: justify;
   text-indent: 0;
   orphans: 3;
   widows: 3;
+  color: #000000 !important;
 }
 
 .doc-p:empty {
@@ -97,14 +107,20 @@
    ============================================ */
 
 .doc-ul {
-  margin: 10pt 0;
+  font-family: 'Times New Roman', Times, serif !important;
+  font-size: 12pt;
+  line-height: 1.5;
+  margin: 12pt 0;
   padding-left: 30pt;
   list-style-type: disc;
+  color: #000000 !important;
 }
 
 .doc-li {
+  font-family: 'Times New Roman', Times, serif !important;
   margin-bottom: 6pt;
   text-align: justify;
+  color: #000000 !important;
 }
 
 .doc-ul .doc-ul {
@@ -113,33 +129,36 @@
 }
 
 /* ============================================
-   TABELAS
+   TABELAS - Normas UCM
    ============================================ */
 
 .doc-table {
+  font-family: 'Times New Roman', Times, serif !important;
   width: 100%;
   border-collapse: collapse;
   margin: 15pt 0;
   page-break-inside: avoid;
   font-size: 11pt;
+  color: #000000 !important;
 }
 
 .doc-table th {
-  background-color: #1e3a8a;
-  color: white;
+  background-color: #f0f0f0;
+  color: #000000 !important;
   font-weight: bold;
   padding: 8pt;
   text-align: left;
-  border: 1pt solid #1e3a8a;
+  border: 1pt solid #000000;
 }
 
 .doc-table td {
   padding: 6pt 8pt;
-  border: 1pt solid #cbd5e1;
+  border: 1pt solid #000000;
+  color: #000000 !important;
 }
 
 .doc-table tbody tr:nth-child(even) {
-  background-color: #f8fafc;
+  background-color: #f8f8f8;
 }
 
 /* ============================================
@@ -147,9 +166,9 @@
    ============================================ */
 
 .code-block {
-  background-color: #f1f5f9;
-  border: 1pt solid #cbd5e1;
-  border-radius: 4pt;
+  background-color: #f5f5f5;
+  border: 1pt solid #000000;
+  border-radius: 0;
   padding: 10pt;
   margin: 12pt 0;
   overflow-x: auto;
@@ -157,12 +176,14 @@
   font-family: 'Courier New', Courier, monospace;
   font-size: 10pt;
   line-height: 1.4;
+  color: #000000 !important;
 }
 
 .code-block code {
   font-family: 'Courier New', Courier, monospace;
   white-space: pre-wrap;
   word-wrap: break-word;
+  color: #000000 !important;
 }
 
 /* ============================================
@@ -172,9 +193,9 @@
 .mermaid-diagram {
   margin: 20pt 0;
   padding: 15pt;
-  background-color: #fefefe;
-  border: 1pt solid #e2e8f0;
-  border-radius: 4pt;
+  background-color: #ffffff;
+  border: 1pt solid #000000;
+  border-radius: 0;
   page-break-inside: avoid;
   text-align: center;
 }
@@ -191,11 +212,11 @@
 }
 
 .error-diagram {
-  color: #dc2626;
-  background-color: #fee2e2;
+  color: #000000 !important;
+  background-color: #f5f5f5;
   padding: 10pt;
-  border: 1pt solid #dc2626;
-  border-radius: 4pt;
+  border: 1pt solid #000000;
+  border-radius: 0;
   font-size: 10pt;
 }
 
@@ -224,6 +245,7 @@
     margin: 0;
     padding: 25mm;
     max-width: 100%;
+    color: #000000 !important;
   }
 
   /* Cabeçalho de cada página */
@@ -235,21 +257,21 @@
       content: "Documentação Técnica — Sistema de Gestão de Dívidas";
       font-family: 'Times New Roman', Times, serif;
       font-size: 10pt;
-      color: #64748b;
+      color: #000000;
     }
     
     @bottom-right {
       content: counter(page);
       font-family: 'Times New Roman', Times, serif;
       font-size: 10pt;
-      color: #64748b;
+      color: #000000;
     }
     
     @bottom-center {
       content: "© 2025 Nilton Ramim Pita - UCM";
       font-family: 'Times New Roman', Times, serif;
       font-size: 9pt;
-      color: #94a3b8;
+      color: #000000;
     }
   }
 
@@ -269,6 +291,7 @@
   .doc-h3,
   .doc-h4 {
     page-break-after: avoid;
+    color: #000000 !important;
   }
 
   .doc-table,
@@ -286,26 +309,27 @@
   /* Links */
   a {
     text-decoration: none;
-    color: #1e40af;
+    color: #000000 !important;
   }
 
   a[href^="http"]::after {
     content: " (" attr(href) ")";
     font-size: 9pt;
-    color: #64748b;
+    color: #000000;
   }
 }
 
 /* ============================================
-   PÁGINA DE TÍTULO (CAPA)
+   PÁGINA DE TÍTULO (CAPA) - UCM
    ============================================ */
 
 .doc-h1:first-of-type {
-  margin-top: 80pt;
-  font-size: 22pt;
+  margin-top: 60pt;
+  font-size: 16pt;
   text-align: center;
   border: none;
-  padding-bottom: 20pt;
+  padding-bottom: 16pt;
+  color: #000000 !important;
 }
 
 /* CAPA E ÍNDICE ESPECÍFICOS PARA PDF GERADO */
@@ -317,6 +341,7 @@
   align-items: center;
   min-height: 260mm;
   text-align: center;
+  font-family: 'Times New Roman', Times, serif !important;
 }
 
 .cover-logo {
@@ -326,55 +351,68 @@
 }
 
 .cover-title {
-  font-size: 20pt;
+  font-family: 'Times New Roman', Times, serif !important;
+  font-size: 16pt;
   font-weight: bold;
   text-transform: uppercase;
-  color: #1e3a8a;
+  color: #000000 !important;
   margin-bottom: 12pt;
 }
 
 .cover-subtitle {
+  font-family: 'Times New Roman', Times, serif !important;
   font-size: 14pt;
-  color: #334155;
+  color: #000000 !important;
   margin-bottom: 20pt;
 }
 
 .cover-info {
+  font-family: 'Times New Roman', Times, serif !important;
   font-size: 12pt;
-  color: #0f172a;
-  line-height: 1.6;
+  color: #000000 !important;
+  line-height: 1.5;
 }
 
 .toc-page {
   padding-top: 40pt;
+  font-family: 'Times New Roman', Times, serif !important;
 }
 
 .toc-title {
+  font-family: 'Times New Roman', Times, serif !important;
   font-size: 16pt;
   font-weight: bold;
   margin-bottom: 16pt;
-  color: #1e40af;
+  color: #000000 !important;
+  text-transform: uppercase;
 }
 
 .toc-content {
+  font-family: 'Times New Roman', Times, serif !important;
   font-size: 12pt;
+  line-height: 1.5;
+  color: #000000 !important;
 }
 
 .toc-item {
   margin-bottom: 6pt;
+  color: #000000 !important;
 }
 
 .toc-level-1 {
   font-weight: bold;
+  color: #000000 !important;
 }
 
 .toc-level-2 {
   margin-left: 12pt;
+  color: #000000 !important;
 }
 
 .toc-level-3 {
   margin-left: 24pt;
   font-size: 11pt;
+  color: #000000 !important;
 }
 
 .report-content {
@@ -387,19 +425,21 @@
 
 strong {
   font-weight: bold;
-  color: #0f172a;
+  color: #000000 !important;
 }
 
 em {
   font-style: italic;
+  color: #000000 !important;
 }
 
 code {
   font-family: 'Courier New', Courier, monospace;
-  background-color: #f1f5f9;
+  background-color: #f5f5f5;
   padding: 2pt 4pt;
-  border-radius: 2pt;
+  border-radius: 0;
   font-size: 10pt;
+  color: #000000 !important;
 }
 
 /* ============================================
@@ -413,11 +453,11 @@ code {
   }
 
   .doc-h1 {
-    font-size: 16pt;
+    font-size: 14pt;
   }
 
   .doc-h2 {
-    font-size: 14pt;
+    font-size: 12pt;
   }
 
   .doc-table {
@@ -427,4 +467,30 @@ code {
   .code-block {
     font-size: 9pt;
   }
+}
+
+/* ============================================
+   GARANTIR TEXTO PRETO EM TODOS ELEMENTOS
+   ============================================ */
+
+.documentation-content * {
+  color: #000000 !important;
+}
+
+.documentation-content h1,
+.documentation-content h2,
+.documentation-content h3,
+.documentation-content h4,
+.documentation-content h5,
+.documentation-content h6,
+.documentation-content p,
+.documentation-content span,
+.documentation-content li,
+.documentation-content td,
+.documentation-content th,
+.documentation-content a,
+.documentation-content strong,
+.documentation-content em,
+.documentation-content code {
+  color: #000000 !important;
 }
