@@ -42,12 +42,14 @@ const buildTOCHtml = (content: string) => {
     .join('');
 };
 
-/** Converte um SVG (string) para dataURL PNG usando canvas */
+/** Converte SVG string para PNG data URL de forma segura (sem tainted canvas) */
 async function svgToPngDataUrl(svgString: string, scale = 2): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
-      const svg = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svg);
+      // Criar SVG data URL diretamente (evita blob URL que causa tainted canvas)
+      const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
+      const svgDataUrl = `data:image/svg+xml;base64,${svgBase64}`;
+      
       const img = new Image();
       img.onload = () => {
         try {
@@ -56,7 +58,6 @@ async function svgToPngDataUrl(svgString: string, scale = 2): Promise<string> {
           canvas.height = Math.ceil(img.height * scale);
           const ctx = canvas.getContext('2d');
           if (!ctx) {
-            URL.revokeObjectURL(url);
             return reject(new Error('Não foi possível obter contexto 2D'));
           }
           ctx.fillStyle = '#ffffff';
@@ -64,19 +65,15 @@ async function svgToPngDataUrl(svgString: string, scale = 2): Promise<string> {
           ctx.setTransform(scale, 0, 0, scale, 0, 0);
           ctx.drawImage(img, 0, 0);
           const dataUrl = canvas.toDataURL('image/png', 0.95);
-          URL.revokeObjectURL(url);
           resolve(dataUrl);
         } catch (e) {
-          URL.revokeObjectURL(url);
           reject(e);
         }
       };
       img.onerror = (err) => {
-        URL.revokeObjectURL(url);
         reject(err);
       };
-      img.crossOrigin = 'anonymous';
-      img.src = url;
+      img.src = svgDataUrl;
     } catch (err) {
       reject(err);
     }
@@ -119,7 +116,6 @@ export function RelatorioTecnico() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
-  const [mermaidConverted, setMermaidConverted] = useState(false);
 
   useEffect(() => {
     renderMermaidDiagrams();
@@ -128,9 +124,10 @@ export function RelatorioTecnico() {
   const renderMermaidDiagrams = async () => {
     try {
       // Aguarda um pouco para o DOM estar pronto
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       const mermaidElements = document.querySelectorAll('.mermaid-diagram');
+      console.log(`Encontrados ${mermaidElements.length} diagramas Mermaid`);
       
       for (let i = 0; i < mermaidElements.length; i++) {
         const element = mermaidElements[i] as HTMLElement;
@@ -139,17 +136,25 @@ export function RelatorioTecnico() {
         if (!code.trim()) continue;
         
         try {
-          const { svg } = await mermaid.render(`mermaid-${i}-${Date.now()}`, code);
-          // Converte SVG para PNG para garantir compatibilidade com html2canvas
-          const pngDataUrl = await svgToPngDataUrl(svg, 2);
-          element.innerHTML = `<img src="${pngDataUrl}" alt="Diagrama ${i + 1}" class="mermaid-png" style="max-width:100%;height:auto;display:block;margin:16px auto;" />`;
+          const uniqueId = `mermaid-${i}-${Date.now()}`;
+          const { svg } = await mermaid.render(uniqueId, code);
+          
+          // Converte SVG para PNG usando data URL (evita tainted canvas)
+          try {
+            const pngDataUrl = await svgToPngDataUrl(svg, 2);
+            element.innerHTML = `<img src="${pngDataUrl}" alt="Diagrama ${i + 1}" class="mermaid-png" style="max-width:100%;height:auto;display:block;margin:16px auto;" />`;
+            console.log(`Diagrama ${i + 1} convertido para PNG com sucesso`);
+          } catch (pngError) {
+            // Se falhar PNG, usa o SVG diretamente (melhor que nada)
+            console.warn(`Falha ao converter para PNG, usando SVG:`, pngError);
+            element.innerHTML = `<div class="mermaid-rendered">${svg}</div>`;
+          }
         } catch (error) {
           console.error('Erro ao renderizar diagrama Mermaid:', error);
           element.innerHTML = `<div class="error-diagram" style="color:#b91c1c;padding:8px;border:1px solid #fca5a5;border-radius:6px;">Erro ao renderizar diagrama</div>`;
         }
       }
       
-      setMermaidConverted(true);
       setIsRendered(true);
     } catch (error) {
       console.error('Erro geral ao renderizar diagramas:', error);
@@ -192,6 +197,9 @@ export function RelatorioTecnico() {
       // Aguardar reflow
       await new Promise(resolve => setTimeout(resolve, 500));
 
+      console.log('Iniciando captura html2canvas...');
+      console.log('Dimensões do elemento:', element.scrollWidth, 'x', element.scrollHeight);
+
       // Capturar com html2canvas
       const canvas = await html2canvas(element, {
         scale: 2,
@@ -200,12 +208,14 @@ export function RelatorioTecnico() {
         scrollX: 0,
         scrollY: 0,
         backgroundColor: '#ffffff',
-        logging: false,
+        logging: true,
         imageTimeout: 30000,
         windowWidth: 794,
         width: element.scrollWidth,
         height: element.scrollHeight,
       });
+
+      console.log('Canvas capturado:', canvas.width, 'x', canvas.height);
 
       // Converter para JPEG
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
