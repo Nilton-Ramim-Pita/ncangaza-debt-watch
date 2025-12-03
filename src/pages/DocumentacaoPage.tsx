@@ -1,5 +1,5 @@
-import { DocumentacaoTecnica } from '@/components/documentation/DocumentacaoTecnica';
+import RelatorioTecnico from '@/components/documentation/DocumentacaoTecnica';
 
 export default function DocumentacaoPage() {
-  return <DocumentacaoTecnica />;
+  return <RelatorioTecnico />;
 }
