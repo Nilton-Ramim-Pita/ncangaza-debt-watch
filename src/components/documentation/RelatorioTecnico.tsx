@@ -169,56 +169,57 @@ export function RelatorioTecnico() {
     }
 
     setIsGeneratingPDF(true);
-    toast.info('A gerar PDF profissional... Isso pode levar alguns minutos.');
-
-    const element = contentRef.current;
-
-    // Guardar estilos originais
-    const originalStyle = {
-      position: element.style.position,
-      overflow: element.style.overflow,
-      transform: element.style.transform,
-      maxHeight: element.style.maxHeight,
-      width: element.style.width,
-      height: element.style.height,
-    };
+    toast.info('A gerar PDF... Isso pode levar alguns segundos.');
 
     try {
-      // Aguardar imagens e fontes
-      await waitForImagesAndFonts(element, 10000);
+      // Clonar o elemento para não afetar a visualização
+      const element = contentRef.current;
+      const clone = element.cloneNode(true) as HTMLElement;
+      
+      // Criar container temporário com estilos fixos
+      const container = document.createElement('div');
+      container.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 794px;
+        background: white;
+        z-index: -9999;
+        visibility: hidden;
+      `;
+      container.appendChild(clone);
+      document.body.appendChild(container);
 
-      // Preparar elemento para captura completa
-      element.style.position = 'static';
-      element.style.overflow = 'visible';
-      element.style.transform = 'none';
-      element.style.maxHeight = 'none';
-      element.style.width = '794px'; // Largura A4 em pixels (210mm * 3.78)
-
-      // Aguardar reflow
+      // Aguardar renderização
       await new Promise(resolve => setTimeout(resolve, 500));
 
       console.log('Iniciando captura html2canvas...');
-      console.log('Dimensões do elemento:', element.scrollWidth, 'x', element.scrollHeight);
+      console.log('Dimensões:', clone.scrollWidth, 'x', clone.scrollHeight);
 
       // Capturar com html2canvas
-      const canvas = await html2canvas(element, {
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         allowTaint: false,
-        scrollX: 0,
-        scrollY: 0,
         backgroundColor: '#ffffff',
         logging: true,
-        imageTimeout: 30000,
+        width: 794,
+        height: clone.scrollHeight,
         windowWidth: 794,
-        width: element.scrollWidth,
-        height: element.scrollHeight,
       });
+
+      // Remover container temporário
+      document.body.removeChild(container);
 
       console.log('Canvas capturado:', canvas.width, 'x', canvas.height);
 
+      // Verificar se o canvas tem conteúdo
+      if (canvas.width === 0 || canvas.height === 0) {
+        throw new Error('Canvas vazio - falha na captura');
+      }
+
       // Converter para JPEG
-      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
       // Criar PDF A4
       const pdf = new jsPDF({
@@ -230,30 +231,30 @@ export function RelatorioTecnico() {
       const pageWidth = 210;
       const pageHeight = 297;
       const margin = 10;
-      const imgWidth = pageWidth - (margin * 2);
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const contentWidth = pageWidth - (margin * 2);
+      const contentHeight = (canvas.height * contentWidth) / canvas.width;
 
-      let heightLeft = imgHeight;
+      let heightLeft = contentHeight;
       let position = margin;
       let pageNum = 0;
 
       // Primeira página
-      pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, contentHeight);
       heightLeft -= (pageHeight - margin * 2);
       pageNum++;
 
       // Páginas adicionais
       while (heightLeft > 0) {
-        position = heightLeft - imgHeight + margin;
+        position = heightLeft - contentHeight + margin;
         pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, contentHeight);
         heightLeft -= (pageHeight - margin * 2);
         pageNum++;
       }
 
       // Salvar
       const timestamp = new Date().toISOString().split('T')[0];
-      pdf.save(`Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita_${timestamp}.pdf`);
+      pdf.save(`Relatorio_Tecnico_Sistema_Gestao_Dividas_${timestamp}.pdf`);
 
       toast.success(`PDF gerado com sucesso! (${pageNum} páginas)`);
 
@@ -261,13 +262,6 @@ export function RelatorioTecnico() {
       console.error('Erro ao gerar PDF:', error);
       toast.error('Erro ao gerar PDF. Verifique o console.');
     } finally {
-      // Restaurar estilos
-      element.style.position = originalStyle.position;
-      element.style.overflow = originalStyle.overflow;
-      element.style.transform = originalStyle.transform;
-      element.style.maxHeight = originalStyle.maxHeight;
-      element.style.width = originalStyle.width;
-      element.style.height = originalStyle.height;
       setIsGeneratingPDF(false);
     }
   };
