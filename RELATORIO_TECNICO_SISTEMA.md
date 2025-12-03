@@ -1098,9 +1098,57 @@ pg_restore --timestamp="2024-01-15 10:30:00"
 
 ---
 
-## 12. CONCLUSÃO
+## 12. ANÁLISE DE COMPLETUDE DO DOCUMENTO
 
-### 12.1 Resultados Alcançados
+Esta secção apresenta uma análise detalhada dos elementos que necessitam de actualização ou adição para que o relatório técnico esteja completo e adequado para anexar à monografia académica.
+
+### ❌ O que FALTA ou precisa MELHORAR
+
+| Item | Status | Acção Necessária |
+|------|:------:|------------------|
+| **1. Capa Formal** | ⚠️ Incompleto | Adicionar autor "Nilton Ramim Pita", UCM, ano |
+| **2. Índice Numerado** | ❌ Falta | Criar índice com numeração hierárquica |
+| **3. Diagramas Mermaid** | ⚠️ Textual | Converter para Mermaid (e garantir renderização no PDF) |
+| **4. Diagrama de Caso de Uso** | ❌ Falta | Adicionar diagrama com actores: Admin, Utilizador, Sistema |
+| **5. Diagramas de Sequência** | ❌ Falta | Adicionar diagramas para fluxos principais |
+| **6. Scripts SQL Completos** | ⚠️ Parcial | Incluir todos os modelos CREATE TABLE e INSERT |
+| **7. Secção de Segurança** | ⚠️ Dispersa | Consolidar conteúdo numa secção dedicada |
+| **8. Secção de Testes** | ❌ Falta | Adicionar estratégia de testes e checklist |
+| **9. Secção de Deployment** | ⚠️ Básico | Expandir com processo de deploy, variáveis e Vercel |
+| **10. Secção de Manutenção** | ❌ Falta | Incluir tarefas diárias, semanais, mensais e backup |
+| **11. Capturas de Ecrã do Sistema** | ❌ Falta | Inserir ou referenciar screenshots das principais telas |
+| **12. Conclusão** | ⚠️ Básica | Expandir com resultados, impacto e recomendações |
+| **13. Data/Versão** | ⚠️ Desatualizado | Actualizar metadata para 2025 |
+
+### Legenda de Status
+
+| Ícone | Significado |
+|:-----:|-------------|
+| ✅ | Completo e adequado |
+| ⚠️ | Parcialmente completo, necessita melhorias |
+| ❌ | Ausente ou insuficiente |
+
+### Priorização Recomendada
+
+**Prioridade Alta:**
+- Capa formal com dados do autor e instituição
+- Índice numerado hierarquicamente
+- Diagramas em formato Mermaid
+
+**Prioridade Média:**
+- Secções de Segurança, Testes e Manutenção consolidadas
+- Scripts SQL completos
+- Processo de deployment detalhado
+
+**Prioridade Baixa:**
+- Capturas de ecrã (podem ser anexadas separadamente)
+- Expansão da conclusão
+
+---
+
+## 13. CONCLUSÃO
+
+### 13.1 Resultados Alcançados
 
 O **Sistema de Gestão de Dívidas da Ncangaza Multiservices** representa uma solução moderna, escalável e segura para controlo financeiro de empresas em Moçambique. 
 
@@ -1111,7 +1159,7 @@ O **Sistema de Gestão de Dívidas da Ncangaza Multiservices** representa uma so
 - ✅ Visibilidade total sobre saúde financeira
 - ✅ Interface intuitiva com baixa curva de aprendizado
 
-### 12.2 Impacto Esperado
+### 13.2 Impacto Esperado
 
 **Para a empresa:**
 - Melhoria no fluxo de caixa
@@ -1125,7 +1173,7 @@ O **Sistema de Gestão de Dívidas da Ncangaza Multiservices** representa uma so
 - Múltiplos canais de comunicação
 - Histórico acessível
 
-### 12.3 Lições Aprendidas
+### 13.3 Lições Aprendidas
 
 **Técnicas:**
 - Importância de validações em múltiplas camadas
@@ -1139,7 +1187,7 @@ O **Sistema de Gestão de Dívidas da Ncangaza Multiservices** representa uma so
 - Feedback contextual reduz erros de usuário
 - Sistema responsivo é essencial
 
-### 12.4 Considerações Finais
+### 13.4 Considerações Finais
 
 Este sistema demonstra a viabilidade de criar soluções empresariais modernas utilizando tecnologias open-source e serviços cloud acessíveis. A arquitetura escolhida permite escalabilidade horizontal e vertical conforme a empresa cresce.
 
@@ -1147,9 +1195,9 @@ O código está preparado para evoluir, com separação clara de responsabilidad
 
 ---
 
-## 13. REFERÊNCIAS
+## 14. REFERÊNCIAS
 
-### 13.1 Tecnologias Utilizadas
+### 14.1 Tecnologias Utilizadas
 
 - **React**: https://react.dev
 - **TypeScript**: https://www.typescriptlang.org
@@ -1163,14 +1211,14 @@ O código está preparado para evoluir, com separação clara de responsabilidad
 - **React Query**: https://tanstack.com/query
 - **jsPDF**: https://github.com/parallax/jsPDF
 
-### 13.2 Documentação Adicional
+### 14.2 Documentação Adicional
 
 - **Supabase Docs**: https://supabase.com/docs
 - **React Query Docs**: https://tanstack.com/query/latest/docs
 - **TypeScript Handbook**: https://www.typescriptlang.org/docs
 - **PostgreSQL Manual**: https://www.postgresql.org/docs
 
-### 13.3 Padrões e Best Practices
+### 14.3 Padrões e Boas Práticas
 
 - **React Best Practices**: https://react.dev/learn/thinking-in-react
 - **TypeScript Guidelines**: https://google.github.io/styleguide/tsguide.html
