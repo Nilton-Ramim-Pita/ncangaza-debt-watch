@@ -1,336 +1,420 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, Loader2 } from "lucide-react";
+import { FileDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import mermaid from "mermaid";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import relatorioContent from "../../../RELATORIO_TECNICO_SISTEMA.md?raw";
+import "./documentation-styles.css";
+import logoImage from "@/assets/logo-ncangaza-full.png";
 
-// Simulação de conteúdo de documentação (substitua pelo seu conteúdo real)
-const documentacaoContent = `# Documentação Técnica Completa
-Sistema de Gestão de Dívidas
+// Initialize Mermaid
+mermaid.initialize({
+  startOnLoad: false,
+  theme: "default",
+  securityLevel: "loose",
+});
 
-## 1. Introdução
+/* -------------------------
+   Helpers
+   ------------------------*/
 
-Este documento apresenta a documentação técnica completa do Sistema de Gestão de Dívidas desenvolvido para Ncangaza Multiservices.
+/** Extrai headings do markdown (TOC) */
+const buildTOCHtml = (content: string) => {
+  const lines = content.split("\n");
+  const items: { level: number; title: string }[] = [];
 
-### 1.1 Objetivo do Sistema
-
-O sistema tem como objetivo principal automatizar e otimizar o processo de gestão de dívidas, proporcionando:
-- Controle eficiente de clientes e suas dívidas
-- Rastreamento de pagamentos e histórico financeiro
-- Geração de relatórios e análises
-- Notificações automáticas
-
-## 2. Arquitetura do Sistema
-
-### 2.1 Visão Geral
-
-O sistema utiliza uma arquitetura moderna baseada em:
-- **Frontend**: React com TypeScript
-- **Backend**: Node.js/Express
-- **Banco de Dados**: PostgreSQL/MySQL
-- **Autenticação**: JWT (JSON Web Tokens)
-
-### 2.2 Componentes Principais
-
-#### 2.2.1 Módulo de Clientes
-- Cadastro de clientes
-- Gerenciamento de informações
-- Histórico de transações
-
-#### 2.2.2 Módulo de Dívidas
-- Registro de dívidas
-- Controle de vencimentos
-- Cálculo de juros e multas
-
-#### 2.2.3 Módulo de Pagamentos
-- Processamento de pagamentos
-- Registro de recebimentos
-- Conciliação bancária
-
-## 3. Tecnologias Utilizadas
-
-### 3.1 Frontend
-- React 18+
-- TypeScript
-- TailwindCSS
-- Shadcn/ui
-- React Router
-
-### 3.2 Backend
-- Node.js
-- Express
-- Prisma ORM
-- JWT Authentication
-
-### 3.3 Banco de Dados
-- PostgreSQL
-- Redis (cache)
-
-## 4. Funcionalidades
-
-### 4.1 Gestão de Clientes
-\`\`\`typescript
-interface Cliente {
-  id: string;
-  nome: string;
-  email: string;
-  telefone: string;
-  cpf: string;
-  endereco: string;
-  dataCadastro: Date;
-}
-\`\`\`
-
-### 4.2 Gestão de Dívidas
-\`\`\`typescript
-interface Divida {
-  id: string;
-  clienteId: string;
-  valor: number;
-  dataVencimento: Date;
-  status: 'pendente' | 'paga' | 'vencida';
-  juros: number;
-  multa: number;
-}
-\`\`\`
-
-### 4.3 Processamento de Pagamentos
-\`\`\`typescript
-interface Pagamento {
-  id: string;
-  dividaId: string;
-  valor: number;
-  dataPagamento: Date;
-  metodoPagamento: string;
-  comprovante?: string;
-}
-\`\`\`
-
-## 5. APIs e Endpoints
-
-### 5.1 Clientes
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET | /api/clientes | Lista todos os clientes |
-| GET | /api/clientes/:id | Busca cliente por ID |
-| POST | /api/clientes | Cria novo cliente |
-| PUT | /api/clientes/:id | Atualiza cliente |
-| DELETE | /api/clientes/:id | Remove cliente |
-
-### 5.2 Dívidas
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET | /api/dividas | Lista todas as dívidas |
-| GET | /api/dividas/:id | Busca dívida por ID |
-| POST | /api/dividas | Cria nova dívida |
-| PUT | /api/dividas/:id | Atualiza dívida |
-| DELETE | /api/dividas/:id | Remove dívida |
-
-## 6. Segurança
-
-### 6.1 Autenticação
-- Sistema de login com JWT
-- Tokens com expiração configurável
-- Refresh tokens para sessões longas
-
-### 6.2 Autorização
-- Controle de acesso baseado em roles
-- Permissões granulares por módulo
-- Auditoria de ações
-
-### 6.3 Proteção de Dados
-- Criptografia de senhas (bcrypt)
-- HTTPS obrigatório
-- Validação de inputs
-- Proteção contra SQL Injection
-- Sanitização de dados
-
-## 7. Testes
-
-### 7.1 Testes Unitários
-- Jest para testes de componentes
-- Cobertura mínima de 80%
-
-### 7.2 Testes de Integração
-- Testes de API com Supertest
-- Validação de fluxos completos
-
-### 7.3 Testes E2E
-- Playwright para testes end-to-end
-- Cenários críticos cobertos
-
-## 8. Deployment
-
-### 8.1 Ambiente de Produção
-- Deploy automatizado via CI/CD
-- Docker containers
-- Kubernetes para orquestração
-
-### 8.2 Monitoramento
-- Logs centralizados
-- Métricas de performance
-- Alertas automáticos
-
-## 9. Manutenção
-
-### 9.1 Backup
-- Backup automático diário
-- Retenção de 30 dias
-- Testes de restauração mensais
-
-### 9.2 Atualizações
-- Versionamento semântico
-- Changelog detalhado
-- Processo de rollback
-
-## 10. Conclusão
-
-Este sistema foi desenvolvido seguindo as melhores práticas de engenharia de software, garantindo escalabilidade, segurança e manutenibilidade.
-
----
-
-**Autor**: Nilton Ramim Pita
-**Instituição**: Universidade Católica de Moçambique (UCM)
-**Data**: ${new Date().getFullYear()}
-`;
-
-export const DocumentacaoTecnica = () => {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [message, setMessage] = useState("");
-
-  const showMessage = (msg: string, type: "success" | "error" | "info") => {
-    setMessage(msg);
-    setTimeout(() => setMessage(""), 3000);
-  };
-
-  const generatePDF = () => {
-    if (!contentRef.current) {
-      showMessage("Erro: conteúdo não encontrado", "error");
-      return;
+  lines.forEach((line) => {
+    const match = /^(#{1,4})\s+(.+)$/.exec(line.trim());
+    if (match) {
+      const level = match[1].length;
+      const rawTitle = match[2].trim();
+      items.push({ level, title: rawTitle });
     }
+  });
 
-    setIsGenerating(true);
-    showMessage("Preparando documento para impressão...", "info");
+  if (!items.length) {
+    return '<p class="doc-p">Índice não disponível.</p>';
+  }
 
-    // Simular processo de geração
-    setTimeout(() => {
-      window.print();
-      setIsGenerating(false);
-      showMessage("Use Ctrl+P ou Cmd+P para salvar como PDF", "success");
-    }, 500);
-  };
+  return items.map((item) => `<div class="toc-item toc-level-${item.level}">${item.title}</div>`).join("");
+};
 
-  const processContent = () => {
-    let processed = documentacaoContent;
+/** Converte SVG string para PNG data URL (usando base64 inline) */
+async function svgToPngDataUrl(svgString: string, scale = 2): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
+      const svgDataUrl = `data:image/svg+xml;base64,${svgBase64}`;
 
-    // Processar código
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.ceil(img.width * scale));
+          canvas.height = Math.max(1, Math.ceil(img.height * scale));
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return reject(new Error("2D context not available"));
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.setTransform(scale, 0, 0, scale, 0, 0);
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL("image/png", 0.95);
+          resolve(dataUrl);
+        } catch (e) {
+          reject(e);
+        }
+      };
+      img.onerror = (err) => reject(err);
+      img.crossOrigin = "anonymous";
+      img.src = svgDataUrl;
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+/** Aguarda que todas as imagens e fontes dentro de root estejam carregadas */
+function waitForImagesAndFonts(root: HTMLElement, timeout = 8000): Promise<void> {
+  return new Promise((resolve) => {
+    let finished = false;
+    const t = setTimeout(() => {
+      if (!finished) {
+        finished = true;
+        resolve();
+      }
+    }, timeout);
+
+    const imgs = Array.from(root.querySelectorAll("img"));
+    const imgPromises = imgs.map((img) => {
+      if ((img as HTMLImageElement).complete) return Promise.resolve();
+      return new Promise<void>((res) => {
+        (img as HTMLImageElement).addEventListener("load", () => res());
+        (img as HTMLImageElement).addEventListener("error", () => res());
+      });
+    });
+
+    const fontPromise = (document as any).fonts ? (document as any).fonts.ready : Promise.resolve();
+
+    Promise.all([...imgPromises, fontPromise]).then(() => {
+      if (!finished) {
+        finished = true;
+        clearTimeout(t);
+        resolve();
+      }
+    });
+  });
+}
+
+/* -------------------------
+   Component
+   ------------------------*/
+
+export function RelatorioTecnico() {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isRendered, setIsRendered] = useState(false);
+
+  /* Preprocess markdown to HTML (basic) */
+  const processContent = (content: string) => {
+    let processed = content;
+
+    // Mermaid blocks kept as markers for rendering
+    processed = processed.replace(/```mermaid\n([\s\S]*?)```/g, (_, code) => {
+      return `<div class="mermaid-diagram avoid-break">${code.replace(/</g, "&lt;")}</div>`;
+    });
+
+    // Code blocks
     processed = processed.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
       const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      return `<pre class="code-block"><code class="language-${lang || "text"}">${escaped}</code></pre>`;
+      return `<div class="code-block avoid-break"><pre><code class="language-${lang || "text"}">${escaped}</code></pre></div>`;
     });
 
-    // Processar tabelas
-    processed = processed.replace(/\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)*)/g, (match) => {
-      const lines = match.trim().split("\n");
-      const headers = lines[0]
-        .split("|")
-        .filter((h) => h.trim())
-        .map((h) => h.trim());
-      const rows = lines.slice(2).map((line) =>
-        line
+    // Tables (simple markdown pipes)
+    processed = processed.replace(
+      /\n\|(.*?)\|\n\|([-:\s|]+)\|\n((?:\|.*?\|\n)+)/g,
+      (match, header, separator, rows) => {
+        const headers = header
           .split("|")
-          .filter((c) => c.trim())
-          .map((c) => c.trim()),
-      );
+          .map((h: string) => h.trim())
+          .filter(Boolean);
+        const rowData = rows
+          .trim()
+          .split("\n")
+          .map((r: string) =>
+            r
+              .split("|")
+              .map((c) => c.trim())
+              .filter(Boolean),
+          );
+        let table = '<table class="doc-table avoid-break"><thead><tr>';
+        headers.forEach((h) => (table += `<th>${h}</th>`));
+        table += "</tr></thead><tbody>";
+        rowData.forEach((row) => {
+          table += "<tr>";
+          row.forEach((cell) => (table += `<td>${cell}</td>`));
+          table += "</tr>";
+        });
+        table += "</tbody></table>";
+        return table;
+      },
+    );
 
-      let html = '<table class="doc-table"><thead><tr>';
-      headers.forEach((h) => (html += `<th>${h}</th>`));
-      html += "</tr></thead><tbody>";
-      rows.forEach((row) => {
-        html += "<tr>";
-        row.forEach((cell) => (html += `<td>${cell}</td>`));
-        html += "</tr>";
-      });
-      html += "</tbody></table>";
-      return html;
-    });
-
-    // Processar títulos
-    processed = processed.replace(/^# (.+)$/gm, '<h1 class="doc-h1">$1</h1>');
+    // Headings
+    processed = processed.replace(/^# (.+)$/gm, '<h1 class="doc-h1 page-break-before">$1</h1>');
     processed = processed.replace(/^## (.+)$/gm, '<h2 class="doc-h2">$1</h2>');
     processed = processed.replace(/^### (.+)$/gm, '<h3 class="doc-h3">$1</h3>');
     processed = processed.replace(/^#### (.+)$/gm, '<h4 class="doc-h4">$1</h4>');
 
-    // Processar listas
-    processed = processed.replace(/^- (.+)$/gm, '<li class="doc-li">$1</li>');
-    processed = processed.replace(/(<li class="doc-li">.*<\/li>\n?)+/g, '<ul class="doc-ul">$&</ul>');
+    // Lists
+    processed = processed.replace(/^\d+\.\s+(.+)$/gm, '<li class="doc-li">$1</li>');
+    processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li class="doc-li">$1</li>');
+    processed = processed.replace(/(<li class="doc-li">[\s\S]*?<\/li>)/g, '<ul class="doc-ul">$1</ul>');
 
-    // Processar negrito e itálico
+    // Bold / italic
     processed = processed.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     processed = processed.replace(/\*(.+?)\*/g, "<em>$1</em>");
 
-    // Processar parágrafos
-    processed = processed.replace(/^(?!<[^>]+>)(.+)$/gm, '<p class="doc-p">$1</p>');
+    // Paragraphs (simple)
+    processed = processed.replace(/\n\n+/g, '</p><p class="doc-p">');
+    processed = `<p class="doc-p">${processed}</p>`;
+    processed = processed.replace(/<\/p><p class="doc-p"><\/p>/g, "");
 
     return processed;
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <style>{`
-        @media print {
-          .no-print { display: none !important; }
-          body { margin: 0; padding: 0; }
-          .documentation-content {
-            max-width: 100% !important;
-            margin: 0 !important;
-            padding: 20mm !important;
+  const processedContent = processContent(relatorioContent);
+  const tocHtml = buildTOCHtml(relatorioContent);
+
+  /* Render Mermaid diagrams in DOM and convert to PNG images (so html2canvas captures reliably) */
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        // short delay to allow initial DOM paint
+        await new Promise((r) => setTimeout(r, 120));
+        const root = contentRef.current;
+        if (!root) return;
+
+        // We inserted the mermaid blocks as HTML when rendering via dangerouslySetInnerHTML,
+        // so select them and render
+        const mermaidEls = Array.from(root.querySelectorAll(".mermaid-diagram")) as HTMLElement[];
+
+        for (let i = 0; i < mermaidEls.length; i++) {
+          const el = mermaidEls[i];
+          const rawCode = (el.textContent || "").trim();
+          if (!rawCode) continue;
+          try {
+            const uid = `mermaid-${i}-${Date.now()}`;
+            const { svg } = await mermaid.render(uid, rawCode);
+            // try convert to PNG - if fails, fall back to inline SVG
+            try {
+              const png = await svgToPngDataUrl(svg, 2);
+              const img = document.createElement("img");
+              img.src = png;
+              img.alt = `Diagrama ${i + 1}`;
+              img.className = "mermaid-png";
+              img.style.maxWidth = "100%";
+              img.style.display = "block";
+              img.style.margin = "16px auto";
+              el.innerHTML = "";
+              el.appendChild(img);
+            } catch (err) {
+              // fallback: set svg (inline)
+              el.innerHTML = `<div class="mermaid-rendered">${svg}</div>`;
+              console.warn("svg->png falhou, usando svg inline", err);
+            }
+          } catch (err) {
+            el.innerHTML = `<div class="error-diagram" style="color:#b91c1c;padding:8px;border:1px solid #fca5a5;border-radius:6px">Erro ao renderizar diagrama</div>`;
+            console.error("mermaid render error", err);
           }
         }
 
-        .documentation-content {
-          max-width: 210mm;
-          margin: 0 auto;
-          background: white;
-          padding: 40px;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
-          font-family: 'Times New Roman', serif;
-          color: #000;
+        // Wait for any newly inserted images to load
+        if (mounted && root) {
+          await waitForImagesAndFonts(root, 4000);
         }
 
-        .doc-h1 {
-          font-size: 28px;
-          font-weight: bold;
-          margin-top: 30px;
-          margin-bottom: 20px;
-          color: #1a1a1a;
-          border-bottom: 2px solid #333;
-          padding-bottom: 10px;
-        }
+        if (mounted) setIsRendered(true);
+      } catch (err) {
+        console.error("Erro ao renderizar diagrams:", err);
+        if (mounted) setIsRendered(true);
+      }
+    })();
 
-        .doc-h2 {
-          font-size: 24px;
-          font-weight: bold;
-          margin-top: 25px;
-          margin-bottom: 15px;
-          color: #2a2a2a;
-        }
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-        .doc-h3 {
-          font-size: 20px;
-          font-weight: bold;
-          margin-top: 20px;
-          margin-bottom: 12px;
-          color: #3a3a3a;
-        }
+  /* Full PDF generation using html2canvas + jsPDF (fixed & robust) */
+  const generatePDF = async () => {
+    if (!contentRef.current || !isRendered) {
+      toast.error("Aguarde a renderização completa...");
+      return;
+    }
 
-        .doc-h4 {
-          font-size: 18px;
-          font-weight: bold;
-          margin-top: 15px;
-          margin-bottom: 10px;
-          color: #4a4a4a;
-        }
+    setIsGeneratingPDF(true);
+    toast.info("A gerar PDF... Isso pode levar alguns segundos.");
 
-        .doc-p {
-          font-size: 12pt;
-          line-height:
+    try {
+      const original = contentRef.current;
+      // Clone the node so we don't disturb UI
+      const clone = original.cloneNode(true) as HTMLElement;
+
+      // Remove fixed headers/footers / interactive elements from clone
+      // We look for elements with class 'fixed' or role banner or data-no-print
+      const fixedEls = Array.from(
+        clone.querySelectorAll(".fixed, [data-no-print], header, .no-print"),
+      ) as HTMLElement[];
+      fixedEls.forEach((el) => el.remove());
+
+      // Force certain styles on clone to ensure correct width
+      clone.style.boxSizing = "border-box";
+      clone.style.width = "794px"; // roughly A4 portrait at 96dpi
+      clone.style.maxWidth = "794px";
+      clone.style.background = "#ffffff";
+
+      // Create an offscreen container but VISIBLE to the renderer (not visibility:hidden)
+      const container = document.createElement("div");
+      container.style.cssText = [
+        "position:absolute",
+        "top:-99999px", // off screen but renderable
+        "left:0",
+        "width:794px",
+        "background:#ffffff",
+        "z-index:10000",
+        "visibility:visible",
+        "display:block",
+        "padding:0",
+        "margin:0",
+      ].join(";");
+
+      container.appendChild(clone);
+      document.body.appendChild(container);
+
+      // Give browser time to layout and to load images/fonts
+      await new Promise((r) => setTimeout(r, 500));
+      await waitForImagesAndFonts(clone, 5000);
+
+      // Debug sizes
+      const scrollW = clone.scrollWidth || clone.offsetWidth || 794;
+      const scrollH = clone.scrollHeight || clone.offsetHeight || 1123;
+      console.log("clone dimensions", { scrollW, scrollH });
+
+      // Capture with html2canvas
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: "#ffffff",
+        logging: false,
+        width: scrollW,
+        height: scrollH,
+        windowWidth: Math.max(window.innerWidth, 794),
+      });
+
+      // Remove container
+      document.body.removeChild(container);
+
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error("Canvas inválido/zero — captura falhou");
+      }
+
+      // Convert to image and create PDF pages
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 10;
+      const contentWidth = pageWidth - margin * 2;
+      const contentHeight = (canvas.height * contentWidth) / canvas.width;
+
+      // First page
+      pdf.addImage(imgData, "JPEG", margin, margin, contentWidth, contentHeight);
+
+      let heightLeft = contentHeight - (pageHeight - margin * 2);
+      let offset = 0;
+
+      while (heightLeft > -1) {
+        offset += pageHeight - margin * 2;
+        if (heightLeft <= 0) break;
+        pdf.addPage();
+        // On each additional page, place slice by using negative y offset on the same large image
+        pdf.addImage(imgData, "JPEG", margin, margin - offset, contentWidth, contentHeight);
+        heightLeft -= pageHeight - margin * 2;
+      }
+
+      const timestamp = new Date().toISOString().split("T")[0];
+      pdf.save(`Relatorio_Tecnico_Sistema_Gestao_Dividas_${timestamp}.pdf`);
+
+      toast.success("PDF gerado com sucesso!");
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+      toast.error("Erro ao gerar PDF. Verifique o console.");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header (visual only) */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Relatório Técnico do Sistema</h1>
+            <p className="text-sm text-muted-foreground mt-1">Sistema de Gestão de Dívidas - Ncangaza Multiservices</p>
+          </div>
+          <Button onClick={generatePDF} disabled={isGeneratingPDF || !isRendered} size="lg" className="gap-2">
+            {isGeneratingPDF ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />A gerar PDF...
+              </>
+            ) : (
+              <>
+                <FileDown className="h-5 w-5" />
+                Gerar PDF
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="pt-24 px-4 pb-8">
+        <div ref={contentRef} className="documentation-content">
+          <section className="cover-page page-break-after">
+            <img src={logoImage} alt="Logotipo Ncangaza Multiservices" className="cover-logo" />
+            <h1 className="cover-title">Relatório Técnico do Sistema de Gestão de Dívidas</h1>
+            <p className="cover-subtitle">Ncangaza Multiservices</p>
+            <div className="cover-info">
+              <p>
+                Autor: <strong>Nilton Ramim Pita</strong>
+              </p>
+              <p>Instituição: Universidade Católica de Moçambique (UCM)</p>
+              <p>Ano: {new Date().getFullYear()}</p>
+            </div>
+          </section>
+
+          <section className="toc-page page-break-after">
+            <h2 className="toc-title">Índice</h2>
+            <div className="toc-content" dangerouslySetInnerHTML={{ __html: tocHtml }} />
+          </section>
+
+          <section className="report-content" dangerouslySetInnerHTML={{ __html: processedContent }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default RelatorioTecnico;
