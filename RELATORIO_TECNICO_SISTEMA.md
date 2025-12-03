@@ -3,6 +3,94 @@
 
 ---
 
+<div align="center">
+
+# 📋 RELATÓRIO TÉCNICO
+
+## SISTEMA DE GESTÃO DE DÍVIDAS
+
+### Ncangaza Multiservices Lda
+
+---
+
+**TRABALHO DE CONCLUSÃO DE CURSO**
+
+**Licenciatura em Engenharia Informática**
+
+---
+
+**Autor:** Nilton Ramim Pita
+
+**Instituição:** Universidade Católica de Moçambique (UCM)
+
+**Orientador:** [Nome do Orientador]
+
+**Ano Lectivo:** 2024/2025
+
+---
+
+**Tete, Moçambique**
+
+**Dezembro de 2025**
+
+</div>
+
+---
+
+## ÍNDICE
+
+1. [RESUMO EXECUTIVO](#1-resumo-executivo)
+   - 1.1 [Objetivo Principal](#11-objetivo-principal)
+   - 1.2 [Público-Alvo](#12-público-alvo)
+
+2. [ARQUITETURA DO SISTEMA](#2-arquitetura-do-sistema)
+   - 2.1 [Visão Geral da Arquitetura](#21-visão-geral-da-arquitetura)
+   - 2.2 [Stack Tecnológico Completo](#22-stack-tecnológico-completo)
+   - 2.3 [Padrões de Design Implementados](#23-padrões-de-design-implementados)
+
+3. [MODELO DE DADOS](#3-modelo-de-dados)
+   - 3.1 [Estrutura do Banco de Dados](#31-estrutura-do-banco-de-dados)
+   - 3.2 [Triggers e Funções](#32-triggers-e-funções)
+   - 3.3 [Políticas de Segurança (RLS)](#33-políticas-de-segurança-rls)
+   - 3.4 [Diagrama de Caso de Uso](#34-diagrama-de-caso-de-uso)
+   - 3.5 [Diagramas de Sequência](#35-diagramas-de-sequência)
+   - 3.6 [Diagrama ERD](#36-diagrama-erd-entidade-relacionamento)
+   - 3.7 [Diagrama de Arquitectura](#37-diagrama-de-arquitectura-do-sistema)
+   - 3.8 [Diagrama de Deployment](#38-diagrama-de-deployment)
+   - 3.9 [Diagrama de Fluxo de Dados](#39-diagrama-de-fluxo-de-dados)
+   - 3.10 [Diagrama de Estados](#310-diagrama-de-estados-das-dívidas)
+
+4. [FUNCIONALIDADES DO SISTEMA](#4-funcionalidades-do-sistema)
+   - 4.1 [Autenticação e Autorização](#41-autenticação-e-autorização)
+   - 4.2 [Dashboard Executivo](#42-dashboard-executivo)
+   - 4.3 [Gestão de Clientes](#43-gestão-de-clientes)
+   - 4.4 [Controlo de Dívidas](#44-controlo-de-dívidas)
+   - 4.5 [Sistema de Notificações](#45-sistema-de-notificações)
+   - 4.6 [Relatórios e Analytics](#46-relatórios-e-analytics)
+   - 4.7 [Administração do Sistema](#47-administração-do-sistema)
+
+5. [EDGE FUNCTIONS (SERVERLESS)](#5-edge-functions-serverless)
+
+6. [INTERFACE DO UTILIZADOR](#6-interface-do-utilizador)
+
+7. [SEGURANÇA DO SISTEMA](#7-segurança-do-sistema)
+
+8. [TESTES E VALIDAÇÃO](#8-testes-e-validação)
+
+9. [DEPLOYMENT E INFRAESTRUTURA](#9-deployment-e-infraestrutura)
+
+10. [MANUTENÇÃO E SUPORTE](#10-manutenção-e-suporte)
+
+11. [FUTURAS MELHORIAS (ROADMAP)](#11-futuras-melhorias-roadmap)
+
+12. [CONCLUSÃO](#12-conclusão)
+
+13. [REFERÊNCIAS](#13-referências)
+
+14. [APÊNDICES](#apêndices)
+
+---
+
 ## 1. RESUMO EXECUTIVO
 
 O **Sistema de Gestão de Dívidas da Ncangaza Multiservices** é uma aplicação web full-stack moderna desenvolvida para otimizar o controlo financeiro e a gestão de cobranças de empresas em Moçambique. O sistema oferece uma solução completa para registo de clientes, controlo de dívidas, notificações automáticas e análise de desempenho financeiro.
@@ -1822,60 +1910,9 @@ pg_restore --timestamp="2024-01-15 10:30:00"
 
 ---
 
-## 12. ANÁLISE DE COMPLETUDE DO DOCUMENTO
+## 12. CONCLUSÃO
 
-Esta secção apresenta uma análise detalhada dos elementos que necessitam de actualização ou adição para que o relatório técnico esteja completo e adequado para anexar à monografia académica.
-
-### ❌ O que FALTA ou precisa MELHORAR
-
-| Item | Status | Acção Necessária |
-|------|:------:|------------------|
-| **1. Capa Formal** | ⚠️ Incompleto | Adicionar autor "Nilton Ramim Pita", UCM, ano |
-| **2. Índice Numerado** | ❌ Falta | Criar índice com numeração hierárquica |
-| **3. Diagramas Mermaid** | ✅ Completo | Todos os diagramas convertidos para Mermaid |
-| **4. Diagrama de Caso de Uso** | ✅ Completo | Diagrama Mermaid com actores: Admin, Utilizador, Sistema (Secção 3.4) |
-| **5. Diagramas de Sequência** | ✅ Completo | 5 diagramas para fluxos principais: Login, Dívida, Email, Status, Utilizador (Secção 3.5) |
-| **6. Diagrama ERD** | ✅ Completo | Diagrama Entidade-Relacionamento com todas as 8 tabelas (Secção 3.6) |
-| **7. Diagrama de Arquitectura** | ✅ Completo | Arquitectura Frontend + Backend + Serviços Externos (Secção 3.7) |
-| **8. Diagrama de Deployment** | ✅ Completo | Infraestrutura Vercel + Supabase + Resend (Secção 3.8) |
-| **9. Diagrama de Fluxo de Dados** | ✅ Completo | Fluxo completo entrada → validação → processamento → saída (Secção 3.9) |
-| **10. Diagrama de Estados** | ✅ Completo | Estados das dívidas: Pendente → Vencida → Paga/Cancelada (Secção 3.10) |
-| **11. Scripts SQL Completos** | ⚠️ Parcial | Incluir todos os modelos CREATE TABLE e INSERT |
-| **12. Secção de Segurança** | ⚠️ Dispersa | Consolidar conteúdo numa secção dedicada |
-| **13. Secção de Testes** | ❌ Falta | Adicionar estratégia de testes e checklist |
-| **14. Capturas de Ecrã do Sistema** | ❌ Falta | Inserir ou referenciar screenshots das principais telas |
-| **15. Conclusão** | ⚠️ Básica | Expandir com resultados, impacto e recomendações |
-| **16. Data/Versão** | ⚠️ Desatualizado | Actualizar metadata para 2025 |
-
-### Legenda de Status
-
-| Ícone | Significado |
-|:-----:|-------------|
-| ✅ | Completo e adequado |
-| ⚠️ | Parcialmente completo, necessita melhorias |
-| ❌ | Ausente ou insuficiente |
-
-### Priorização Recomendada
-
-**Prioridade Alta:**
-- Capa formal com dados do autor e instituição
-- Índice numerado hierarquicamente
-- Diagramas em formato Mermaid
-
-**Prioridade Média:**
-- Secções de Segurança, Testes e Manutenção consolidadas
-- Scripts SQL completos
-- Processo de deployment detalhado
-
-**Prioridade Baixa:**
-- Capturas de ecrã (podem ser anexadas separadamente)
-- Expansão da conclusão
-
----
-
-## 13. CONCLUSÃO
-
-### 13.1 Resultados Alcançados
+### 12.1 Resultados Alcançados
 
 O **Sistema de Gestão de Dívidas da Ncangaza Multiservices** representa uma solução moderna, escalável e segura para controlo financeiro de empresas em Moçambique. 
 
@@ -1886,7 +1923,7 @@ O **Sistema de Gestão de Dívidas da Ncangaza Multiservices** representa uma so
 - ✅ Visibilidade total sobre saúde financeira
 - ✅ Interface intuitiva com baixa curva de aprendizado
 
-### 13.2 Impacto Esperado
+### 12.2 Impacto Esperado
 
 **Para a empresa:**
 - Melhoria no fluxo de caixa
@@ -1900,7 +1937,7 @@ O **Sistema de Gestão de Dívidas da Ncangaza Multiservices** representa uma so
 - Múltiplos canais de comunicação
 - Histórico acessível
 
-### 13.3 Lições Aprendidas
+### 12.3 Lições Aprendidas
 
 **Técnicas:**
 - Importância de validações em múltiplas camadas
@@ -1914,7 +1951,7 @@ O **Sistema de Gestão de Dívidas da Ncangaza Multiservices** representa uma so
 - Feedback contextual reduz erros de usuário
 - Sistema responsivo é essencial
 
-### 13.4 Considerações Finais
+### 12.4 Considerações Finais
 
 Este sistema demonstra a viabilidade de criar soluções empresariais modernas utilizando tecnologias open-source e serviços cloud acessíveis. A arquitetura escolhida permite escalabilidade horizontal e vertical conforme a empresa cresce.
 
@@ -1922,9 +1959,9 @@ O código está preparado para evoluir, com separação clara de responsabilidad
 
 ---
 
-## 14. REFERÊNCIAS
+## 13. REFERÊNCIAS
 
-### 14.1 Tecnologias Utilizadas
+### 13.1 Tecnologias Utilizadas
 
 - **React**: https://react.dev
 - **TypeScript**: https://www.typescriptlang.org
@@ -1938,14 +1975,14 @@ O código está preparado para evoluir, com separação clara de responsabilidad
 - **React Query**: https://tanstack.com/query
 - **jsPDF**: https://github.com/parallax/jsPDF
 
-### 14.2 Documentação Adicional
+### 13.2 Documentação Adicional
 
 - **Supabase Docs**: https://supabase.com/docs
 - **React Query Docs**: https://tanstack.com/query/latest/docs
 - **TypeScript Handbook**: https://www.typescriptlang.org/docs
 - **PostgreSQL Manual**: https://www.postgresql.org/docs
 
-### 14.3 Padrões e Boas Práticas
+### 13.3 Padrões e Boas Práticas
 
 - **React Best Practices**: https://react.dev/learn/thinking-in-react
 - **TypeScript Guidelines**: https://google.github.io/styleguide/tsguide.html
@@ -2093,11 +2130,14 @@ npm run format           # Formata código
 
 ---
 
-**Documento gerado em:** 17 de Janeiro de 2025  
+**Documento gerado em:** Dezembro de 2025  
 **Versão do Sistema:** 1.0.0  
-**Autor:** Sistema de Gestão Ncangaza Multiservices  
+**Autor:** Nilton Ramim Pita  
+**Instituição:** Universidade Católica de Moçambique (UCM)  
 **Empresa:** Ncangaza Multiservices Lda - Tete, Moçambique  
 
 ---
 
-*Este documento é confidencial e propriedade da Ncangaza Multiservices Lda. Todos os direitos reservados.*
+*Este documento faz parte do Trabalho de Conclusão de Curso (TCC) apresentado à Universidade Católica de Moçambique para obtenção do grau de Licenciatura em Engenharia Informática.*
+
+*© 2025 Nilton Ramim Pita. Todos os direitos reservados.*
