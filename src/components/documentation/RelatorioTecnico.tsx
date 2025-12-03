@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import mermaid from 'mermaid';
-import { generatePdfFromHtml } from '@/utils/htmlToPdfGenerator';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import relatorioContent from '../../../RELATORIO_TECNICO_SISTEMA.md?raw';
 import './documentation-styles.css';
 import logoImage from '@/assets/logo-ncangaza-full.png';
@@ -41,10 +42,84 @@ const buildTOCHtml = (content: string) => {
     .join('');
 };
 
+/** Converte um SVG (string) para dataURL PNG usando canvas */
+async function svgToPngDataUrl(svgString: string, scale = 2): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const svg = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svg);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.ceil(img.width * scale);
+          canvas.height = Math.ceil(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            URL.revokeObjectURL(url);
+            return reject(new Error('Não foi possível obter contexto 2D'));
+          }
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.setTransform(scale, 0, 0, scale, 0, 0);
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL('image/png', 0.95);
+          URL.revokeObjectURL(url);
+          resolve(dataUrl);
+        } catch (e) {
+          URL.revokeObjectURL(url);
+          reject(e);
+        }
+      };
+      img.onerror = (err) => {
+        URL.revokeObjectURL(url);
+        reject(err);
+      };
+      img.crossOrigin = 'anonymous';
+      img.src = url;
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+/** Aguarda que todas as imagens e fontes estejam carregadas */
+function waitForImagesAndFonts(root: HTMLElement, timeout = 8000): Promise<void> {
+  return new Promise((resolve) => {
+    let finished = false;
+    const t = setTimeout(() => {
+      if (!finished) {
+        finished = true;
+        resolve();
+      }
+    }, timeout);
+
+    const imgs = Array.from(root.querySelectorAll('img'));
+    const imgPromises = imgs.map((img) => {
+      if ((img as HTMLImageElement).complete) return Promise.resolve();
+      return new Promise<void>((res) => {
+        img.addEventListener('load', () => res());
+        img.addEventListener('error', () => res());
+      });
+    });
+
+    const fontPromise = document.fonts ? document.fonts.ready : Promise.resolve();
+
+    Promise.all([...imgPromises, fontPromise]).then(() => {
+      if (!finished) {
+        finished = true;
+        clearTimeout(t);
+        resolve();
+      }
+    });
+  });
+}
+
 export function RelatorioTecnico() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
+  const [mermaidConverted, setMermaidConverted] = useState(false);
 
   useEffect(() => {
     renderMermaidDiagrams();
@@ -52,21 +127,29 @@ export function RelatorioTecnico() {
 
   const renderMermaidDiagrams = async () => {
     try {
+      // Aguarda um pouco para o DOM estar pronto
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const mermaidElements = document.querySelectorAll('.mermaid-diagram');
       
       for (let i = 0; i < mermaidElements.length; i++) {
         const element = mermaidElements[i] as HTMLElement;
         const code = element.textContent || '';
         
+        if (!code.trim()) continue;
+        
         try {
-          const { svg } = await mermaid.render(`mermaid-${i}`, code);
-          element.innerHTML = `<div class="mermaid-rendered">${svg}</div>`;
+          const { svg } = await mermaid.render(`mermaid-${i}-${Date.now()}`, code);
+          // Converte SVG para PNG para garantir compatibilidade com html2canvas
+          const pngDataUrl = await svgToPngDataUrl(svg, 2);
+          element.innerHTML = `<img src="${pngDataUrl}" alt="Diagrama ${i + 1}" class="mermaid-png" style="max-width:100%;height:auto;display:block;margin:16px auto;" />`;
         } catch (error) {
           console.error('Erro ao renderizar diagrama Mermaid:', error);
-          element.innerHTML = `<div class="error-diagram">Erro ao renderizar diagrama</div>`;
+          element.innerHTML = `<div class="error-diagram" style="color:#b91c1c;padding:8px;border:1px solid #fca5a5;border-radius:6px;">Erro ao renderizar diagrama</div>`;
         }
       }
       
+      setMermaidConverted(true);
       setIsRendered(true);
     } catch (error) {
       console.error('Erro geral ao renderizar diagramas:', error);
@@ -83,16 +166,98 @@ export function RelatorioTecnico() {
     setIsGeneratingPDF(true);
     toast.info('A gerar PDF profissional... Isso pode levar alguns minutos.');
 
+    const element = contentRef.current;
+
+    // Guardar estilos originais
+    const originalStyle = {
+      position: element.style.position,
+      overflow: element.style.overflow,
+      transform: element.style.transform,
+      maxHeight: element.style.maxHeight,
+      width: element.style.width,
+      height: element.style.height,
+    };
+
     try {
-      await generatePdfFromHtml(contentRef.current, {
-        filename: 'Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita',
+      // Aguardar imagens e fontes
+      await waitForImagesAndFonts(element, 10000);
+
+      // Preparar elemento para captura completa
+      element.style.position = 'static';
+      element.style.overflow = 'visible';
+      element.style.transform = 'none';
+      element.style.maxHeight = 'none';
+      element.style.width = '794px'; // Largura A4 em pixels (210mm * 3.78)
+
+      // Aguardar reflow
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Capturar com html2canvas
+      const canvas = await html2canvas(element, {
         scale: 2,
-        quality: 0.95,
-        orientation: 'portrait',
+        useCORS: true,
+        allowTaint: false,
+        scrollX: 0,
+        scrollY: 0,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 30000,
+        windowWidth: 794,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
       });
+
+      // Converter para JPEG
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+      // Criar PDF A4
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 10;
+      const imgWidth = pageWidth - (margin * 2);
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = margin;
+      let pageNum = 0;
+
+      // Primeira página
+      pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - margin * 2);
+      pageNum++;
+
+      // Páginas adicionais
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight + margin;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+        heightLeft -= (pageHeight - margin * 2);
+        pageNum++;
+      }
+
+      // Salvar
+      const timestamp = new Date().toISOString().split('T')[0];
+      pdf.save(`Relatorio_Tecnico_Sistema_Gestao_Dividas_Nilton_Ramim_Pita_${timestamp}.pdf`);
+
+      toast.success(`PDF gerado com sucesso! (${pageNum} páginas)`);
+
     } catch (error) {
-      // Erro já tratado na função utilitária
+      console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar PDF. Verifique o console.');
     } finally {
+      // Restaurar estilos
+      element.style.position = originalStyle.position;
+      element.style.overflow = originalStyle.overflow;
+      element.style.transform = originalStyle.transform;
+      element.style.maxHeight = originalStyle.maxHeight;
+      element.style.width = originalStyle.width;
+      element.style.height = originalStyle.height;
       setIsGeneratingPDF(false);
     }
   };
@@ -100,14 +265,15 @@ export function RelatorioTecnico() {
   const processContent = (content: string) => {
     let processed = content;
 
-    // Process Mermaid diagrams
+    // Process Mermaid diagrams - marca para conversão posterior
     processed = processed.replace(/```mermaid\n([\s\S]*?)```/g, (_, code) => {
       return `<div class="mermaid-diagram avoid-break">${code}</div>`;
     });
 
     // Process code blocks
     processed = processed.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
-      return `<div class="code-block avoid-break"><pre><code class="language-${lang || 'text'}">${code}</code></pre></div>`;
+      const escaped = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<div class="code-block avoid-break"><pre><code class="language-${lang || 'text'}">${escaped}</code></pre></div>`;
     });
 
     // Process tables
@@ -135,7 +301,7 @@ export function RelatorioTecnico() {
       return table;
     });
 
-    // Process headings - mantém numeração original do markdown
+    // Process headings
     processed = processed.replace(/^# (.+)$/gm, '<h1 class="doc-h1 page-break-before">$1</h1>');
     processed = processed.replace(/^## (.+)$/gm, '<h2 class="doc-h2">$1</h2>');
     processed = processed.replace(/^### (.+)$/gm, '<h3 class="doc-h3">$1</h3>');
