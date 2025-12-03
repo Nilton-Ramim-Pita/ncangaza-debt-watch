@@ -1,8 +1,3 @@
-# RELATÓRIO TÉCNICO DO SISTEMA
-## Sistema de Gestão de Dívidas - Ncangaza Multiservices Lda
-
----
-
 <div align="center">
 
 # 📋 RELATÓRIO TÉCNICO
