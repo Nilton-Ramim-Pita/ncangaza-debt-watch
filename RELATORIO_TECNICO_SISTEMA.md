@@ -307,6 +307,284 @@ Todas as tabelas possuem **Row Level Security (RLS)** habilitado:
 - ✅ Sistema pode atualizar notificações (autenticado)
 - ✅ Apenas admins podem deletar notificações
 
+### 3.4 Diagrama de Caso de Uso
+
+O diagrama abaixo representa as interacções entre os actores do sistema e as funcionalidades disponíveis.
+
+```mermaid
+flowchart TB
+    subgraph Actores
+        Admin["👤 Administrador"]
+        User["👤 Utilizador"]
+        Sistema["⚙️ Sistema"]
+    end
+
+    subgraph "Gestão de Clientes"
+        UC1["Registar Cliente"]
+        UC2["Editar Cliente"]
+        UC3["Listar Clientes"]
+        UC4["Activar/Desactivar Cliente"]
+        UC5["Eliminar Cliente"]
+    end
+
+    subgraph "Gestão de Dívidas"
+        UC6["Registar Dívida"]
+        UC7["Editar Dívida"]
+        UC8["Listar Dívidas"]
+        UC9["Marcar como Paga"]
+        UC10["Eliminar Dívida"]
+    end
+
+    subgraph "Notificações"
+        UC11["Enviar Email"]
+        UC12["Enviar WhatsApp"]
+        UC13["Ligar para Cliente"]
+        UC14["Ver Notificações"]
+        UC15["Notificação Automática"]
+    end
+
+    subgraph "Relatórios"
+        UC16["Gerar Relatório PDF"]
+        UC17["Exportar CSV"]
+        UC18["Ver Dashboard"]
+        UC19["Ver Analytics"]
+    end
+
+    subgraph "Administração"
+        UC20["Criar Utilizador"]
+        UC21["Gerir Permissões"]
+        UC22["Ver Logs de Acesso"]
+        UC23["Configurar Sistema"]
+    end
+
+    %% Conexões do Administrador
+    Admin --> UC1
+    Admin --> UC2
+    Admin --> UC3
+    Admin --> UC4
+    Admin --> UC5
+    Admin --> UC6
+    Admin --> UC7
+    Admin --> UC8
+    Admin --> UC9
+    Admin --> UC10
+    Admin --> UC11
+    Admin --> UC12
+    Admin --> UC13
+    Admin --> UC14
+    Admin --> UC16
+    Admin --> UC17
+    Admin --> UC18
+    Admin --> UC19
+    Admin --> UC20
+    Admin --> UC21
+    Admin --> UC22
+    Admin --> UC23
+
+    %% Conexões do Utilizador
+    User --> UC1
+    User --> UC2
+    User --> UC3
+    User --> UC6
+    User --> UC7
+    User --> UC8
+    User --> UC9
+    User --> UC11
+    User --> UC12
+    User --> UC13
+    User --> UC14
+    User --> UC16
+    User --> UC17
+    User --> UC18
+
+    %% Conexões do Sistema
+    Sistema --> UC15
+    Sistema --> UC9
+```
+
+**Descrição dos Actores:**
+
+| Actor | Descrição | Permissões Principais |
+|-------|-----------|----------------------|
+| **Administrador** | Utilizador com acesso total ao sistema | Todas as funcionalidades + gestão de utilizadores |
+| **Utilizador** | Utilizador com acesso limitado | Operações básicas (CRUD clientes/dívidas, notificações) |
+| **Sistema** | Processos automáticos (cron jobs, triggers) | Notificações automáticas, actualização de status |
+
+### 3.5 Diagramas de Sequência
+
+#### 3.5.1 Fluxo de Autenticação (Login)
+
+```mermaid
+sequenceDiagram
+    participant U as Utilizador
+    participant F as Frontend (React)
+    participant S as Supabase Auth
+    participant DB as PostgreSQL
+    participant EF as Edge Function
+
+    U->>F: Insere email e senha
+    F->>F: Valida campos (Zod)
+    F->>S: signInWithPassword(email, password)
+    S->>S: Verifica credenciais
+    
+    alt Credenciais válidas
+        S->>DB: Consulta user_roles
+        DB-->>S: Retorna role (admin/user)
+        S->>DB: Consulta profiles
+        DB-->>S: Retorna perfil
+        S-->>F: Session + User + Role
+        F->>EF: log-login(user_id, device_info)
+        EF->>DB: INSERT login_history
+        DB-->>EF: OK
+        EF-->>F: Login registado
+        F->>F: Guarda session (localStorage)
+        F-->>U: Redireciona para Dashboard
+    else Credenciais inválidas
+        S-->>F: Error: Invalid credentials
+        F-->>U: Exibe mensagem de erro
+    end
+```
+
+#### 3.5.2 Fluxo de Registo de Dívida
+
+```mermaid
+sequenceDiagram
+    participant U as Utilizador
+    participant F as Frontend (React)
+    participant API as Supabase API
+    participant DB as PostgreSQL
+    participant RT as Realtime
+    participant N as Sistema de Notificações
+
+    U->>F: Abre formulário de dívida
+    F->>API: GET /clientes (buscar clientes)
+    API->>DB: SELECT * FROM clientes WHERE ativo = true
+    DB-->>API: Lista de clientes
+    API-->>F: Clientes disponíveis
+    
+    U->>F: Preenche dados da dívida
+    F->>F: Valida campos (React Hook Form + Zod)
+    F->>API: POST /dividas (insert)
+    API->>DB: INSERT INTO dividas
+    DB->>DB: Trigger: notify_new_debt
+    DB-->>API: Dívida criada (id, data)
+    DB->>RT: Notifica subscribers (INSERT)
+    RT-->>F: Evento: nova dívida
+    F->>F: Actualiza lista (React Query invalidate)
+    
+    alt Data vencimento próxima
+        DB->>N: Agendar notificação
+        N->>DB: INSERT INTO notificacoes
+    end
+    
+    API-->>F: Success response
+    F-->>U: Toast: "Dívida registada com sucesso"
+```
+
+#### 3.5.3 Fluxo de Envio de Notificação (Email)
+
+```mermaid
+sequenceDiagram
+    participant U as Utilizador
+    participant F as Frontend (React)
+    participant EF as Edge Function (send-email)
+    participant R as Resend API
+    participant DB as PostgreSQL
+
+    U->>F: Clica "Enviar Email" na dívida
+    F->>F: Monta dados (cliente, dívida, template)
+    F->>EF: POST /send-email
+    
+    EF->>EF: Valida dados recebidos
+    EF->>DB: SELECT template FROM notification_templates
+    DB-->>EF: Template de email
+    EF->>EF: Substitui variáveis no template
+    
+    EF->>R: POST /emails (Resend API)
+    
+    alt Email enviado com sucesso
+        R-->>EF: { id: "email_id", status: "sent" }
+        EF->>DB: INSERT INTO notificacoes (status: 'enviada')
+        DB-->>EF: Notificação registada
+        EF-->>F: { success: true }
+        F-->>U: Toast: "Email enviado com sucesso"
+    else Erro no envio
+        R-->>EF: { error: "invalid_email" }
+        EF->>DB: INSERT INTO notificacoes (status: 'erro', erro: msg)
+        DB-->>EF: Erro registado
+        EF-->>F: { success: false, error: msg }
+        F-->>U: Toast: "Erro ao enviar email"
+    end
+```
+
+#### 3.5.4 Fluxo de Actualização Automática de Status
+
+```mermaid
+sequenceDiagram
+    participant C as pg_cron (Scheduler)
+    participant DB as PostgreSQL
+    participant F as update_debt_status()
+    participant RT as Realtime
+    participant FE as Frontend (React)
+
+    Note over C: Executa diariamente às 00:00
+    
+    C->>DB: CALL update_debt_status()
+    DB->>F: Executar função
+    
+    F->>DB: UPDATE dividas SET status = 'vencida'<br/>WHERE status = 'pendente'<br/>AND data_vencimento < CURRENT_DATE
+    
+    DB->>DB: Para cada dívida actualizada:
+    DB->>DB: Trigger: notify_debt_overdue
+    
+    DB-->>F: Rows affected: N
+    F-->>DB: Função concluída
+    
+    DB->>RT: Broadcast: dividas UPDATE
+    RT-->>FE: Evento: dívidas actualizadas
+    FE->>FE: React Query: invalidateQueries(['dividas'])
+    FE->>FE: UI actualizada automaticamente
+    
+    DB-->>C: Execução completa
+```
+
+#### 3.5.5 Fluxo de Criação de Utilizador (Admin)
+
+```mermaid
+sequenceDiagram
+    participant A as Administrador
+    participant F as Frontend (React)
+    participant EF as Edge Function (create-user)
+    participant SA as Supabase Admin API
+    participant DB as PostgreSQL
+
+    A->>F: Preenche formulário de novo utilizador
+    F->>F: Valida campos (email, nome, role)
+    F->>EF: POST /create-user
+    
+    EF->>EF: Verifica se chamador é admin
+    
+    alt Não é admin
+        EF-->>F: { error: "Unauthorized" }
+        F-->>A: Erro: Sem permissão
+    else É admin
+        EF->>SA: admin.createUser(email, password)
+        SA->>DB: INSERT INTO auth.users
+        DB-->>SA: User created (id)
+        SA-->>EF: { user: { id, email } }
+        
+        EF->>DB: INSERT INTO profiles (user_id, full_name, ...)
+        DB-->>EF: Profile created
+        
+        EF->>DB: INSERT INTO user_roles (user_id, role)
+        DB-->>EF: Role assigned
+        
+        EF-->>F: { success: true, user_id }
+        F->>F: Actualiza lista de utilizadores
+        F-->>A: Toast: "Utilizador criado com sucesso"
+    end
+```
+
 ---
 
 ## 4. FUNCIONALIDADES DO SISTEMA
@@ -1109,8 +1387,8 @@ Esta secção apresenta uma análise detalhada dos elementos que necessitam de a
 | **1. Capa Formal** | ⚠️ Incompleto | Adicionar autor "Nilton Ramim Pita", UCM, ano |
 | **2. Índice Numerado** | ❌ Falta | Criar índice com numeração hierárquica |
 | **3. Diagramas Mermaid** | ⚠️ Textual | Converter para Mermaid (e garantir renderização no PDF) |
-| **4. Diagrama de Caso de Uso** | ❌ Falta | Adicionar diagrama com actores: Admin, Utilizador, Sistema |
-| **5. Diagramas de Sequência** | ❌ Falta | Adicionar diagramas para fluxos principais |
+| **4. Diagrama de Caso de Uso** | ✅ Completo | Diagrama Mermaid com actores: Admin, Utilizador, Sistema (Secção 3.4) |
+| **5. Diagramas de Sequência** | ✅ Completo | 5 diagramas para fluxos principais: Login, Dívida, Email, Status, Utilizador (Secção 3.5) |
 | **6. Scripts SQL Completos** | ⚠️ Parcial | Incluir todos os modelos CREATE TABLE e INSERT |
 | **7. Secção de Segurança** | ⚠️ Dispersa | Consolidar conteúdo numa secção dedicada |
 | **8. Secção de Testes** | ❌ Falta | Adicionar estratégia de testes e checklist |
