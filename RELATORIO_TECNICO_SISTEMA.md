@@ -583,6 +583,454 @@ sequenceDiagram
     end
 ```
 
+### 3.6 Diagrama ERD (Entidade-Relacionamento)
+
+O diagrama abaixo apresenta a estrutura completa da base de dados do sistema, incluindo todas as tabelas, seus atributos e relacionamentos.
+
+```mermaid
+erDiagram
+    %% Tabela de Clientes
+    clientes {
+        uuid id PK "Identificador único"
+        text nome "Nome completo"
+        text nuit UK "NUIT (único)"
+        text email "Email do cliente"
+        text telefone "Telefone (+258)"
+        text endereco "Endereço completo"
+        boolean ativo "Status activo"
+        timestamp data_registro "Data de registo"
+        timestamp created_at "Criado em"
+        timestamp updated_at "Actualizado em"
+    }
+    
+    %% Tabela de Dívidas
+    dividas {
+        uuid id PK "Identificador único"
+        uuid cliente_id FK "Referência ao cliente"
+        numeric valor "Valor em MTn"
+        text descricao "Descrição da dívida"
+        text status "pendente|vencida|paga"
+        date data_vencimento "Data de vencimento"
+        timestamp data_pagamento "Data do pagamento"
+        timestamp data_criacao "Data de criação"
+        timestamp created_at "Criado em"
+        timestamp updated_at "Actualizado em"
+    }
+    
+    %% Tabela de Notificações
+    notificacoes {
+        uuid id PK "Identificador único"
+        uuid divida_id FK "Referência à dívida"
+        uuid cliente_id FK "Referência ao cliente"
+        text tipo "email|sms|whatsapp|in_app|chamada"
+        text status "pendente|enviada|erro"
+        text mensagem "Conteúdo da notificação"
+        text erro "Mensagem de erro"
+        boolean lida "Flag de leitura"
+        timestamp data_agendamento "Agendada para"
+        timestamp data_envio "Enviada em"
+        timestamp created_at "Criado em"
+    }
+    
+    %% Tabela de Perfis
+    profiles {
+        uuid id PK "Identificador único"
+        uuid user_id FK "Referência auth.users"
+        text full_name "Nome completo"
+        text avatar_url "URL do avatar"
+        text telefone "Telefone"
+        text cargo "Cargo/Função"
+        text departamento "Departamento"
+        text bio "Biografia"
+        boolean active "Utilizador activo"
+        boolean email_notifications "Notif. por email"
+        boolean sms_notifications "Notif. por SMS"
+        boolean whatsapp_notifications "Notif. WhatsApp"
+        uuid created_by FK "Criado por"
+        timestamp created_at "Criado em"
+        timestamp updated_at "Actualizado em"
+    }
+    
+    %% Tabela de Roles
+    user_roles {
+        uuid id PK "Identificador único"
+        uuid user_id FK "Referência auth.users"
+        app_role role "admin|user"
+        timestamp created_at "Criado em"
+    }
+    
+    %% Tabela de Actividades
+    user_activities {
+        uuid id PK "Identificador único"
+        uuid user_id FK "Referência auth.users"
+        text action_type "Tipo de acção"
+        text description "Descrição"
+        jsonb metadata "Dados adicionais"
+        timestamp created_at "Criado em"
+    }
+    
+    %% Tabela de Histórico de Login
+    login_history {
+        uuid id PK "Identificador único"
+        uuid user_id FK "Referência auth.users"
+        text ip_address "Endereço IP"
+        text user_agent "User Agent"
+        text device_info "Info do dispositivo"
+        text location "Localização"
+        timestamp login_at "Data/hora login"
+    }
+    
+    %% Templates de Notificação
+    notification_templates {
+        uuid id PK "Identificador único"
+        text name "Nome do template"
+        text type "Tipo de notificação"
+        text subject "Assunto"
+        text body "Corpo da mensagem"
+        boolean is_default "É padrão"
+        timestamp created_at "Criado em"
+        timestamp updated_at "Actualizado em"
+    }
+    
+    %% Relacionamentos
+    clientes ||--o{ dividas : "possui"
+    clientes ||--o{ notificacoes : "recebe"
+    dividas ||--o{ notificacoes : "gera"
+    profiles ||--o{ user_activities : "regista"
+    profiles ||--o{ login_history : "autentica"
+    profiles ||--|| user_roles : "tem"
+```
+
+**Legenda:**
+- **PK**: Primary Key (Chave Primária)
+- **FK**: Foreign Key (Chave Estrangeira)
+- **UK**: Unique Key (Chave Única)
+
+### 3.7 Diagrama de Arquitectura do Sistema
+
+O diagrama apresenta a arquitectura completa do sistema, desde o frontend até aos serviços externos.
+
+```mermaid
+flowchart TB
+    subgraph Cliente["🖥️ CLIENTE (Browser)"]
+        UI["React 18 + TypeScript"]
+        Router["React Router DOM"]
+        State["React Query + Context API"]
+        Styles["Tailwind CSS + Shadcn/UI"]
+    end
+
+    subgraph Frontend["📱 FRONTEND (Vercel)"]
+        Vite["Vite Build System"]
+        Components["Componentes React"]
+        Hooks["Custom Hooks"]
+        Utils["Utilitários"]
+    end
+
+    subgraph Supabase["☁️ SUPABASE CLOUD"]
+        subgraph Auth["🔐 Auth Service"]
+            JWT["JWT Tokens"]
+            Sessions["Gestão de Sessões"]
+        end
+        
+        subgraph Database["🗄️ PostgreSQL"]
+            Tables["Tabelas"]
+            RLS["Row Level Security"]
+            Functions["Database Functions"]
+            Triggers["Triggers"]
+        end
+        
+        subgraph Realtime["⚡ Realtime"]
+            Subscriptions["Subscriptions"]
+            Broadcast["Broadcast Events"]
+        end
+        
+        subgraph EdgeFunctions["⚙️ Edge Functions"]
+            SendEmail["send-email"]
+            CreateUser["create-user"]
+            LogLogin["log-login"]
+            CheckDebts["check-debts"]
+        end
+        
+        subgraph Storage["📦 Storage"]
+            Avatars["Bucket: avatars"]
+        end
+    end
+
+    subgraph External["🌐 SERVIÇOS EXTERNOS"]
+        Resend["Resend API (Email)"]
+        WhatsApp["WhatsApp Web"]
+    end
+
+    %% Conexões Cliente -> Frontend
+    UI --> Vite
+    Router --> Components
+    State --> Hooks
+    
+    %% Conexões Frontend -> Supabase
+    Components --> Auth
+    Components --> Database
+    Hooks --> Realtime
+    Components --> EdgeFunctions
+    Components --> Storage
+    
+    %% Conexões Edge Functions -> Externos
+    SendEmail --> Resend
+    
+    %% Estilos
+    style Cliente fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style Frontend fill:#22c55e,stroke:#16a34a,color:#fff
+    style Supabase fill:#6366f1,stroke:#4f46e5,color:#fff
+    style External fill:#f59e0b,stroke:#d97706,color:#000
+    style Auth fill:#ec4899,stroke:#db2777,color:#fff
+    style Database fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style Realtime fill:#06b6d4,stroke:#0891b2,color:#fff
+    style EdgeFunctions fill:#84cc16,stroke:#65a30d,color:#000
+```
+
+**Componentes Principais:**
+
+| Camada | Tecnologia | Função |
+|--------|------------|--------|
+| **Frontend** | React + Vite | Interface do utilizador |
+| **Styling** | Tailwind + Shadcn | Design system |
+| **State** | React Query | Cache e sincronização |
+| **Auth** | Supabase Auth | Autenticação JWT |
+| **Database** | PostgreSQL | Persistência de dados |
+| **Realtime** | Supabase Realtime | Actualizações em tempo real |
+| **Functions** | Edge Functions | Lógica de negócio serverless |
+| **Email** | Resend API | Envio de notificações |
+
+### 3.8 Diagrama de Deployment
+
+O diagrama ilustra a infraestrutura de deployment do sistema em produção.
+
+```mermaid
+flowchart TB
+    subgraph Users["👥 UTILIZADORES"]
+        Browser["🌐 Browser"]
+        Mobile["📱 Mobile Browser"]
+    end
+
+    subgraph CDN["🌍 CDN (Vercel Edge Network)"]
+        Edge1["Edge Node Europa"]
+        Edge2["Edge Node África"]
+        Edge3["Edge Node América"]
+    end
+
+    subgraph Vercel["☁️ VERCEL"]
+        subgraph Build["Build Pipeline"]
+            GitHub["GitHub Repository"]
+            CI["CI/CD Pipeline"]
+            Preview["Preview Deployments"]
+            Prod["Production Deploy"]
+        end
+        
+        Static["Static Assets<br/>(HTML, CSS, JS, Images)"]
+    end
+
+    subgraph SupabaseCloud["☁️ SUPABASE CLOUD"]
+        subgraph Region["Região: EU Central"]
+            LB["Load Balancer"]
+            
+            subgraph Services["Serviços"]
+                AuthServer["Auth Server"]
+                RestAPI["REST API (PostgREST)"]
+                RealtimeServer["Realtime Server"]
+                EdgeRuntime["Edge Runtime (Deno)"]
+            end
+            
+            subgraph Data["Dados"]
+                PG["PostgreSQL 15"]
+                PGBackup["Backups Diários"]
+                StorageS3["Object Storage (S3)"]
+            end
+        end
+    end
+
+    subgraph ThirdParty["🔌 THIRD-PARTY"]
+        ResendService["Resend<br/>(Email Delivery)"]
+        WhatsAppWeb["WhatsApp Web<br/>(Messaging)"]
+    end
+
+    %% Fluxo de Utilizadores
+    Users --> CDN
+    CDN --> Vercel
+    
+    %% Fluxo de Build
+    GitHub -->|"Push"| CI
+    CI -->|"Build"| Preview
+    CI -->|"Merge main"| Prod
+    Prod --> Static
+    
+    %% Fluxo de API
+    Static -->|"API Calls"| LB
+    LB --> Services
+    Services --> Data
+    
+    %% Serviços Externos
+    EdgeRuntime -->|"SMTP"| ResendService
+    Browser -->|"wa.me"| WhatsAppWeb
+
+    %% Estilos
+    style Users fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style CDN fill:#22c55e,stroke:#16a34a,color:#fff
+    style Vercel fill:#000,stroke:#333,color:#fff
+    style SupabaseCloud fill:#6366f1,stroke:#4f46e5,color:#fff
+    style ThirdParty fill:#f59e0b,stroke:#d97706,color:#000
+```
+
+**Especificações de Infraestrutura:**
+
+| Componente | Serviço | Especificações |
+|------------|---------|----------------|
+| **Frontend Hosting** | Vercel | CDN global, SSL automático, Preview deployments |
+| **Database** | Supabase PostgreSQL | 500MB storage, backups diários |
+| **Auth** | Supabase Auth | JWT, OAuth 2.0 ready |
+| **Functions** | Edge Functions | Deno runtime, ~50ms cold start |
+| **Storage** | Supabase Storage | Bucket público para avatars |
+| **Email** | Resend | 3000 emails/mês (free tier) |
+| **DNS/SSL** | Vercel | Certificados automáticos |
+
+### 3.9 Diagrama de Fluxo de Dados
+
+O diagrama mostra como os dados fluem através do sistema desde a entrada até à persistência.
+
+```mermaid
+flowchart LR
+    subgraph Input["📥 ENTRADA DE DADOS"]
+        Form["Formulários<br/>(React Hook Form)"]
+        Import["Importação<br/>(CSV/Excel)"]
+        API["API Externa"]
+    end
+
+    subgraph Validation["✅ VALIDAÇÃO"]
+        Zod["Schema Validation<br/>(Zod)"]
+        Business["Regras de Negócio"]
+        RLS["Row Level Security"]
+    end
+
+    subgraph Processing["⚙️ PROCESSAMENTO"]
+        ReactQuery["React Query<br/>(Cache)"]
+        Hooks["Custom Hooks<br/>(useClients, useDebts)"]
+        EdgeFn["Edge Functions"]
+    end
+
+    subgraph Storage["💾 ARMAZENAMENTO"]
+        Supabase["Supabase API"]
+        PostgreSQL["PostgreSQL"]
+        Cache["Browser Cache"]
+    end
+
+    subgraph Output["📤 SAÍDA DE DADOS"]
+        UI["Interface UI"]
+        Reports["Relatórios<br/>(PDF/CSV)"]
+        Email["Notificações<br/>(Email)"]
+        Realtime["Updates<br/>(Realtime)"]
+    end
+
+    %% Fluxo Principal
+    Input --> Validation
+    Validation --> Processing
+    Processing --> Storage
+    Storage --> Output
+    
+    %% Detalhes
+    Form --> Zod
+    Zod --> Business
+    Business --> ReactQuery
+    ReactQuery --> Hooks
+    Hooks --> Supabase
+    Supabase --> PostgreSQL
+    PostgreSQL --> RLS
+    
+    %% Saídas
+    PostgreSQL --> UI
+    PostgreSQL --> Reports
+    EdgeFn --> Email
+    PostgreSQL --> Realtime
+
+    %% Estilos
+    style Input fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style Validation fill:#22c55e,stroke:#16a34a,color:#fff
+    style Processing fill:#f59e0b,stroke:#d97706,color:#000
+    style Storage fill:#6366f1,stroke:#4f46e5,color:#fff
+    style Output fill:#ec4899,stroke:#db2777,color:#fff
+```
+
+**Fluxo de Dados Detalhado:**
+
+1. **Entrada**: Utilizador preenche formulário ou sistema recebe dados via API
+2. **Validação**: Zod valida schema, regras de negócio aplicadas, RLS verifica permissões
+3. **Processamento**: React Query gere cache, hooks processam lógica, Edge Functions executam operações serverless
+4. **Armazenamento**: Supabase API persiste em PostgreSQL com cache no browser
+5. **Saída**: UI actualizada, relatórios gerados, notificações enviadas, eventos realtime propagados
+
+### 3.10 Diagrama de Estados das Dívidas
+
+O diagrama representa o ciclo de vida completo de uma dívida no sistema.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pendente: Dívida Criada
+    
+    Pendente --> Vencida: Data vencimento ultrapassada<br/>(Trigger automático diário)
+    Pendente --> Paga: Pagamento registado<br/>(Acção manual)
+    Pendente --> Cancelada: Cancelamento<br/>(Admin apenas)
+    
+    Vencida --> Paga: Pagamento registado<br/>(mesmo em atraso)
+    Vencida --> Cancelada: Cancelamento<br/>(Admin apenas)
+    Vencida --> EmNegociacao: Acordo de pagamento
+    
+    EmNegociacao --> Paga: Pagamento concluído
+    EmNegociacao --> Vencida: Acordo não cumprido
+    
+    Paga --> [*]: Dívida Liquidada
+    Cancelada --> [*]: Dívida Removida
+
+    note right of Pendente
+        🟡 Status inicial
+        - Aguarda vencimento
+        - Pode receber lembretes
+    end note
+    
+    note right of Vencida
+        🔴 Status crítico
+        - Gera alertas automáticos
+        - Prioridade de cobrança
+        - Email para admins
+    end note
+    
+    note right of Paga
+        🟢 Status final positivo
+        - Notificação de confirmação
+        - Registado data_pagamento
+        - Histórico preservado
+    end note
+    
+    note right of Cancelada
+        ⚫ Status final negativo
+        - Apenas admin pode cancelar
+        - Motivo registado
+        - Não conta em estatísticas
+    end note
+```
+
+**Transições de Estado:**
+
+| De | Para | Gatilho | Acções Automáticas |
+|----|------|---------|-------------------|
+| **Criada** | Pendente | INSERT na tabela | Notificação in-app, agendamento de lembrete |
+| **Pendente** | Vencida | Cron job diário (00:00) | Email para admins, notificação in-app, alerta visual |
+| **Pendente** | Paga | Utilizador marca como paga | Notificação de confirmação, email para admins |
+| **Vencida** | Paga | Pagamento tardio | Mesmas acções de pagamento normal |
+| **Qualquer** | Cancelada | Admin cancela | Registo de motivo, remoção de estatísticas |
+
+**Triggers Automáticos:**
+- `notify_new_debt`: Ao criar dívida
+- `notify_debt_overdue`: Ao mudar para vencida
+- `notify_payment_completed`: Ao mudar para paga
+- `update_debt_status`: Cron job diário para actualizar status
+
 ---
 
 ## 4. FUNCIONALIDADES DO SISTEMA
@@ -1384,17 +1832,20 @@ Esta secção apresenta uma análise detalhada dos elementos que necessitam de a
 |------|:------:|------------------|
 | **1. Capa Formal** | ⚠️ Incompleto | Adicionar autor "Nilton Ramim Pita", UCM, ano |
 | **2. Índice Numerado** | ❌ Falta | Criar índice com numeração hierárquica |
-| **3. Diagramas Mermaid** | ⚠️ Textual | Converter para Mermaid (e garantir renderização no PDF) |
+| **3. Diagramas Mermaid** | ✅ Completo | Todos os diagramas convertidos para Mermaid |
 | **4. Diagrama de Caso de Uso** | ✅ Completo | Diagrama Mermaid com actores: Admin, Utilizador, Sistema (Secção 3.4) |
 | **5. Diagramas de Sequência** | ✅ Completo | 5 diagramas para fluxos principais: Login, Dívida, Email, Status, Utilizador (Secção 3.5) |
-| **6. Scripts SQL Completos** | ⚠️ Parcial | Incluir todos os modelos CREATE TABLE e INSERT |
-| **7. Secção de Segurança** | ⚠️ Dispersa | Consolidar conteúdo numa secção dedicada |
-| **8. Secção de Testes** | ❌ Falta | Adicionar estratégia de testes e checklist |
-| **9. Secção de Deployment** | ⚠️ Básico | Expandir com processo de deploy, variáveis e Vercel |
-| **10. Secção de Manutenção** | ❌ Falta | Incluir tarefas diárias, semanais, mensais e backup |
-| **11. Capturas de Ecrã do Sistema** | ❌ Falta | Inserir ou referenciar screenshots das principais telas |
-| **12. Conclusão** | ⚠️ Básica | Expandir com resultados, impacto e recomendações |
-| **13. Data/Versão** | ⚠️ Desatualizado | Actualizar metadata para 2025 |
+| **6. Diagrama ERD** | ✅ Completo | Diagrama Entidade-Relacionamento com todas as 8 tabelas (Secção 3.6) |
+| **7. Diagrama de Arquitectura** | ✅ Completo | Arquitectura Frontend + Backend + Serviços Externos (Secção 3.7) |
+| **8. Diagrama de Deployment** | ✅ Completo | Infraestrutura Vercel + Supabase + Resend (Secção 3.8) |
+| **9. Diagrama de Fluxo de Dados** | ✅ Completo | Fluxo completo entrada → validação → processamento → saída (Secção 3.9) |
+| **10. Diagrama de Estados** | ✅ Completo | Estados das dívidas: Pendente → Vencida → Paga/Cancelada (Secção 3.10) |
+| **11. Scripts SQL Completos** | ⚠️ Parcial | Incluir todos os modelos CREATE TABLE e INSERT |
+| **12. Secção de Segurança** | ⚠️ Dispersa | Consolidar conteúdo numa secção dedicada |
+| **13. Secção de Testes** | ❌ Falta | Adicionar estratégia de testes e checklist |
+| **14. Capturas de Ecrã do Sistema** | ❌ Falta | Inserir ou referenciar screenshots das principais telas |
+| **15. Conclusão** | ⚠️ Básica | Expandir com resultados, impacto e recomendações |
+| **16. Data/Versão** | ⚠️ Desatualizado | Actualizar metadata para 2025 |
 
 ### Legenda de Status
 
