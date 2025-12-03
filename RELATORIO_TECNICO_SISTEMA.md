@@ -312,94 +312,92 @@ Todas as tabelas possuem **Row Level Security (RLS)** habilitado:
 O diagrama abaixo representa as interacções entre os actores do sistema e as funcionalidades disponíveis.
 
 ```mermaid
-flowchart TB
-    subgraph Actores
-        Admin["👤 Administrador"]
-        User["👤 Utilizador"]
-        Sistema["⚙️ Sistema"]
+flowchart LR
+    %% Definição dos Actores (lado esquerdo e direito)
+    Admin(("👤<br/>Administrador"))
+    User(("👤<br/>Utilizador"))
+    Sistema(("⚙️<br/>Sistema<br/>Automático"))
+
+    %% Sistema Principal
+    subgraph SistemaGestao["🏢 SISTEMA DE GESTÃO DE DÍVIDAS - NCANGAZA"]
+        
+        subgraph GC["📋 Gestão de Clientes"]
+            UC1(["Registar Cliente"])
+            UC2(["Consultar Clientes"])
+            UC3(["Editar Cliente"])
+            UC4(["Activar/Desactivar"])
+            UC5(["Eliminar Cliente"])
+        end
+
+        subgraph GD["💰 Gestão de Dívidas"]
+            UC6(["Registar Dívida"])
+            UC7(["Consultar Dívidas"])
+            UC8(["Editar Dívida"])
+            UC9(["Marcar como Paga"])
+            UC10(["Eliminar Dívida"])
+        end
+
+        subgraph NT["📧 Notificações"]
+            UC11(["Enviar Email"])
+            UC12(["Enviar WhatsApp"])
+            UC13(["Efectuar Chamada"])
+            UC14(["Consultar Histórico"])
+        end
+
+        subgraph RL["📊 Relatórios & Analytics"]
+            UC15(["Ver Dashboard"])
+            UC16(["Gerar PDF"])
+            UC17(["Exportar CSV"])
+            UC18(["Ver Analytics"])
+        end
+
+        subgraph AD["⚙️ Administração"]
+            UC19(["Criar Utilizador"])
+            UC20(["Gerir Permissões"])
+            UC21(["Ver Logs de Acesso"])
+            UC22(["Configurar Sistema"])
+        end
+
+        subgraph AU["🤖 Automação"]
+            UC23(["Actualizar Status Dívidas"])
+            UC24(["Enviar Alertas Vencimento"])
+            UC25(["Gerar Notificações"])
+        end
     end
 
-    subgraph "Gestão de Clientes"
-        UC1["Registar Cliente"]
-        UC2["Editar Cliente"]
-        UC3["Listar Clientes"]
-        UC4["Activar/Desactivar Cliente"]
-        UC5["Eliminar Cliente"]
-    end
+    %% Relacionamentos do Administrador (acesso total)
+    Admin -.->|"CRUD completo"| GC
+    Admin -.->|"CRUD completo"| GD
+    Admin -.->|"Todas acções"| NT
+    Admin -.->|"Acesso total"| RL
+    Admin -.->|"Exclusivo"| AD
 
-    subgraph "Gestão de Dívidas"
-        UC6["Registar Dívida"]
-        UC7["Editar Dívida"]
-        UC8["Listar Dívidas"]
-        UC9["Marcar como Paga"]
-        UC10["Eliminar Dívida"]
-    end
+    %% Relacionamentos do Utilizador (acesso limitado)
+    User -.->|"Criar/Editar"| UC1
+    User -.->|"Consultar"| UC2
+    User -.->|"Editar"| UC3
+    User -.->|"CRUD"| GD
+    User -.->|"Enviar"| NT
+    User -.->|"Visualizar"| UC15
+    User -.->|"Gerar"| UC16
+    User -.->|"Exportar"| UC17
 
-    subgraph "Notificações"
-        UC11["Enviar Email"]
-        UC12["Enviar WhatsApp"]
-        UC13["Ligar para Cliente"]
-        UC14["Ver Notificações"]
-        UC15["Notificação Automática"]
-    end
+    %% Relacionamentos do Sistema Automático
+    Sistema -.->|"Cron Job"| UC23
+    Sistema -.->|"Trigger"| UC24
+    Sistema -.->|"Automático"| UC25
 
-    subgraph "Relatórios"
-        UC16["Gerar Relatório PDF"]
-        UC17["Exportar CSV"]
-        UC18["Ver Dashboard"]
-        UC19["Ver Analytics"]
-    end
-
-    subgraph "Administração"
-        UC20["Criar Utilizador"]
-        UC21["Gerir Permissões"]
-        UC22["Ver Logs de Acesso"]
-        UC23["Configurar Sistema"]
-    end
-
-    %% Conexões do Administrador
-    Admin --> UC1
-    Admin --> UC2
-    Admin --> UC3
-    Admin --> UC4
-    Admin --> UC5
-    Admin --> UC6
-    Admin --> UC7
-    Admin --> UC8
-    Admin --> UC9
-    Admin --> UC10
-    Admin --> UC11
-    Admin --> UC12
-    Admin --> UC13
-    Admin --> UC14
-    Admin --> UC16
-    Admin --> UC17
-    Admin --> UC18
-    Admin --> UC19
-    Admin --> UC20
-    Admin --> UC21
-    Admin --> UC22
-    Admin --> UC23
-
-    %% Conexões do Utilizador
-    User --> UC1
-    User --> UC2
-    User --> UC3
-    User --> UC6
-    User --> UC7
-    User --> UC8
-    User --> UC9
-    User --> UC11
-    User --> UC12
-    User --> UC13
-    User --> UC14
-    User --> UC16
-    User --> UC17
-    User --> UC18
-
-    %% Conexões do Sistema
-    Sistema --> UC15
-    Sistema --> UC9
+    %% Estilos
+    style SistemaGestao fill:#1a1a2e,stroke:#16213e,stroke-width:3px
+    style GC fill:#0f3460,stroke:#e94560,stroke-width:2px
+    style GD fill:#0f3460,stroke:#e94560,stroke-width:2px
+    style NT fill:#0f3460,stroke:#e94560,stroke-width:2px
+    style RL fill:#0f3460,stroke:#e94560,stroke-width:2px
+    style AD fill:#533483,stroke:#e94560,stroke-width:2px
+    style AU fill:#1a1a2e,stroke:#00d9ff,stroke-width:2px
+    style Admin fill:#e94560,stroke:#fff,stroke-width:2px,color:#fff
+    style User fill:#00d9ff,stroke:#fff,stroke-width:2px,color:#000
+    style Sistema fill:#ffc107,stroke:#fff,stroke-width:2px,color:#000
 ```
 
 **Descrição dos Actores:**
