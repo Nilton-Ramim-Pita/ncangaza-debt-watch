@@ -6,14 +6,12 @@ import {
   Settings, 
   TrendingUp,
   Calendar,
-  UserCog,
-  BookOpen
+  UserCog
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLogo } from "@/hooks/useLogo";
-import { Link } from "react-router-dom";
 
 interface SidebarProps {
   activeTab: string;
@@ -151,16 +149,6 @@ export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       </nav>
 
       <div className="p-4 border-t space-y-2">
-        <Link to="/relatorio-tecnico">
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start" 
-            size="sm"
-          >
-            <BookOpen className="mr-2 h-4 w-4" />
-            Relatório Técnico
-          </Button>
-        </Link>
         <Button 
           variant="ghost" 
           className="w-full justify-start" 
