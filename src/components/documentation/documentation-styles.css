@@ -170,24 +170,57 @@
    ============================================ */
 
 .mermaid-diagram {
-  margin: 20pt 0;
-  padding: 15pt;
+  margin: 24pt 0;
+  padding: 20pt;
   background-color: #fefefe;
-  border: 1pt solid #e2e8f0;
-  border-radius: 4pt;
+  border: 2pt solid #cbd5e1;
+  border-radius: 6pt;
   page-break-inside: avoid;
   text-align: center;
+  min-height: 200pt;
 }
 
 .mermaid-rendered {
-  max-width: 100%;
-  overflow-x: auto;
+  width: 100%;
+  overflow: visible;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .mermaid-rendered svg {
+  width: 100% !important;
   max-width: 100%;
-  height: auto;
+  height: auto !important;
+  min-height: 250pt;
   font-family: 'Times New Roman', Times, serif;
+  font-size: 14px;
+}
+
+.mermaid-rendered img {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Ensure Mermaid text is large and legible */
+.mermaid-rendered .node rect,
+.mermaid-rendered .node circle,
+.mermaid-rendered .node polygon {
+  stroke-width: 2px !important;
+}
+
+.mermaid-rendered .edgeLabel {
+  font-size: 12px !important;
+}
+
+.mermaid-rendered .label {
+  font-size: 13px !important;
+}
+
+.mermaid-rendered text {
+  font-size: 13px !important;
 }
 
 .error-diagram {
