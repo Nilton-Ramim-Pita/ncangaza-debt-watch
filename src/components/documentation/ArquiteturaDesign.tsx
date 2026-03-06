@@ -12,6 +12,9 @@ mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
   securityLevel: 'loose',
+  flowchart: { curve: 'basis', padding: 20, nodeSpacing: 30, rankSpacing: 40 },
+  sequence: { actorMargin: 60, messageMargin: 40, boxMargin: 10 },
+  er: { entityPadding: 15, fontSize: 14 },
 });
 
 const buildTOCHtml = (md: string) => {
@@ -62,6 +65,34 @@ const processContent = (raw: string) => {
   return p;
 };
 
+/** Convert SVG element to PNG data URL using base64 (avoids tainted canvas) */
+const svgToPngDataUrl = (svgEl: SVGElement, scale = 3): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const base64 = btoa(unescape(encodeURIComponent(svgData)));
+    const dataUrl = `data:image/svg+xml;base64,${base64}`;
+
+    const img = new Image();
+    const bbox = svgEl.getBoundingClientRect();
+    const w = bbox.width * scale;
+    const h = bbox.height * scale;
+
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject('No canvas context');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+};
+
 export function ArquiteturaDesign() {
   const ref = useRef<HTMLDivElement>(null);
   const [generating, setGenerating] = useState(false);
@@ -83,19 +114,61 @@ export function ArquiteturaDesign() {
     })();
   }, []);
 
+  const convertSvgsToPng = async () => {
+    if (!ref.current) return;
+    const svgs = ref.current.querySelectorAll('.mermaid-rendered svg');
+    for (const svgEl of svgs) {
+      try {
+        const pngUrl = await svgToPngDataUrl(svgEl as SVGElement, 3);
+        const parent = svgEl.parentElement;
+        if (parent) {
+          const img = document.createElement('img');
+          img.src = pngUrl;
+          img.style.width = '100%';
+          img.style.height = 'auto';
+          img.style.display = 'block';
+          img.style.margin = '0 auto';
+          img.setAttribute('data-was-svg', 'true');
+          parent.replaceChild(img, svgEl);
+        }
+      } catch (e) {
+        console.warn('SVG to PNG conversion failed:', e);
+      }
+    }
+  };
+
+  const restorePngsToSvg = () => {
+    // Re-render mermaid after PDF to restore interactive SVGs
+    if (!ref.current) return;
+    const imgs = ref.current.querySelectorAll('img[data-was-svg]');
+    if (imgs.length > 0) {
+      // Simple reload approach - re-trigger mermaid
+      window.location.reload();
+    }
+  };
+
   const exportPDF = async () => {
     if (!ref.current || !ready) return;
     setGenerating(true);
-    toast.info('A gerar PDF... Pode demorar alguns minutos.');
+    toast.info('A gerar PDF... Pode demorar alguns segundos.');
     try {
+      // Convert SVGs to PNG for clean PDF capture
+      await convertSvgsToPng();
+      // Small delay to let images render
+      await new Promise(r => setTimeout(r, 500));
+
       await generatePdfFromHtml(ref.current, {
         filename: 'Proposta_Arquitetura_Design_Sistema_Gestao_Dividas',
         scale: 2,
-        quality: 0.95,
+        quality: 0.98,
         orientation: 'portrait',
       });
-    } catch { /* handled */ } finally {
+    } catch {
+      /* handled by utility */
+    } finally {
       setGenerating(false);
+      // Restore SVGs
+      restorePngsToSvg();
     }
   };
 
