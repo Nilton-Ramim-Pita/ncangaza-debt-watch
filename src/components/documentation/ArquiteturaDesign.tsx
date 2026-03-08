@@ -36,12 +36,18 @@ const buildTOCHtml = (md: string) => {
 
 const processContent = (raw: string) => {
   let p = raw;
-  p = p.replace(/```mermaid\n([\s\S]*?)```/g, (_, code) =>
-    `<div class="mermaid-diagram avoid-break">${code}</div>`
-  );
+  // Extract mermaid blocks first and replace with placeholders
+  const mermaidBlocks: string[] = [];
+  p = p.replace(/```mermaid\n([\s\S]*?)```/g, (_, code) => {
+    const idx = mermaidBlocks.length;
+    mermaidBlocks.push(code);
+    return `%%MERMAID_PLACEHOLDER_${idx}%%`;
+  });
+  // Process code blocks
   p = p.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) =>
     `<div class="code-block avoid-break"><pre><code class="language-${lang || 'text'}">${code}</code></pre></div>`
   );
+  // Process tables
   p = p.replace(/\n\|(.*?)\|\n\|([-:\s|]+)\|\n((?:\|.*?\|\n)+)/g, (match, header, _sep, rows) => {
     const hs = header.split('|').filter(Boolean).map((h: string) => h.trim());
     const rs = rows.trim().split('\n').map((r: string) =>
@@ -57,6 +63,7 @@ const processContent = (raw: string) => {
     });
     return t + '</tbody></table>';
   });
+  // Process headings, lists, formatting
   p = p.replace(/^# (.+)$/gm, '<h1 class="doc-h1 page-break-before">$1</h1>');
   p = p.replace(/^## (.+)$/gm, '<h2 class="doc-h2">$1</h2>');
   p = p.replace(/^### (.+)$/gm, '<h3 class="doc-h3">$1</h3>');
@@ -67,6 +74,10 @@ const processContent = (raw: string) => {
   p = p.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   p = p.replace(/\*(.+?)\*/g, '<em>$1</em>');
   p = p.replace(/\n\n(.+?)\n\n/g, '<p class="doc-p">$1</p>');
+  // Restore mermaid blocks
+  mermaidBlocks.forEach((code, idx) => {
+    p = p.replace(`%%MERMAID_PLACEHOLDER_${idx}%%`, `<div class="mermaid-diagram avoid-break">${code}</div>`);
+  });
   return p;
 };
 
