@@ -170,14 +170,18 @@
    ============================================ */
 
 .mermaid-diagram {
-  margin: 24pt 0;
-  padding: 20pt;
+  margin: 30pt 0;
+  padding: 25pt;
   background-color: #fefefe;
-  border: 2pt solid #cbd5e1;
+  border: 2pt solid #94a3b8;
   border-radius: 6pt;
   page-break-inside: avoid;
+  page-break-before: always;
   text-align: center;
-  min-height: 200pt;
+  min-height: 400pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mermaid-rendered {
@@ -192,9 +196,9 @@
   width: 100% !important;
   max-width: 100%;
   height: auto !important;
-  min-height: 250pt;
+  min-height: 400pt;
   font-family: 'Times New Roman', Times, serif;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .mermaid-rendered img {
@@ -208,19 +212,42 @@
 .mermaid-rendered .node rect,
 .mermaid-rendered .node circle,
 .mermaid-rendered .node polygon {
-  stroke-width: 2px !important;
+  stroke-width: 2.5px !important;
 }
 
 .mermaid-rendered .edgeLabel {
-  font-size: 12px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
 }
 
 .mermaid-rendered .label {
-  font-size: 13px !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
 }
 
 .mermaid-rendered text {
+  font-size: 15px !important;
+}
+
+.mermaid-rendered .actor {
+  font-size: 16px !important;
+  font-weight: bold !important;
+}
+
+.mermaid-rendered .messageText {
+  font-size: 14px !important;
+}
+
+.mermaid-rendered .noteText {
   font-size: 13px !important;
+}
+
+.mermaid-rendered .entityLabel {
+  font-size: 15px !important;
+}
+
+.mermaid-rendered .relationshipLabel {
+  font-size: 14px !important;
 }
 
 .error-diagram {

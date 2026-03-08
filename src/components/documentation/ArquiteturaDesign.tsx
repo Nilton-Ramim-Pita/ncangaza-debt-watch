@@ -12,9 +12,14 @@ mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
   securityLevel: 'loose',
-  flowchart: { curve: 'basis', padding: 20, nodeSpacing: 30, rankSpacing: 40 },
-  sequence: { actorMargin: 60, messageMargin: 40, boxMargin: 10 },
-  er: { entityPadding: 15, fontSize: 14 },
+  flowchart: { curve: 'basis', padding: 30, nodeSpacing: 50, rankSpacing: 60, htmlLabels: true },
+  sequence: { actorMargin: 80, messageMargin: 50, boxMargin: 15, width: 200, height: 50, noteMargin: 20, mirrorActors: true, useMaxWidth: false },
+  er: { entityPadding: 20, fontSize: 16, useMaxWidth: false },
+  class: { useMaxWidth: false },
+  themeVariables: {
+    fontSize: '16px',
+    fontFamily: 'Times New Roman, serif',
+  },
 });
 
 const buildTOCHtml = (md: string) => {
@@ -66,7 +71,7 @@ const processContent = (raw: string) => {
 };
 
 /** Convert SVG element to PNG data URL using base64 (avoids tainted canvas) */
-const svgToPngDataUrl = (svgEl: SVGElement, scale = 3): Promise<string> => {
+const svgToPngDataUrl = (svgEl: SVGElement, scale = 4): Promise<string> => {
   return new Promise((resolve, reject) => {
     const svgData = new XMLSerializer().serializeToString(svgEl);
     const base64 = btoa(unescape(encodeURIComponent(svgData)));
@@ -119,7 +124,7 @@ export function ArquiteturaDesign() {
     const svgs = ref.current.querySelectorAll('.mermaid-rendered svg');
     for (const svgEl of svgs) {
       try {
-        const pngUrl = await svgToPngDataUrl(svgEl as SVGElement, 3);
+        const pngUrl = await svgToPngDataUrl(svgEl as SVGElement, 4);
         const parent = svgEl.parentElement;
         if (parent) {
           const img = document.createElement('img');
