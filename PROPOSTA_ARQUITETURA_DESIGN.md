@@ -272,45 +272,66 @@ O utilizador possui acesso limitado e pode realizar as seguintes acções:
 - Gerir o seu perfil pessoal.
 
 ```mermaid
-graph TB
-    subgraph "Sistema de Gestão de Dívidas - Ncangaza Multiservices"
-        UC1[Autenticar no Sistema]
-        UC2[Gerir Clientes]
-        UC3[Gerir Dívidas]
-        UC4[Visualizar Dashboard]
-        UC5[Gerar Relatórios]
-        UC6[Gerir Notificações]
-        UC7[Gerir Utilizadores]
-        UC8[Configurar Sistema]
-        UC9[Consultar Auditoria]
-        UC10[Gerir Perfil]
-        UC11[Exportar Dados]
-        UC12[Visualizar Estatísticas]
+graph LR
+    ADM(("Administrador"))
+    USR(("Utilizador"))
+
+    subgraph "Sistema de Gestao de Dividas"
+        direction TB
+        UC1["Autenticar no Sistema"]
+        UC2["Gerir Clientes"]
+        UC3["Gerir Dividas"]
+        UC4["Visualizar Dashboard"]
+        UC5["Gerar Relatorios"]
+        UC6["Gerir Notificacoes"]
+        UC7["Gerir Utilizadores"]
+        UC8["Configurar Sistema"]
+        UC9["Consultar Auditoria"]
+        UC10["Gerir Perfil"]
+        UC11["Exportar Dados"]
+        UC12["Visualizar Estatisticas"]
+        UC13["Registar Pagamento"]
+        UC14["Enviar Notificacao"]
+        UC15["Consultar Historico"]
+        UC16["Gerir Templates"]
+        UC17["Activar e Desactivar Contas"]
+        UC18["Alterar Senha"]
+        UC19["Filtrar Dividas por Estado"]
+        UC20["Visualizar Logs de Acesso"]
     end
 
-    ADM["Actor: Administrador"]
-    USR["Actor: Utilizador"]
+    ADM --- UC1
+    ADM --- UC2
+    ADM --- UC3
+    ADM --- UC4
+    ADM --- UC5
+    ADM --- UC6
+    ADM --- UC7
+    ADM --- UC8
+    ADM --- UC9
+    ADM --- UC10
+    ADM --- UC11
+    ADM --- UC12
+    ADM --- UC13
+    ADM --- UC14
+    ADM --- UC15
+    ADM --- UC16
+    ADM --- UC17
+    ADM --- UC18
+    ADM --- UC19
+    ADM --- UC20
 
-    ADM --> UC1
-    ADM --> UC2
-    ADM --> UC3
-    ADM --> UC4
-    ADM --> UC5
-    ADM --> UC6
-    ADM --> UC7
-    ADM --> UC8
-    ADM --> UC9
-    ADM --> UC10
-    ADM --> UC11
-    ADM --> UC12
-
-    USR --> UC1
-    USR --> UC2
-    USR --> UC3
-    USR --> UC4
-    USR --> UC5
-    USR --> UC10
-    USR --> UC12
+    USR --- UC1
+    USR --- UC2
+    USR --- UC3
+    USR --- UC4
+    USR --- UC5
+    USR --- UC10
+    USR --- UC12
+    USR --- UC13
+    USR --- UC15
+    USR --- UC18
+    USR --- UC19
 ```
 
 ---
