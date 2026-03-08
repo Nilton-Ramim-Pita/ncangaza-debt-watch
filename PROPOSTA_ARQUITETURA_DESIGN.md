@@ -272,26 +272,42 @@ O utilizador possui acesso limitado e pode realizar as seguintes acções:
 - Gerir o seu perfil pessoal.
 
 ```mermaid
-graph TD
-    ADM(("Admin"))
-    USR(("User"))
+graph LR
+    ADM(("Administrador"))
 
-    subgraph Sistema
-        UC1["Autenticar"]
-        UC2["Gerir Clientes"]
-        UC3["Gerir Dividas"]
-        UC4["Dashboard"]
-        UC5["Relatorios"]
-        UC6["Notificacoes"]
-        UC7["Gerir Utilizadores"]
-        UC8["Configuracoes"]
-        UC9["Perfil"]
-        UC10["Auditoria"]
+    subgraph SGD ["Sistema de Gestao de Dividas"]
+        direction TB
+
+        subgraph ADMIN_UC ["Funcionalidades do Administrador"]
+            direction TB
+            UC7["Gerir Utilizadores"]
+            UC2["Registar Cliente"]
+            UC3["Registar Divida"]
+            UC4["Actualizar Divida"]
+            UC5["Eliminar Divida"]
+            UC6["Visualizar Relatorios"]
+        end
+
+        subgraph USER_UC ["Funcionalidades do Utilizador"]
+            direction TB
+            UC8["Consultar Dividas"]
+            UC9["Registar Pagamento"]
+            UC10["Visualizar Historico"]
+        end
     end
 
-    ADM --- UC1 & UC2 & UC3 & UC4 & UC5
-    ADM --- UC6 & UC7 & UC8 & UC9 & UC10
-    USR --- UC1 & UC2 & UC3 & UC4 & UC5 & UC9
+    USR(("Utilizador"))
+
+    ADM --- UC7
+    ADM --- UC2
+    ADM --- UC3
+    ADM --- UC4
+    ADM --- UC5
+    ADM --- UC6
+
+    USR --- UC8
+    USR --- UC9
+    USR --- UC10
 ```
 
 ---
