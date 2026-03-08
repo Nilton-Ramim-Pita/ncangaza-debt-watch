@@ -262,12 +262,14 @@
   min-height: 350pt !important;
 }
 
-/* Diagrama de Casos de Uso - grande, muitos elementos */
+/* Diagrama de Casos de Uso - cabe numa A4 */
 .diagram-usecase {
-  min-height: 550pt;
+  min-height: 300pt;
+  max-height: 680pt;
 }
 .diagram-usecase svg {
-  min-height: 550pt !important;
+  min-height: 300pt !important;
+  max-height: 680pt !important;
 }
 
 /* DER - muito grande, 8 tabelas com atributos */

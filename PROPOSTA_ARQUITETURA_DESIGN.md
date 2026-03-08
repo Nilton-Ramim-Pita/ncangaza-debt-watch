@@ -272,66 +272,26 @@ O utilizador possui acesso limitado e pode realizar as seguintes acções:
 - Gerir o seu perfil pessoal.
 
 ```mermaid
-graph LR
-    ADM(("Administrador"))
-    USR(("Utilizador"))
+graph TD
+    ADM(("Admin"))
+    USR(("User"))
 
-    subgraph "Sistema de Gestao de Dividas"
-        direction TB
-        UC1["Autenticar no Sistema"]
+    subgraph Sistema
+        UC1["Autenticar"]
         UC2["Gerir Clientes"]
         UC3["Gerir Dividas"]
-        UC4["Visualizar Dashboard"]
-        UC5["Gerar Relatorios"]
-        UC6["Gerir Notificacoes"]
+        UC4["Dashboard"]
+        UC5["Relatorios"]
+        UC6["Notificacoes"]
         UC7["Gerir Utilizadores"]
-        UC8["Configurar Sistema"]
-        UC9["Consultar Auditoria"]
-        UC10["Gerir Perfil"]
-        UC11["Exportar Dados"]
-        UC12["Visualizar Estatisticas"]
-        UC13["Registar Pagamento"]
-        UC14["Enviar Notificacao"]
-        UC15["Consultar Historico"]
-        UC16["Gerir Templates"]
-        UC17["Activar e Desactivar Contas"]
-        UC18["Alterar Senha"]
-        UC19["Filtrar Dividas por Estado"]
-        UC20["Visualizar Logs de Acesso"]
+        UC8["Configuracoes"]
+        UC9["Perfil"]
+        UC10["Auditoria"]
     end
 
-    ADM --- UC1
-    ADM --- UC2
-    ADM --- UC3
-    ADM --- UC4
-    ADM --- UC5
-    ADM --- UC6
-    ADM --- UC7
-    ADM --- UC8
-    ADM --- UC9
-    ADM --- UC10
-    ADM --- UC11
-    ADM --- UC12
-    ADM --- UC13
-    ADM --- UC14
-    ADM --- UC15
-    ADM --- UC16
-    ADM --- UC17
-    ADM --- UC18
-    ADM --- UC19
-    ADM --- UC20
-
-    USR --- UC1
-    USR --- UC2
-    USR --- UC3
-    USR --- UC4
-    USR --- UC5
-    USR --- UC10
-    USR --- UC12
-    USR --- UC13
-    USR --- UC15
-    USR --- UC18
-    USR --- UC19
+    ADM --- UC1 & UC2 & UC3 & UC4 & UC5
+    ADM --- UC6 & UC7 & UC8 & UC9 & UC10
+    USR --- UC1 & UC2 & UC3 & UC4 & UC5 & UC9
 ```
 
 ---
