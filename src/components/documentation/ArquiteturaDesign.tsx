@@ -108,8 +108,22 @@ export function ArquiteturaDesign() {
       const els = document.querySelectorAll('.mermaid-diagram');
       for (let i = 0; i < els.length; i++) {
         const el = els[i] as HTMLElement;
+        const code = el.textContent || '';
         try {
-          const { svg } = await mermaid.render(`mermaid-arq-${i}`, el.textContent || '');
+          const { svg } = await mermaid.render(`mermaid-arq-${i}`, code);
+          // Detect diagram type and add specific class
+          let typeClass = 'diagram-generic';
+          if (code.includes('erDiagram')) typeClass = 'diagram-er';
+          else if (code.includes('classDiagram')) typeClass = 'diagram-class';
+          else if (code.includes('sequenceDiagram')) typeClass = 'diagram-sequence';
+          else if (code.includes('Camada de Apresentação')) typeClass = 'diagram-architecture';
+          else if (code.includes('Sistema de Gestão de Dívidas')) typeClass = 'diagram-usecase';
+          else if (code.includes('Página de Login') || code.includes('Introduzir E-mail')) typeClass = 'diagram-activity-login';
+          else if (code.includes('Administrador') && code.includes('Gerir Clientes')) typeClass = 'diagram-activity-admin';
+          else if (code.includes('Relatórios') || code.includes('Formato Seleccionado')) typeClass = 'diagram-activity-reports';
+          else if (code.includes('Visualizar Clientes') && code.includes('Gerir Perfil')) typeClass = 'diagram-activity-user';
+          
+          el.classList.add(typeClass);
           el.innerHTML = `<div class="mermaid-rendered">${svg}</div>`;
         } catch {
           el.innerHTML = `<div class="error-diagram">Erro ao renderizar diagrama</div>`;

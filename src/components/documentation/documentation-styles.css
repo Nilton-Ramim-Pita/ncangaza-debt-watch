@@ -250,7 +250,99 @@
   font-size: 14px !important;
 }
 
-.error-diagram {
+/* ============================================
+   TAMANHOS ESPECÍFICOS POR TIPO DE DIAGRAMA
+   ============================================ */
+
+/* Diagrama de Arquitectura - médio */
+.diagram-architecture {
+  min-height: 350pt;
+}
+.diagram-architecture svg {
+  min-height: 350pt !important;
+}
+
+/* Diagrama de Casos de Uso - grande, muitos elementos */
+.diagram-usecase {
+  min-height: 550pt;
+}
+.diagram-usecase svg {
+  min-height: 550pt !important;
+}
+
+/* DER - muito grande, 8 tabelas com atributos */
+.diagram-er {
+  min-height: 650pt;
+  padding: 15pt;
+}
+.diagram-er svg {
+  min-height: 650pt !important;
+}
+.diagram-er text {
+  font-size: 13px !important;
+}
+
+/* Diagrama de Classes - muito grande, 12 classes */
+.diagram-class {
+  min-height: 600pt;
+  padding: 15pt;
+}
+.diagram-class svg {
+  min-height: 600pt !important;
+}
+.diagram-class text {
+  font-size: 13px !important;
+}
+
+/* Diagramas de Actividade - Login (médio) */
+.diagram-activity-login {
+  min-height: 500pt;
+}
+.diagram-activity-login svg {
+  min-height: 500pt !important;
+}
+
+/* Diagramas de Actividade - Admin (grande, muitas ramificações) */
+.diagram-activity-admin {
+  min-height: 600pt;
+}
+.diagram-activity-admin svg {
+  min-height: 600pt !important;
+}
+
+/* Diagramas de Actividade - Relatórios */
+.diagram-activity-reports {
+  min-height: 500pt;
+}
+.diagram-activity-reports svg {
+  min-height: 500pt !important;
+}
+
+/* Diagramas de Actividade - Utilizador */
+.diagram-activity-user {
+  min-height: 550pt;
+}
+.diagram-activity-user svg {
+  min-height: 550pt !important;
+}
+
+/* Diagramas de Sequência - mais largos e altos */
+.diagram-sequence {
+  min-height: 500pt;
+  padding: 20pt 10pt;
+}
+.diagram-sequence svg {
+  min-height: 500pt !important;
+}
+.diagram-sequence .messageText {
+  font-size: 13px !important;
+}
+.diagram-sequence .actor {
+  font-size: 14px !important;
+  font-weight: bold !important;
+}
+
+
   color: #dc2626;
   background-color: #fee2e2;
   padding: 10pt;
