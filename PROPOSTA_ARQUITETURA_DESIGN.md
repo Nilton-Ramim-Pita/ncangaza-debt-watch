@@ -276,38 +276,29 @@ graph LR
     ADM(("Administrador"))
 
     subgraph SGD ["Sistema de Gestao de Dividas"]
-        direction TB
-
-        subgraph ADMIN_UC ["Funcionalidades do Administrador"]
-            direction TB
-            UC7["Gerir Utilizadores"]
-            UC2["Registar Cliente"]
-            UC3["Registar Divida"]
-            UC4["Actualizar Divida"]
-            UC5["Eliminar Divida"]
-            UC6["Visualizar Relatorios"]
-        end
-
-        subgraph USER_UC ["Funcionalidades do Utilizador"]
-            direction TB
-            UC8["Consultar Dividas"]
-            UC9["Registar Pagamento"]
-            UC10["Visualizar Historico"]
-        end
+        UC1["Gerir Utilizadores"]
+        UC2["Registar Cliente"]
+        UC3["Registar Divida"]
+        UC4["Actualizar Divida"]
+        UC5["Eliminar Divida"]
+        UC6["Visualizar Relatorios"]
+        UC7["Consultar Dividas"]
+        UC8["Registar Pagamento"]
+        UC9["Visualizar Historico"]
     end
 
     USR(("Utilizador"))
 
-    ADM --- UC7
+    ADM --- UC1
     ADM --- UC2
     ADM --- UC3
     ADM --- UC4
     ADM --- UC5
     ADM --- UC6
 
+    USR --- UC7
     USR --- UC8
     USR --- UC9
-    USR --- UC10
 ```
 
 ---
