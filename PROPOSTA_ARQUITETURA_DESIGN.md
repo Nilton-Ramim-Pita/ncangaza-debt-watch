@@ -274,7 +274,6 @@ O utilizador possui acesso limitado e pode realizar as seguintes acções:
 ```mermaid
 graph LR
     ADM(("Administrador"))
-
     subgraph SGD ["Sistema de Gestao de Dividas"]
         UC1["Gerir Utilizadores"]
         UC2["Registar Cliente"]
@@ -286,16 +285,13 @@ graph LR
         UC8["Registar Pagamento"]
         UC9["Visualizar Historico"]
     end
-
     USR(("Utilizador"))
-
     ADM --- UC1
     ADM --- UC2
     ADM --- UC3
     ADM --- UC4
     ADM --- UC5
     ADM --- UC6
-
     USR --- UC7
     USR --- UC8
     USR --- UC9
