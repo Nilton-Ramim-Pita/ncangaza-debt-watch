@@ -124,7 +124,7 @@ export function ArquiteturaDesign() {
     const svgs = ref.current.querySelectorAll('.mermaid-rendered svg');
     for (const svgEl of svgs) {
       try {
-        const pngUrl = await svgToPngDataUrl(svgEl as SVGElement, 3);
+        const pngUrl = await svgToPngDataUrl(svgEl as SVGElement, 4);
         const parent = svgEl.parentElement;
         if (parent) {
           const img = document.createElement('img');
