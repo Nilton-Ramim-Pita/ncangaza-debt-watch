@@ -71,7 +71,7 @@ const processContent = (raw: string) => {
 };
 
 /** Convert SVG element to PNG data URL using base64 (avoids tainted canvas) */
-const svgToPngDataUrl = (svgEl: SVGElement, scale = 3): Promise<string> => {
+const svgToPngDataUrl = (svgEl: SVGElement, scale = 4): Promise<string> => {
   return new Promise((resolve, reject) => {
     const svgData = new XMLSerializer().serializeToString(svgEl);
     const base64 = btoa(unescape(encodeURIComponent(svgData)));
