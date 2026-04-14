@@ -58,7 +58,7 @@ export const useStats = () => {
           if (debt.status === 'paga') {
             paidValue += value;
             paidCount++;
-          } else if (debt.status === 'vencida' || (debt.status === 'pendente' && new Date(debt.data_vencimento) < today)) {
+          } else if (debt.status === 'vencida') {
             overdueValue += value;
             overdueCount++;
           } else {
