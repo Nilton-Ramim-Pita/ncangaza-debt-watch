@@ -107,7 +107,18 @@ const UserManagement = () => {
       });
       
       if (error) {
-        toast.error('Erro ao criar usuário: ' + error.message);
+        // Try to parse the error body for a better message
+        let errorMsg = error.message;
+        try {
+          const errorBody = typeof error === 'object' && 'context' in error ? error.context : null;
+          if (errorBody) errorMsg = errorBody;
+        } catch {}
+        toast.error('Erro ao criar usuário: ' + errorMsg);
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
         return;
       }
       
@@ -115,8 +126,8 @@ const UserManagement = () => {
       setIsCreateDialogOpen(false);
       resetForm();
       await fetchUsers();
-    } catch (error) {
-      toast.error('Erro ao criar usuário');
+    } catch (error: any) {
+      toast.error('Erro ao criar usuário: ' + (error?.message || 'Erro desconhecido'));
     }
   };
 
