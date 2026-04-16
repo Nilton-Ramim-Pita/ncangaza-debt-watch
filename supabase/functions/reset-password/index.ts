@@ -17,36 +17,50 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const { email, password } = await req.json();
+    const { action, email, password, fullName, role } = await req.json();
 
-    // List users and find by email
-    const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-    if (listError) throw listError;
-    
-    const user = listData.users.find((u: any) => u.email === email);
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Utilizador não encontrado' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404
+    if (action === 'setup-user') {
+      // Find or create user, ensure profile and role exist
+      const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+      let user = listData?.users?.find((u: any) => u.email === email);
+      
+      if (!user) {
+        // Create user
+        const { data: newUser, error } = await supabaseAdmin.auth.admin.createUser({
+          email, password, email_confirm: true,
+          user_metadata: { full_name: fullName }
+        });
+        if (error) throw error;
+        user = newUser.user;
+      }
+
+      // Ensure profile exists
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles').select('id').eq('user_id', user.id).maybeSingle();
+      
+      if (!existingProfile) {
+        await supabaseAdmin.from('profiles').insert({
+          user_id: user.id, full_name: fullName || user.user_metadata?.full_name || email, active: true
+        });
+      }
+
+      // Ensure role exists
+      const { data: existingRole } = await supabaseAdmin
+        .from('user_roles').select('id').eq('user_id', user.id).maybeSingle();
+      
+      if (!existingRole) {
+        await supabaseAdmin.from('user_roles').insert({
+          user_id: user.id, role: role || 'user'
+        });
+      }
+
+      return new Response(JSON.stringify({ message: 'Utilizador configurado', user_id: user.id }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Delete and recreate user with new password
-    await supabaseAdmin.auth.admin.deleteUser(user.id);
-    
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: user.user_metadata
-    });
-    if (createError) throw createError;
-
-    // Update profile to point to new user id
-    await supabaseAdmin.from('profiles').update({ user_id: newUser.user.id }).eq('user_id', user.id);
-    await supabaseAdmin.from('user_roles').update({ user_id: newUser.user.id }).eq('user_id', user.id);
-
-    return new Response(JSON.stringify({ message: 'Senha atualizada com sucesso', user_id: newUser.user.id }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    return new Response(JSON.stringify({ error: 'Ação inválida' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
