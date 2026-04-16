@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const { error } = await supabaseAdmin.auth.admin.updateUser(user.id, { password });
+      const { error } = await supabaseAdmin.auth.admin.updateUser(user.id, { password: password });
       if (error) throw error;
 
       return new Response(JSON.stringify({ message: 'Senha atualizada', user_id: user.id }), {
