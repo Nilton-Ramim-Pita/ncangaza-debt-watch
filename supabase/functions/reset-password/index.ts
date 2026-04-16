@@ -17,50 +17,36 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const { email, password, fullName, role, action } = await req.json();
+    const { email, password } = await req.json();
 
-    if (action === 'reset') {
-      // Find user by email
-      const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-      if (listError) throw listError;
-      
-      const user = users.find(u => u.email === email);
-      if (!user) {
-        return new Response(JSON.stringify({ error: 'Utilizador não encontrado' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404
-        });
-      }
-
-      const { error } = await supabaseAdmin.auth.admin.updateUser(user.id, { password: password });
-      if (error) throw error;
-
-      return new Response(JSON.stringify({ message: 'Senha atualizada', user_id: user.id }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    // List users and find by email
+    const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    if (listError) throw listError;
+    
+    const user = listData.users.find((u: any) => u.email === email);
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Utilizador não encontrado' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404
       });
     }
 
-    if (action === 'create') {
-      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email, password, email_confirm: true,
-        user_metadata: { full_name: fullName }
-      });
-      if (createError) throw createError;
+    // Delete and recreate user with new password
+    await supabaseAdmin.auth.admin.deleteUser(user.id);
+    
+    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: user.user_metadata
+    });
+    if (createError) throw createError;
 
-      await supabaseAdmin.from('profiles').insert({
-        user_id: newUser.user.id, full_name: fullName, active: true
-      });
+    // Update profile to point to new user id
+    await supabaseAdmin.from('profiles').update({ user_id: newUser.user.id }).eq('user_id', user.id);
+    await supabaseAdmin.from('user_roles').update({ user_id: newUser.user.id }).eq('user_id', user.id);
 
-      await supabaseAdmin.from('user_roles').insert({
-        user_id: newUser.user.id, role: role || 'user'
-      });
-
-      return new Response(JSON.stringify({ message: 'Utilizador criado', user_id: newUser.user.id }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    return new Response(JSON.stringify({ error: 'Ação inválida' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400
+    return new Response(JSON.stringify({ message: 'Senha atualizada com sucesso', user_id: newUser.user.id }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
