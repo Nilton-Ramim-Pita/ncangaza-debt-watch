@@ -98,24 +98,6 @@ export const SlideCapa = () => (
 /* =========================================================
    SLIDE 2 — ESTRUTURA
    ========================================================= */
-export const SlideEstrutura = () => {
-  const items = [
-    "Contextualização e Problema",
-    "Objectivos da Pesquisa",
-    "Metodologia",
-    "Fundamentação Teórica",
-    "Estudo de Caso",
-    "Resultados e Discussão",
-    "Propostas de Melhoria",
-    "Conclusões e Sugestões",
-    "Agradecimentos",
-  ];
-  return (
-    <SlideHeader title="Estrutura da Apresentação" subtitle="Roteiro temático" />
-  ).type === "div" ? null : null; // placeholder substituído abaixo
-};
-
-// Reescrita do Slide 2 para usar componente real
 export const SlideEstruturaReal = () => {
   const items = [
     "Contextualização e Problema",
