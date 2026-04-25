@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import DocumentacaoPage from "./pages/DocumentacaoPage";
 import RelatorioTecnicoPage from "./pages/RelatorioTecnicoPage";
 import ArquiteturaDesignPage from "./pages/ArquiteturaDesignPage";
+import ApresentacaoEmilia from "./pages/ApresentacaoEmilia";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/documentacao" element={<DocumentacaoPage />} />
               <Route path="/relatorio-tecnico" element={<RelatorioTecnicoPage />} />
               <Route path="/arquitetura-design" element={<ArquiteturaDesignPage />} />
+              <Route path="/apresentacao-emilia" element={<ApresentacaoEmilia />} />
               <Route 
                 path="/" 
                 element={
