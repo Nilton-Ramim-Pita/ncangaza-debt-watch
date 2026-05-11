@@ -34,6 +34,7 @@ export const ClientsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showClientForm, setShowClientForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const { clients, loading, createClient, updateClient, deleteClient, refetch } = useClients();
 
   // Filtrar clientes baseado no termo de pesquisa
