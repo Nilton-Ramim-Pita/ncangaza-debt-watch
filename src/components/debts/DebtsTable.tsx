@@ -147,6 +147,16 @@ export const DebtsTable = ({ selectedDebtId, onDebtViewed }: DebtsTableProps) =>
     return matchesSearch && matchesStatus;
   });
 
+  useEffect(() => {
+    if (!selectedDebtId || loading) return;
+
+    const debt = debts.find((item) => item.id === selectedDebtId);
+    if (debt) {
+      setViewingDebt(debt);
+      onDebtViewed?.();
+    }
+  }, [selectedDebtId, loading, debts, onDebtViewed]);
+
   const handleAddDebt = async (debtData: DebtFormData) => {
     try {
       if (editingDebt?.id) {
