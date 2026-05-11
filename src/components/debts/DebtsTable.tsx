@@ -417,7 +417,7 @@ export const DebtsTable = ({ selectedDebtId, onDebtViewed }: DebtsTableProps) =>
                           {client && (debt.status === 'vencida' || debt.status === 'pendente') && (
                             <DebtActions debt={debt} client={client} />
                           )}
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => setViewingDebt(debt)} title="Ver detalhes da dívida">
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleEdit(debt)}>
@@ -465,6 +465,51 @@ export const DebtsTable = ({ selectedDebtId, onDebtViewed }: DebtsTableProps) =>
         clients={clients}
         editData={editingDebt}
       />
+      <Dialog open={!!viewingDebt} onOpenChange={(open) => !open && setViewingDebt(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes da Dívida</DialogTitle>
+            <DialogDescription>
+              Informação completa da dívida selecionada.
+            </DialogDescription>
+          </DialogHeader>
+          {viewingDebt && (() => {
+            const client = clients.find(c => c.id === viewingDebt.cliente_id);
+
+            return (
+              <div className="grid gap-4 py-2">
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Cliente</span>
+                  <span className="font-semibold text-foreground">{client?.nome || viewingDebt.cliente?.nome || 'Cliente não encontrado'}</span>
+                  <span className="text-sm text-muted-foreground">NUIT: {client?.nuit || viewingDebt.cliente?.nuit || 'N/A'}</span>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Descrição</span>
+                  <span className="text-foreground">{viewingDebt.descricao}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="grid gap-1">
+                    <span className="text-sm font-medium text-muted-foreground">Valor</span>
+                    <span className="font-bold text-foreground">{formatCurrency(Number(viewingDebt.valor))}</span>
+                  </div>
+                  <div className="grid gap-1">
+                    <span className="text-sm font-medium text-muted-foreground">Estado</span>
+                    <span>{getStatusBadge(viewingDebt.status)}</span>
+                  </div>
+                  <div className="grid gap-1">
+                    <span className="text-sm font-medium text-muted-foreground">Data de criação</span>
+                    <span className="text-foreground">{new Date(viewingDebt.data_criacao).toLocaleDateString("pt-MZ")}</span>
+                  </div>
+                  <div className="grid gap-1">
+                    <span className="text-sm font-medium text-muted-foreground">Data de vencimento</span>
+                    <span className="text-foreground">{new Date(viewingDebt.data_vencimento).toLocaleDateString("pt-MZ")}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
