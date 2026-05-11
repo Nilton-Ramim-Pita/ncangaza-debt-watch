@@ -10,14 +10,10 @@ import { AnalyticsReal } from "../analytics/AnalyticsReal";
 import { Profile } from "../profile/Profile";
 import { Settings } from "../settings/Settings";
 import UserManagement from "../admin/UserManagement";
-import { usePopularDadosAutomatico } from "@/hooks/usePopularDadosAutomatico";
-
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedDebtId, setSelectedDebtId] = useState<string | undefined>();
-  
-  // Popular dados automaticamente se a base de dados estiver vazia
-  usePopularDadosAutomatico();
+  // Auto-popular desativado: dados reais inseridos manualmente para teste de notificações
 
   const handleTabChange = (tab: string, debtId?: string) => {
     setActiveTab(tab);
