@@ -247,6 +247,49 @@ export const ClientsTable = () => {
           ativo: editingClient.ativo,
         } : undefined}
       />
+
+      <Dialog open={!!viewingClient} onOpenChange={(open) => !open && setViewingClient(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes do Cliente</DialogTitle>
+            <DialogDescription>Informação completa do cliente selecionado.</DialogDescription>
+          </DialogHeader>
+          {viewingClient && (
+            <div className="grid gap-3 py-2">
+              <div className="grid gap-1">
+                <span className="text-sm font-medium text-muted-foreground">Nome</span>
+                <span className="font-semibold text-foreground">{viewingClient.nome}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">NUIT</span>
+                  <span className="font-mono text-foreground">{viewingClient.nuit || 'N/A'}</span>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Estado</span>
+                  <span>{getStatusBadge(viewingClient.ativo)}</span>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Email</span>
+                  <span className="text-foreground">{viewingClient.email || 'N/A'}</span>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Telefone</span>
+                  <span className="text-foreground">{viewingClient.telefone || 'N/A'}</span>
+                </div>
+                <div className="grid gap-1 sm:col-span-2">
+                  <span className="text-sm font-medium text-muted-foreground">Endereço</span>
+                  <span className="text-foreground">{viewingClient.endereco || 'N/A'}</span>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Registado em</span>
+                  <span className="text-foreground">{new Date(viewingClient.created_at).toLocaleDateString("pt-MZ")}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
