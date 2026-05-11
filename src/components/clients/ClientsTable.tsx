@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { ClientForm, type ClientFormData } from "@/components/forms/ClientForm";
 import { useClients, Client } from "@/hooks/useClients";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { generatePDF, downloadPDF } from "@/utils/pdfGenerator";
 
 export const ClientsTable = () => {
