@@ -125,7 +125,7 @@ RELATÓRIO NCANGAZA MULTISERVICES
 
 Período: ${reportData.period}
 Tipo: ${reportData.reportType}
-Status: ${reportData.status === 'all' ? 'Todos' : reportData.status}
+Status: ${effectiveStatus === 'all' ? 'Todos' : effectiveStatus}
 Data de Geração: ${new Date().toLocaleString('pt-MZ')}
 
 RESUMO EXECUTIVO
