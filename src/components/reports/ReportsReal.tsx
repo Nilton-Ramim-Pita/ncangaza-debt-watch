@@ -587,7 +587,7 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
                   <p><strong>Valor total:</strong> {formatCurrency(reportSummary.totalValue)}</p>
                   <p><strong>Período:</strong> {reportData.period || 'Não selecionado'}</p>
                   <p><strong>Tipo:</strong> {reportData.reportType}</p>
-                  <p><strong>Status:</strong> {reportData.status === 'all' ? 'Todos' : reportData.status}</p>
+                  <p><strong>Status:</strong> {effectiveStatus === 'all' ? 'Todos' : effectiveStatus}</p>
                 </div>
               </CardContent>
             </Card>
