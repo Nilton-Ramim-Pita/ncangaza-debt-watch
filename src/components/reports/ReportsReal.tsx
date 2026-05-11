@@ -313,7 +313,11 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
         { label: 'Valor Total', value: formatCurrency(totalValue) }
       ];
 
-      if (reportData.reportType === 'debts' || reportData.reportType === 'overdue') {
+      if (
+        reportData.reportType === 'debts' ||
+        reportData.reportType === 'overdue' ||
+        reportData.reportType === 'payments'
+      ) {
         headers = ['ID', 'Cliente', 'Descrição', 'Valor', 'Vencimento', 'Status'];
         data = filteredDebts.slice(0, 10).map(debt => {
           const client = clients.find(c => c.id === debt.cliente_id);
