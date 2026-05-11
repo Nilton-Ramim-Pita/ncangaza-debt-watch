@@ -28,7 +28,7 @@ import { generatePDF, downloadPDF } from "@/utils/pdfGenerator";
 import { FileDown } from "lucide-react";
 import { useState } from "react";
 import { DebtForm, type DebtFormData } from "@/components/forms/DebtForm";
-import { useDebts } from "@/hooks/useDebts";
+import { useDebts, type Debt as DebtRecord } from "@/hooks/useDebts";
 import { useClients } from "@/hooks/useClients";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -127,7 +127,7 @@ export const DebtsTable = ({ selectedDebtId, onDebtViewed }: DebtsTableProps) =>
   const [statusFilter, setStatusFilter] = useState("all");
   const [showDebtForm, setShowDebtForm] = useState(false);
   const [editingDebt, setEditingDebt] = useState<DebtFormData | undefined>();
-  const [viewingDebt, setViewingDebt] = useState<any | null>(null);
+  const [viewingDebt, setViewingDebt] = useState<DebtRecord | null>(null);
   
   const { debts, loading, createDebt, updateDebt, deleteDebt } = useDebts();
   const { clients } = useClients();
@@ -182,7 +182,7 @@ export const DebtsTable = ({ selectedDebtId, onDebtViewed }: DebtsTableProps) =>
     }
   };
 
-  const handleEdit = (debt: any) => {
+  const handleEdit = (debt: DebtRecord) => {
     setEditingDebt({
       id: debt.id,
       cliente_id: debt.cliente_id,
