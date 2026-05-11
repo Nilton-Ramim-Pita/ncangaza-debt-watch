@@ -12,31 +12,10 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
 
-    // Remover entrada anterior (se existir) e criar nova
-    await admin.rpc("exec_sql" as any, {}).catch(() => {});
+    const { error } = await admin.rpc("set_service_role_key", { p_key: serviceKey });
+    if (error) throw error;
 
-    // Usar SQL direto via PostgREST não funciona — usar função vault diretamente
-    const { data: existing } = await admin
-      .from("vault.secrets" as any)
-      .select("id")
-      .eq("name", "service_role_key")
-      .maybeSingle();
-
-    if (existing) {
-      const { error } = await admin.rpc("vault_update_secret" as any, {
-        p_name: "service_role_key",
-        p_secret: serviceKey,
-      });
-      if (error) throw error;
-    } else {
-      const { error } = await admin.rpc("vault_create_secret" as any, {
-        p_name: "service_role_key",
-        p_secret: serviceKey,
-      });
-      if (error) throw error;
-    }
-
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, message: "service_role_key guardada no Vault" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {

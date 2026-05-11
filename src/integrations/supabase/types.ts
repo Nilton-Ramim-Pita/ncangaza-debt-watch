@@ -357,6 +357,7 @@ export type Database = {
         }
         Returns: string
       }
+      set_service_role_key: { Args: { p_key: string }; Returns: undefined }
       update_debt_status: { Args: never; Returns: undefined }
     }
     Enums: {
