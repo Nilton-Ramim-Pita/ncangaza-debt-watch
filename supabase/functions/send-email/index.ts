@@ -344,12 +344,29 @@ const handler = async (req: Request): Promise<Response> => {
       html: generateEmailTemplate(requestData),
     });
 
-    console.log("✅ Email enviado com sucesso:", emailResponse);
+    // Resend SDK não lança erro: precisa inspeccionar o campo `error`
+    if (emailResponse.error) {
+      console.error("❌ Resend rejeitou o envio:", emailResponse.error);
+      const msg = emailResponse.error.message || "Falha no envio do email";
+      const isDomainIssue = /verify a domain|own email address/i.test(msg);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: msg,
+          hint: isDomainIssue
+            ? "Em modo de teste, o Resend só envia para o email da conta. Verifique um domínio em resend.com/domains."
+            : undefined,
+        }),
+        { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
 
-    return new Response(JSON.stringify({ 
+    console.log("✅ Email enviado com sucesso:", emailResponse.data);
+
+    return new Response(JSON.stringify({
       success: true,
       id: emailResponse.data?.id,
-      message: "Email enviado com sucesso"
+      message: "Email enviado com sucesso",
     }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
