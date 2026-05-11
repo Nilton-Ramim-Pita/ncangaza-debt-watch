@@ -44,17 +44,40 @@ export const ReportsReal = () => {
 
   const currentMonth = new Date().toLocaleDateString('pt-MZ', { month: 'long', year: 'numeric' });
 
+  // Status efectivo derivado do tipo de relatório (vencido/pago são fixos pelo tipo)
+  const effectiveStatus = useMemo(() => {
+    if (reportData.reportType === 'overdue') return 'vencida';
+    if (reportData.reportType === 'payments') return 'paga';
+    return reportData.status;
+  }, [reportData.reportType, reportData.status]);
+
+  // Filtra dívidas por período (data_vencimento)
+  const periodFilter = (dateStr: string) => {
+    if (!reportData.period || reportData.period === 'all') return true;
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
+    switch (reportData.period) {
+      case 'week': return Math.abs(diffDays) <= 7;
+      case 'month': return Math.abs(diffDays) <= 31;
+      case 'quarter': return Math.abs(diffDays) <= 92;
+      case 'year': return Math.abs(diffDays) <= 366;
+      default: return true;
+    }
+  };
+
   const reportSummary = useMemo(() => {
     const filteredDebts = debts.filter(debt => {
-      if (reportData.status === 'all') return true;
-      return debt.status === reportData.status;
+      if (effectiveStatus !== 'all' && debt.status !== effectiveStatus) return false;
+      if (!periodFilter(debt.data_vencimento)) return false;
+      return true;
     });
 
     const totalValue = filteredDebts.reduce((sum, debt) => sum + Number(debt.valor), 0);
     const count = filteredDebts.length;
 
     return { totalValue, count, debts: filteredDebts };
-  }, [debts, reportData.status]);
+  }, [debts, effectiveStatus, reportData.period]);
 
   const generateReport = async () => {
     if (!reportData.period || !reportData.reportType) {
@@ -102,7 +125,7 @@ RELATÓRIO NCANGAZA MULTISERVICES
 
 Período: ${reportData.period}
 Tipo: ${reportData.reportType}
-Status: ${reportData.status === 'all' ? 'Todos' : reportData.status}
+Status: ${effectiveStatus === 'all' ? 'Todos' : effectiveStatus}
 Data de Geração: ${new Date().toLocaleString('pt-MZ')}
 
 RESUMO EXECUTIVO
@@ -167,10 +190,14 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
       { label: 'Total de Registos', value: count.toString() },
       { label: 'Valor Total', value: formatCurrency(totalValue) },
       { label: 'Período', value: getPeriodName(reportData.period) },
-      { label: 'Status', value: reportData.status === 'all' ? 'Todos' : reportData.status }
+      { label: 'Status', value: effectiveStatus === 'all' ? 'Todos' : effectiveStatus }
     ];
 
-    if (reportData.reportType === 'debts' || reportData.reportType === 'overdue') {
+    if (
+      reportData.reportType === 'debts' ||
+      reportData.reportType === 'overdue' ||
+      reportData.reportType === 'payments'
+    ) {
       headers = ['ID', 'Cliente', 'Descrição', 'Valor', 'Vencimento', 'Status'];
       data = filteredDebts.map(debt => {
         const client = clients.find(c => c.id === debt.cliente_id);
@@ -234,7 +261,11 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
     
     let csvContent = '';
     
-    if (reportData.reportType === 'debts' || reportData.reportType === 'overdue') {
+    if (
+      reportData.reportType === 'debts' ||
+      reportData.reportType === 'overdue' ||
+      reportData.reportType === 'payments'
+    ) {
       csvContent = 'ID,Cliente,Descrição,Valor,Vencimento,Status\n';
       filteredDebts.forEach(debt => {
         const client = clients.find(c => c.id === debt.cliente_id);
@@ -282,7 +313,11 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
         { label: 'Valor Total', value: formatCurrency(totalValue) }
       ];
 
-      if (reportData.reportType === 'debts' || reportData.reportType === 'overdue') {
+      if (
+        reportData.reportType === 'debts' ||
+        reportData.reportType === 'overdue' ||
+        reportData.reportType === 'payments'
+      ) {
         headers = ['ID', 'Cliente', 'Descrição', 'Valor', 'Vencimento', 'Status'];
         data = filteredDebts.slice(0, 10).map(debt => {
           const client = clients.find(c => c.id === debt.cliente_id);
@@ -512,7 +547,7 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Status</label>
-                <Select value={reportData.status} onValueChange={(value) => setReportData(prev => ({ ...prev, status: value }))}>
+                <Select value={effectiveStatus} onValueChange={(value) => setReportData(prev => ({ ...prev, status: value }))} disabled={reportData.reportType === 'overdue' || reportData.reportType === 'payments'}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todos os status" />
                   </SelectTrigger>
@@ -552,7 +587,7 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
                   <p><strong>Valor total:</strong> {formatCurrency(reportSummary.totalValue)}</p>
                   <p><strong>Período:</strong> {reportData.period || 'Não selecionado'}</p>
                   <p><strong>Tipo:</strong> {reportData.reportType}</p>
-                  <p><strong>Status:</strong> {reportData.status === 'all' ? 'Todos' : reportData.status}</p>
+                  <p><strong>Status:</strong> {effectiveStatus === 'all' ? 'Todos' : effectiveStatus}</p>
                 </div>
               </CardContent>
             </Card>
