@@ -15,252 +15,307 @@ interface SummaryData {
   value: string;
 }
 
-const addLogoToDoc = (doc: jsPDF) => {
-  try {
-    // Add logo (converted to base64 or use direct path)
-    doc.addImage(logoImage, 'JPEG', 14, 10, 30, 30);
-  } catch (error) {
-    console.error('Erro ao adicionar logo:', error);
-  }
+// Paleta corporativa moderna
+const COLORS = {
+  red: [229, 57, 53] as [number, number, number],          // #E53935 — destaque
+  redSoft: [254, 242, 242] as [number, number, number],    // fundo suave
+  ink: [31, 41, 55] as [number, number, number],           // #1F2937 — texto principal
+  muted: [107, 114, 128] as [number, number, number],      // #6B7280 — texto secundário
+  border: [229, 231, 235] as [number, number, number],     // #E5E7EB
+  surface: [249, 250, 251] as [number, number, number],    // #F9FAFB
+  surfaceAlt: [245, 245, 245] as [number, number, number], // #F5F5F5
+  white: [255, 255, 255] as [number, number, number],
+  success: [22, 163, 74] as [number, number, number],
+  warning: [202, 138, 4] as [number, number, number],
+  danger: [220, 38, 38] as [number, number, number],
 };
+
+const setFill = (doc: jsPDF, c: [number, number, number]) => doc.setFillColor(c[0], c[1], c[2]);
+const setText = (doc: jsPDF, c: [number, number, number]) => doc.setTextColor(c[0], c[1], c[2]);
+const setDraw = (doc: jsPDF, c: [number, number, number]) => doc.setDrawColor(c[0], c[1], c[2]);
 
 const addHeader = (doc: jsPDF, config: PDFConfig) => {
   const { title, subtitle, showLogo = true } = config;
   const pageWidth = doc.internal.pageSize.width;
-  
-  // NCANGAZA brand colors
-  const brandRed = [229, 57, 53]; // #E53935
-  const brandDark = [33, 33, 33]; // #212121
-  
-  // Header background with NCANGAZA red
-  doc.setFillColor(brandRed[0], brandRed[1], brandRed[2]);
-  doc.rect(0, 0, pageWidth, 55, 'F');
-  
-  // Decorative accent line
-  doc.setFillColor(brandDark[0], brandDark[1], brandDark[2]);
-  doc.rect(0, 55, pageWidth, 3, 'F');
-  
-  // Add logo if enabled
+  const margin = 14;
+
+  // Faixa branca (header limpo, sem bloco vermelho pesado)
+  setFill(doc, COLORS.white);
+  doc.rect(0, 0, pageWidth, 42, 'F');
+
+  // Logo discreto
   if (showLogo) {
-    // White background circle for logo
-    doc.setFillColor(255, 255, 255);
-    doc.circle(29, 27, 18, 'F');
-    addLogoToDoc(doc);
+    try {
+      doc.addImage(logoImage, 'JPEG', margin, 10, 18, 18);
+    } catch {
+      // ignora falha de logo
+    }
   }
-  
-  // Company name
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(22);
+
+  const textX = showLogo ? margin + 24 : margin;
+
+  // Nome da empresa
+  setText(doc, COLORS.ink);
   doc.setFont('helvetica', 'bold');
-  doc.text('NCANGAZA', showLogo ? 52 : 14, 22);
-  
+  doc.setFontSize(13);
+  doc.text('NCANGAZA', textX, 17);
+
   // Tagline
-  doc.setFontSize(9);
+  setText(doc, COLORS.muted);
   doc.setFont('helvetica', 'normal');
-  doc.text('MULTISERVICES', showLogo ? 52 : 14, 29);
-  
-  // Document title
-  doc.setFontSize(14);
+  doc.setFontSize(7.5);
+  doc.text('MULTISERVICES', textX, 22);
+
+  // Título do documento
+  setText(doc, COLORS.ink);
   doc.setFont('helvetica', 'bold');
-  doc.text(title, showLogo ? 52 : 14, 40);
-  
-  // Subtitle/Info
+  doc.setFontSize(15);
+  doc.text(title, textX, 30);
+
+  // Subtítulo
   if (subtitle) {
-    doc.setFontSize(10);
+    setText(doc, COLORS.muted);
     doc.setFont('helvetica', 'normal');
-    doc.text(subtitle, showLogo ? 52 : 14, 48);
+    doc.setFontSize(9);
+    doc.text(subtitle, textX, 36);
   }
-  
-  // Generation date and time (right aligned)
-  const currentDateTime = new Date().toLocaleString('pt-PT', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+
+  // Bloco direito: meta info
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+
+  setText(doc, COLORS.muted);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text('GERADO EM', pageWidth - margin, 14, { align: 'right' });
+  setText(doc, COLORS.ink);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.text(`${dateStr} · ${timeStr}`, pageWidth - margin, 19, { align: 'right' });
+
+  // Separador elegante (linha fina cinza + acento vermelho curto)
+  setDraw(doc, COLORS.border);
+  doc.setLineWidth(0.3);
+  doc.line(margin, 44, pageWidth - margin, 44);
+
+  setDraw(doc, COLORS.red);
+  doc.setLineWidth(1.2);
+  doc.line(margin, 44, margin + 28, 44);
+
+  setText(doc, COLORS.ink);
+};
+
+const addSummaryCards = (doc: jsPDF, summaryData: SummaryData[], startY: number): number => {
+  if (!summaryData.length) return startY;
+
+  const pageWidth = doc.internal.pageSize.width;
+  const margin = 14;
+  const gap = 4;
+  const available = pageWidth - margin * 2;
+  const count = Math.min(summaryData.length, 4);
+  const cardWidth = (available - gap * (count - 1)) / count;
+  const cardHeight = 22;
+
+  summaryData.slice(0, count).forEach((item, i) => {
+    const x = margin + i * (cardWidth + gap);
+    const y = startY;
+
+    // Card: fundo branco, borda suave
+    setFill(doc, COLORS.white);
+    setDraw(doc, COLORS.border);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(x, y, cardWidth, cardHeight, 2, 2, 'FD');
+
+    // Acento lateral vermelho discreto
+    setFill(doc, COLORS.red);
+    doc.rect(x, y, 1.2, cardHeight, 'F');
+
+    // Label
+    setText(doc, COLORS.muted);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.text(item.label.toUpperCase(), x + 5, y + 7);
+
+    // Valor (destaque)
+    setText(doc, COLORS.ink);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    const valueText = String(item.value);
+    const maxWidth = cardWidth - 8;
+    const lines = doc.splitTextToSize(valueText, maxWidth);
+    doc.text(lines[0], x + 5, y + 16);
   });
-  doc.setFontSize(9);
-  doc.text(`Gerado em: ${currentDateTime}`, pageWidth - 14, 22, { align: 'right' });
-  
-  // Reset text color
-  doc.setTextColor(0, 0, 0);
+
+  // Linhas extras (quando >4) numa segunda fila
+  let yEnd = startY + cardHeight;
+  if (summaryData.length > 4) {
+    const extras = summaryData.slice(4, 8);
+    const extraCount = extras.length;
+    const ew = (available - gap * (extraCount - 1)) / extraCount;
+    extras.forEach((item, i) => {
+      const x = margin + i * (ew + gap);
+      const y = yEnd + gap;
+      setFill(doc, COLORS.white);
+      setDraw(doc, COLORS.border);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(x, y, ew, cardHeight, 2, 2, 'FD');
+      setFill(doc, COLORS.red);
+      doc.rect(x, y, 1.2, cardHeight, 'F');
+      setText(doc, COLORS.muted);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.text(item.label.toUpperCase(), x + 5, y + 7);
+      setText(doc, COLORS.ink);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      const lines = doc.splitTextToSize(String(item.value), ew - 8);
+      doc.text(lines[0], x + 5, y + 16);
+    });
+    yEnd += cardHeight + gap;
+  }
+
+  return yEnd + 6;
 };
 
 const addFooter = (doc: jsPDF, pageNumber: number, totalPages: number) => {
   const pageHeight = doc.internal.pageSize.height;
   const pageWidth = doc.internal.pageSize.width;
-  
-  // NCANGAZA brand colors
-  const brandRed = [229, 57, 53]; // #E53935
-  
-  // Footer accent line with brand color
-  doc.setDrawColor(brandRed[0], brandRed[1], brandRed[2]);
-  doc.setLineWidth(0.5);
-  doc.line(14, pageHeight - 22, pageWidth - 14, pageHeight - 22);
-  
-  // Footer background
-  doc.setFillColor(250, 250, 250);
-  doc.rect(0, pageHeight - 20, pageWidth, 20, 'F');
-  
-  // Page number with brand styling
-  doc.setFontSize(9);
-  doc.setTextColor(brandRed[0], brandRed[1], brandRed[2]);
-  doc.setFont('helvetica', 'bold');
-  doc.text(
-    `Página ${pageNumber} de ${totalPages}`,
-    pageWidth / 2,
-    pageHeight - 12,
-    { align: 'center' }
-  );
-  
-  // Footer text
-  doc.setFontSize(7);
-  doc.setTextColor(100, 100, 100);
+  const margin = 14;
+
+  // Linha divisória discreta
+  setDraw(doc, COLORS.border);
+  doc.setLineWidth(0.3);
+  doc.line(margin, pageHeight - 14, pageWidth - margin, pageHeight - 14);
+
+  // Esquerda: empresa
+  setText(doc, COLORS.muted);
   doc.setFont('helvetica', 'normal');
-  doc.text(
-    'Sistema de Gestão de Dívidas - NCANGAZA Multiservices',
-    pageWidth / 2,
-    pageHeight - 7,
-    { align: 'center' }
-  );
-  
-  // Copyright
-  doc.text(
-    `© ${new Date().getFullYear()} NCANGAZA`,
-    14,
-    pageHeight - 7
-  );
-  
-  // Contact info
-  doc.text(
-    'Moçambique',
-    pageWidth - 14,
-    pageHeight - 7,
-    { align: 'right' }
-  );
+  doc.setFontSize(7.5);
+  doc.text('NCANGAZA Multiservices · Sistema de Gestão de Dívidas', margin, pageHeight - 8);
+
+  // Centro: paginação
+  doc.setFont('helvetica', 'bold');
+  setText(doc, COLORS.ink);
+  doc.text(`${pageNumber} / ${totalPages}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+
+  // Direita: copyright
+  doc.setFont('helvetica', 'normal');
+  setText(doc, COLORS.muted);
+  doc.text(`© ${new Date().getFullYear()} · Moçambique`, pageWidth - margin, pageHeight - 8, { align: 'right' });
 };
 
-const addSummarySection = (doc: jsPDF, summaryData: SummaryData[], startY: number) => {
+const addCompactHeader = (doc: jsPDF, config: PDFConfig) => {
   const pageWidth = doc.internal.pageSize.width;
-  
-  // NCANGAZA brand colors
-  const brandRed = [229, 57, 53]; // #E53935
-  
-  // Summary box with subtle red border
-  doc.setFillColor(255, 250, 250);
-  doc.setDrawColor(brandRed[0], brandRed[1], brandRed[2]);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(14, startY, pageWidth - 28, summaryData.length * 10 + 16, 4, 4, 'FD');
-  
-  // Red accent bar on left
-  doc.setFillColor(brandRed[0], brandRed[1], brandRed[2]);
-  doc.roundedRect(14, startY, 4, summaryData.length * 10 + 16, 4, 0, 'F');
-  doc.rect(16, startY, 2, summaryData.length * 10 + 16, 'F');
-  
-  // Summary title with brand color
-  doc.setFontSize(13);
+  const margin = 14;
+  setFill(doc, COLORS.white);
+  doc.rect(0, 0, pageWidth, 16, 'F');
+  setText(doc, COLORS.ink);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(brandRed[0], brandRed[1], brandRed[2]);
-  doc.text('Resumo Executivo', 24, startY + 10);
-  
-  // Divider line
-  doc.setDrawColor(230, 230, 230);
-  doc.setLineWidth(0.2);
-  doc.line(24, startY + 14, pageWidth - 20, startY + 14);
-  
-  // Summary items
-  doc.setFontSize(10);
-  doc.setTextColor(50, 50, 50);
-  
-  summaryData.forEach((item, index) => {
-    const y = startY + 24 + (index * 8);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(80, 80, 80);
-    doc.text(`${item.label}:`, 24, y);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(40, 40, 40);
-    doc.text(item.value, 85, y);
-  });
-  
-  return startY + summaryData.length * 10 + 26;
+  doc.setFontSize(9);
+  doc.text('NCANGAZA Multiservices', margin, 10);
+  setText(doc, COLORS.muted);
+  doc.setFont('helvetica', 'normal');
+  doc.text(config.title, pageWidth - margin, 10, { align: 'right' });
+  setDraw(doc, COLORS.border);
+  doc.setLineWidth(0.3);
+  doc.line(margin, 14, pageWidth - margin, 14);
 };
 
 export const generatePDF = (
-  config: PDFConfig, 
-  headers: string[], 
+  config: PDFConfig,
+  headers: string[],
   data: any[][],
   summaryData?: SummaryData[]
 ) => {
-  const { orientation = 'portrait', filename = 'relatorio' } = config;
-  
-  const doc = new jsPDF({
-    orientation,
-    unit: 'mm',
-    format: 'a4'
-  });
+  const { orientation = 'portrait' } = config;
 
-  // Add header
+  const doc = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
+
   addHeader(doc, config);
-  
-  let currentY = 60;
-  
-  // Add summary section if provided
+
+  let currentY = 52;
+
   if (summaryData && summaryData.length > 0) {
-    currentY = addSummarySection(doc, summaryData, currentY);
+    currentY = addSummaryCards(doc, summaryData, currentY);
   }
 
-  // NCANGAZA brand colors
-  const brandRed: [number, number, number] = [229, 57, 53]; // #E53935
-  const brandDark: [number, number, number] = [33, 33, 33]; // #212121
+  // Título da secção tabela
+  setText(doc, COLORS.ink);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.text('Detalhe de Registos', 14, currentY);
+  setDraw(doc, COLORS.border);
+  doc.setLineWidth(0.2);
+  doc.line(14, currentY + 1.5, doc.internal.pageSize.width - 14, currentY + 1.5);
+  currentY += 4;
 
-  // Add table with NCANGAZA styling
+  // Detecta coluna "Status" para colorir badges
+  const statusIdx = headers.findIndex((h) => /status|estado/i.test(h));
+
   autoTable(doc, {
     head: [headers],
     body: data,
     startY: currentY,
-    theme: 'striped',
+    theme: 'plain',
     styles: {
       font: 'helvetica',
-      fontSize: 9,
-      cellPadding: 5,
+      fontSize: 8.5,
+      cellPadding: { top: 3.5, right: 4, bottom: 3.5, left: 4 },
       overflow: 'linebreak',
-      lineColor: [230, 230, 230],
+      lineColor: COLORS.border,
       lineWidth: 0.1,
+      textColor: COLORS.ink,
     },
     headStyles: {
-      fillColor: brandRed,
-      textColor: [255, 255, 255],
+      fillColor: COLORS.surface,
+      textColor: COLORS.muted,
       fontStyle: 'bold',
-      halign: 'center',
-      fontSize: 10,
-      cellPadding: 6,
+      halign: 'left',
+      fontSize: 8,
+      cellPadding: { top: 4, right: 4, bottom: 4, left: 4 },
+      lineColor: COLORS.border,
+      lineWidth: { top: 0, right: 0, bottom: 0.4, left: 0 },
     },
     alternateRowStyles: {
-      fillColor: [255, 248, 248] // Very light red tint
+      fillColor: [252, 252, 253],
     },
     bodyStyles: {
-      textColor: brandDark,
+      lineColor: COLORS.border,
+      lineWidth: { top: 0, right: 0, bottom: 0.1, left: 0 },
     },
-    columnStyles: {
-      0: { cellWidth: 'auto', halign: 'center' },
-    },
-    margin: { top: 68, left: 14, right: 14, bottom: 28 },
-    didDrawPage: (data) => {
-      // Add header to subsequent pages
-      if (data.pageNumber > 1) {
-        doc.setFillColor(brandRed[0], brandRed[1], brandRed[2]);
-        doc.rect(0, 0, doc.internal.pageSize.width, 12, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-        doc.text('NCANGAZA Multiservices', 14, 8);
-        doc.text(config.title, doc.internal.pageSize.width - 14, 8, { align: 'right' });
+    margin: { top: 20, left: 14, right: 14, bottom: 18 },
+    didParseCell: (hookData) => {
+      if (hookData.section === 'body' && statusIdx >= 0 && hookData.column.index === statusIdx) {
+        const raw = String(hookData.cell.raw ?? '').toLowerCase();
+        if (/pago|paga/.test(raw)) hookData.cell.styles.textColor = COLORS.success;
+        else if (/pendente/.test(raw)) hookData.cell.styles.textColor = COLORS.warning;
+        else if (/vencid|atrasad/.test(raw)) hookData.cell.styles.textColor = COLORS.danger;
+        hookData.cell.styles.fontStyle = 'bold';
       }
-      // Add footer to each page
+      // Destacar coluna de valor
+      if (hookData.section === 'body') {
+        const headerLabel = String(headers[hookData.column.index] ?? '').toLowerCase();
+        if (/valor|montante|total/.test(headerLabel)) {
+          hookData.cell.styles.fontStyle = 'bold';
+          hookData.cell.styles.halign = 'right';
+        }
+      }
+      if (hookData.section === 'head') {
+        const headerLabel = String(headers[hookData.column.index] ?? '').toLowerCase();
+        if (/valor|montante|total/.test(headerLabel)) {
+          hookData.cell.styles.halign = 'right';
+        }
+      }
+    },
+    didDrawPage: (hookData) => {
+      if (hookData.pageNumber > 1) {
+        addCompactHeader(doc, config);
+      }
       const pageCount = doc.getNumberOfPages();
       const currentPage = doc.getCurrentPageInfo().pageNumber;
       addFooter(doc, currentPage, pageCount);
-    }
+    },
   });
 
   return doc;
