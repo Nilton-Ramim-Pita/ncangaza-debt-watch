@@ -3,8 +3,12 @@ import { DebtChart } from "./DebtChart";
 import { RecentDebts } from "./RecentDebts";
 import { useStats } from "@/hooks/useStats";
 
-export const Dashboard = () => {
-  const { refetch } = useStats();
+interface DashboardProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export const Dashboard = ({ onNavigate }: DashboardProps) => {
+  useStats();
 
   return (
     <div className="space-y-6">
@@ -19,7 +23,7 @@ export const Dashboard = () => {
       
       <DebtChart />
       
-      <RecentDebts />
+      <RecentDebts onViewAll={() => onNavigate?.("debts")} />
     </div>
   );
 };

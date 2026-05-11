@@ -6,7 +6,11 @@ import { cn } from "@/lib/utils";
 import { formatCurrencySimple } from "@/utils/currency";
 import { useDebts } from "@/hooks/useDebts";
 
-export const RecentDebts = () => {
+interface RecentDebtsProps {
+  onViewAll?: () => void;
+}
+
+export const RecentDebts = ({ onViewAll }: RecentDebtsProps) => {
   const { debts, loading } = useDebts();
 
   // Get only the first 5 debts for recent view
@@ -35,7 +39,7 @@ export const RecentDebts = () => {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Dívidas Recentes
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={onViewAll}>
             Ver Todas
           </Button>
         </CardTitle>
@@ -86,7 +90,7 @@ export const RecentDebts = () => {
                       </p>
                       {getStatusBadge(debt.status)}
                     </div>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={onViewAll} title="Ver detalhes na lista de dívidas">
                       <Eye className="h-4 w-4" />
                     </Button>
                   </div>
