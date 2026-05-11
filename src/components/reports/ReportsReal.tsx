@@ -190,10 +190,14 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
       { label: 'Total de Registos', value: count.toString() },
       { label: 'Valor Total', value: formatCurrency(totalValue) },
       { label: 'Período', value: getPeriodName(reportData.period) },
-      { label: 'Status', value: reportData.status === 'all' ? 'Todos' : reportData.status }
+      { label: 'Status', value: effectiveStatus === 'all' ? 'Todos' : effectiveStatus }
     ];
 
-    if (reportData.reportType === 'debts' || reportData.reportType === 'overdue') {
+    if (
+      reportData.reportType === 'debts' ||
+      reportData.reportType === 'overdue' ||
+      reportData.reportType === 'payments'
+    ) {
       headers = ['ID', 'Cliente', 'Descrição', 'Valor', 'Vencimento', 'Status'];
       data = filteredDebts.map(debt => {
         const client = clients.find(c => c.id === debt.cliente_id);
@@ -257,7 +261,11 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
     
     let csvContent = '';
     
-    if (reportData.reportType === 'debts' || reportData.reportType === 'overdue') {
+    if (
+      reportData.reportType === 'debts' ||
+      reportData.reportType === 'overdue' ||
+      reportData.reportType === 'payments'
+    ) {
       csvContent = 'ID,Cliente,Descrição,Valor,Vencimento,Status\n';
       filteredDebts.forEach(debt => {
         const client = clients.find(c => c.id === debt.cliente_id);
