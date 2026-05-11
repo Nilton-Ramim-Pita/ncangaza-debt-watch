@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.setup-vault-key]
 verify_jwt = false
+
+[functions.check-domain-status]
+verify_jwt = false
