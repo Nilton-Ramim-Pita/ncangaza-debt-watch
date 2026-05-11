@@ -32,7 +32,9 @@ import { useDebts } from "@/hooks/useDebts";
 import { useClients } from "@/hooks/useClients";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DebtActions } from "./DebtActions";
+import { useEffect } from "react";
 
 interface Debt {
   id: string;
@@ -115,11 +117,17 @@ const mockDebts: Debt[] = [
   }
 ];
 
-export const DebtsTable = () => {
+interface DebtsTableProps {
+  selectedDebtId?: string;
+  onDebtViewed?: () => void;
+}
+
+export const DebtsTable = ({ selectedDebtId, onDebtViewed }: DebtsTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showDebtForm, setShowDebtForm] = useState(false);
   const [editingDebt, setEditingDebt] = useState<DebtFormData | undefined>();
+  const [viewingDebt, setViewingDebt] = useState<any | null>(null);
   
   const { debts, loading, createDebt, updateDebt, deleteDebt } = useDebts();
   const { clients } = useClients();
