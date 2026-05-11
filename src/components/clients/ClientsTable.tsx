@@ -27,12 +27,14 @@ import { cn } from "@/lib/utils";
 import { ClientForm, type ClientFormData } from "@/components/forms/ClientForm";
 import { useClients, Client } from "@/hooks/useClients";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { generatePDF, downloadPDF } from "@/utils/pdfGenerator";
 
 export const ClientsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showClientForm, setShowClientForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const { clients, loading, createClient, updateClient, deleteClient, refetch } = useClients();
 
   // Filtrar clientes baseado no termo de pesquisa
@@ -182,7 +184,7 @@ export const ClientsTable = () => {
                     <TableCell>{getStatusBadge(client.ativo)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => setViewingClient(client)} title="Ver detalhes do cliente">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button 
@@ -245,6 +247,49 @@ export const ClientsTable = () => {
           ativo: editingClient.ativo,
         } : undefined}
       />
+
+      <Dialog open={!!viewingClient} onOpenChange={(open) => !open && setViewingClient(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes do Cliente</DialogTitle>
+            <DialogDescription>Informação completa do cliente selecionado.</DialogDescription>
+          </DialogHeader>
+          {viewingClient && (
+            <div className="grid gap-3 py-2">
+              <div className="grid gap-1">
+                <span className="text-sm font-medium text-muted-foreground">Nome</span>
+                <span className="font-semibold text-foreground">{viewingClient.nome}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">NUIT</span>
+                  <span className="font-mono text-foreground">{viewingClient.nuit || 'N/A'}</span>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Estado</span>
+                  <span>{getStatusBadge(viewingClient.ativo)}</span>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Email</span>
+                  <span className="text-foreground">{viewingClient.email || 'N/A'}</span>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Telefone</span>
+                  <span className="text-foreground">{viewingClient.telefone || 'N/A'}</span>
+                </div>
+                <div className="grid gap-1 sm:col-span-2">
+                  <span className="text-sm font-medium text-muted-foreground">Endereço</span>
+                  <span className="text-foreground">{viewingClient.endereco || 'N/A'}</span>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Registado em</span>
+                  <span className="text-foreground">{new Date(viewingClient.created_at).toLocaleDateString("pt-MZ")}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
