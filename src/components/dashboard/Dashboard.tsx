@@ -4,7 +4,7 @@ import { RecentDebts } from "./RecentDebts";
 import { useStats } from "@/hooks/useStats";
 
 interface DashboardProps {
-  onNavigate?: (tab: string) => void;
+  onNavigate?: (tab: string, debtId?: string) => void;
 }
 
 export const Dashboard = ({ onNavigate }: DashboardProps) => {
@@ -23,7 +23,10 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
       
       <DebtChart />
       
-      <RecentDebts onViewAll={() => onNavigate?.("debts")} />
+      <RecentDebts
+        onViewAll={() => onNavigate?.("debts")}
+        onViewDebt={(debtId) => onNavigate?.("debts", debtId)}
+      />
     </div>
   );
 };
