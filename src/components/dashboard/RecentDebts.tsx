@@ -8,9 +8,10 @@ import { useDebts } from "@/hooks/useDebts";
 
 interface RecentDebtsProps {
   onViewAll?: () => void;
+  onViewDebt?: (debtId: string) => void;
 }
 
-export const RecentDebts = ({ onViewAll }: RecentDebtsProps) => {
+export const RecentDebts = ({ onViewAll, onViewDebt }: RecentDebtsProps) => {
   const { debts, loading } = useDebts();
 
   // Get only the first 5 debts for recent view
@@ -90,7 +91,12 @@ export const RecentDebts = ({ onViewAll }: RecentDebtsProps) => {
                       </p>
                       {getStatusBadge(debt.status)}
                     </div>
-                    <Button variant="ghost" size="sm" onClick={onViewAll} title="Ver detalhes na lista de dívidas">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onViewDebt?.(debt.id)}
+                      title="Ver detalhes da dívida"
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
                   </div>

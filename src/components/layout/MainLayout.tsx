@@ -14,18 +14,24 @@ import { usePopularDadosAutomatico } from "@/hooks/usePopularDadosAutomatico";
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedDebtId, setSelectedDebtId] = useState<string | undefined>();
   
   // Popular dados automaticamente se a base de dados estiver vazia
   usePopularDadosAutomatico();
 
+  const handleTabChange = (tab: string, debtId?: string) => {
+    setActiveTab(tab);
+    setSelectedDebtId(tab === "debts" ? debtId : undefined);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard onNavigate={setActiveTab} />;
+        return <Dashboard onNavigate={handleTabChange} />;
       case "clients":
         return <ClientsTable />;
       case "debts":
-        return <DebtsTable />;
+        return <DebtsTable selectedDebtId={selectedDebtId} onDebtViewed={() => setSelectedDebtId(undefined)} />;
       case "reports":
         return <ReportsReal />;
       case "notifications":
@@ -39,15 +45,15 @@ const MainLayout = () => {
       case "users":
         return <UserManagement />;
       default:
-        return <Dashboard onNavigate={setActiveTab} />;
+        return <Dashboard onNavigate={handleTabChange} />;
     }
   };
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header onTabChange={setActiveTab} />
+        <Header onTabChange={handleTabChange} />
         <main className="flex-1 overflow-auto p-6">
           {renderContent()}
         </main>
