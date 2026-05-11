@@ -547,7 +547,7 @@ Ncangaza Multiservices - ${new Date().getFullYear()}
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Status</label>
-                <Select value={reportData.status} onValueChange={(value) => setReportData(prev => ({ ...prev, status: value }))}>
+                <Select value={effectiveStatus} onValueChange={(value) => setReportData(prev => ({ ...prev, status: value }))} disabled={reportData.reportType === 'overdue' || reportData.reportType === 'payments'}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todos os status" />
                   </SelectTrigger>
