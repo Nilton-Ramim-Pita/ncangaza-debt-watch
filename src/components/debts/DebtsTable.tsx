@@ -159,26 +159,16 @@ export const DebtsTable = ({ selectedDebtId, onDebtViewed }: DebtsTableProps) =>
 
   const handleAddDebt = async (debtData: DebtFormData) => {
     try {
-      if (editingDebt?.id) {
-        await updateDebt(editingDebt.id, debtData);
-        toast({
-          title: "Sucesso",
-          description: "Dívida actualizada com sucesso!",
-        });
-      } else {
-        await createDebt(debtData);
-        toast({
-          title: "Sucesso", 
-          description: "Dívida adicionada com sucesso!",
-        });
+      const result = editingDebt?.id
+        ? await updateDebt(editingDebt.id, debtData)
+        : await createDebt(debtData);
+
+      if (result?.success) {
+        setEditingDebt(undefined);
       }
-      setEditingDebt(undefined);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao processar dívida",
-        variant: "destructive",
-      });
+      return result;
+    } catch (error: any) {
+      return { success: false, error };
     }
   };
 
