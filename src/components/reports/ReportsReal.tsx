@@ -44,17 +44,40 @@ export const ReportsReal = () => {
 
   const currentMonth = new Date().toLocaleDateString('pt-MZ', { month: 'long', year: 'numeric' });
 
+  // Status efectivo derivado do tipo de relatório (vencido/pago são fixos pelo tipo)
+  const effectiveStatus = useMemo(() => {
+    if (reportData.reportType === 'overdue') return 'vencida';
+    if (reportData.reportType === 'payments') return 'paga';
+    return reportData.status;
+  }, [reportData.reportType, reportData.status]);
+
+  // Filtra dívidas por período (data_vencimento)
+  const periodFilter = (dateStr: string) => {
+    if (!reportData.period || reportData.period === 'all') return true;
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
+    switch (reportData.period) {
+      case 'week': return Math.abs(diffDays) <= 7;
+      case 'month': return Math.abs(diffDays) <= 31;
+      case 'quarter': return Math.abs(diffDays) <= 92;
+      case 'year': return Math.abs(diffDays) <= 366;
+      default: return true;
+    }
+  };
+
   const reportSummary = useMemo(() => {
     const filteredDebts = debts.filter(debt => {
-      if (reportData.status === 'all') return true;
-      return debt.status === reportData.status;
+      if (effectiveStatus !== 'all' && debt.status !== effectiveStatus) return false;
+      if (!periodFilter(debt.data_vencimento)) return false;
+      return true;
     });
 
     const totalValue = filteredDebts.reduce((sum, debt) => sum + Number(debt.valor), 0);
     const count = filteredDebts.length;
 
     return { totalValue, count, debts: filteredDebts };
-  }, [debts, reportData.status]);
+  }, [debts, effectiveStatus, reportData.period]);
 
   const generateReport = async () => {
     if (!reportData.period || !reportData.reportType) {
