@@ -4,6 +4,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+const decodeJwtPayload = (token: string): Record<string, unknown> => {
+  const payload = token.split(".")[1] ?? "";
+  const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), "=");
+  return JSON.parse(atob(padded));
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -317,7 +324,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const token = authHeader.replace("Bearer ", "");
 
-    const tokenClaims = JSON.parse(atob(token.split(".")[1] ?? ""));
+    const tokenClaims = decodeJwtPayload(token);
     const isServiceRole = tokenClaims?.role === "service_role";
 
     if (!isServiceRole) {
